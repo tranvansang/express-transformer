@@ -33,6 +33,7 @@ app.use('/change_age',
   (req, res, next) => {
   ///req.body.age is ensured to be int and >= 18
   })
+app.listen(3000)
 ```
 It is common to convert string type query's parameter into backend type. For example the page parameter
 ```javascript
@@ -46,7 +47,7 @@ app.use('/get_article',
   ///req.query.pagee is ensured to exist, be integer type, and >= 0, and subtracted 1 from value passed from client
   })
 ```
-More common, but obvious case
+More complicated, but obviously common case
 ```javascript
 app.use('/signup',
   transformer('email')
@@ -57,11 +58,12 @@ app.use('/signup',
       if (existingUser) throw 'Email already existed'
       return email
     }),
-  transformer(['password', 'passwordConfirm'])
+  transformer(['password', 'passwordConfirm'], {force: false}) //force is false by default
     .exists()
     .trim()
     .isLength({min: 8})
     .transform(([password, passwordConfirm]) => {
+      //because force option is false. If email transformer throws error, this transformer will be ignored
       if (password !== passwordConfirm)
         throw 'Passwords do not match'
       return [password, passwordConfirm]//return the original values is required
@@ -75,59 +77,51 @@ app.use('/signup',
 
 ## API
 
-These are 2 types of function, basic usage, and sugar statistic built based on basic function.
-It is very straight forward to write your own transformer.
-
-There are only 5 basic functions. 3 are directly imported, and 2 others are called created instance
-
 `import transformer, {transformationResult, TransformationError} from 'express-transformer'`
+
+**Basic APIs**
 
 - `transformer(path, option)`: return the transformation chain for value in `path`.
 
     The transformation chain should be placed as typical express middleware (see examples)
     
     `option` is optional where
-  - `option.nonstop`: default `false`
-       
-       Continue the transformation chain unless this is falsy
-  - `option.location`: default `body`
-  
-    Location to look for value. It is recommended to set `option.location` be 1 level `'body'`, `'params'`, or `'query'`, and `path` parameter be multilevel e.g. `foo.bar.fooo`.
-  
-    Currently, it also supports to set `option.location` be multilevel, but this may be removed in future release, and is not recommended.
+  - `option.nonstop`: default `false`. Continue the transformation chain if this option is truthy
+  - `option.location`: default `body`. Location to look for value
 
-- `chain.message(callback, option)`: custom error message for the next transformer
-  - `option.force`: default `false`
-  
-    Do not call the transformation it value is not provided unless `force` is truthy. Take note that this does not mean that `undefined`, `null` or empty string `''` is ignored.
-  
-    For example: with `req`  be `{body: {foo: undefined}}`.
-    `transformer('foo').transform(callback)(req)`. `callback` **IS CALL**. (`undefined` can be replaced with `null`, `''`, or any other falsy values. Same thing will hapen)
-    
-    However, with `req` be `{body: {}}`. `foo` key is not provided. `callback` is **NOT** called
-  - More options will be added in future releases.
-  - `callback` receives 2 parameter `value` and `option`.
-  
-    With value is the current transformed value so far or the initial value in the first transformer.
-  `option` has `location`, `path`, and `req` key correspond as theirs name.
+- `chain.message(callback)`: custom error message for the next transformer and return the chain
+  - `callback` receives 2 parameter, the value to be transformed, and `{location, path, req}`
   
       Error messages returned/resolved by `callback` will be used if the right next transformer throws error.
-      `callback` passed to `.message` should not throw/reject error
-- `chain.transform(callback)`: `callback` has the same form of parameters it receives with `callback` in `.messaage()`.
+      This `callback` should not throw/reject error
+- `chain.transform(callback, options)`: add new custom transformation and return the chain
     
-    This callback should return transformed value or throw error if value is invalid.
-    Array of values will be passed if `path` is an array 
-
-    Transformation chain will stop if `nonstop` option is `false` (default)
+    `callback` receives 2 parameter, the value to be transformed, and `{location, path, req}`
     
-- `chain.each` (or `chain.every`): pass individual value to the transformer if path is array.
-   Automatically fallback to `transform` if path is not array
+    `callback` should return transformed value or throw error if value is invalid.
+    
+    If `path` is an array, array of values will be passed to the `callback`, otherwise, only pass the single value 
+    - `option.force`: default `false`
+    
+        This `option.force` is falsy. `undefined`, `null`, empty string `''` are all ignored.
+        
+        Otherwise, always call `callback`
+  
+    Example: with `req`  be `{body: {foo: undefined}}`.
+    `transformer('foo').transform(callback)(req)`. `callback` **IS CALLED**. (`undefined` can be replaced with `null`, `''`, or any other falsy values. Same thing will happen)
+    
+    However, with `req` be `{body: {}}`. (remember `foo` key is not provided). `callback` is **NOT** called
+    
+- `chain.each` (or `chain.every`): pass individual value to the transformer if path is an array.
+   Otherwise, automatically fallback to `transform` (if path is not an array)
     
 - `transformationResult(req)`: returns array of transformation result. Each element has form of `{location, path, error}`.
 
   `error` has type of `TransformationError` if and only if the error was thrown from `callback` of transformer that has preceded by a custom message chain `.message()`
   
-All other chain APIs are built from `custom()` function. All return the chain itself
+  String message or any object returned by (not thrown by) `.message`'s callback is stored in `error.message` regardless of the returned value's type
+  
+All next following chain APIs are built based on `every()` function. They all return the chain itself
 - `chain.exists()`: invalidate if value is `undefined`, `null`, `''` (empty string), or not provided
 - `chain.trim()`: trim value if exists and is string
 - `chain.defaultValue(defaultValue)`: transform value to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided
@@ -143,7 +137,7 @@ All [validators](https://www.npmjs.com/package/validator#validators) starts with
  
  For example: `isUUID`, `isPostalCode`, `isCreditCard`, ...
 
-Note that error will be thrown if non-string type value passed to `validator`'s transformer
+Note that error will be thrown if non-string type value passed to transformers inherited from `validator` package
 
 Transformers can chain the previous likes
 ```javascript
