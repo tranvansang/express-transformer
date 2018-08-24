@@ -74,7 +74,7 @@ export default (path, {
             break
           case 'message':
             try {
-              message = await callback(getValue(), {req})
+              message = isString(callback) ? callback : await callback(getValue(), {req})
             } catch (err) {
               hasError = true
               appendError(err)

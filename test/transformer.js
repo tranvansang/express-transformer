@@ -17,10 +17,21 @@ const clearErrs = req => {
 }
 
 describe('Transform', () => {
-  const req = {body: {}}
+  let req
+  beforeEach(() => {
+    req  = {body: {}}
+  })
+
   it('should check message', async () => {
     await expect(combineToAsync(
       transformer('key').message(() => 'hi').exists(),
+      validateTransformation
+    )({})).to.eventually.be.rejectedWith('hi')
+  })
+
+  it('should accept constant message string', async () => {
+    await expect(combineToAsync(
+      transformer('key').message('hi').exists(),
       validateTransformation
     )({})).to.eventually.be.rejectedWith('hi')
   })
