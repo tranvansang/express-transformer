@@ -1,4 +1,4 @@
-import {isObject, isString, recursiveGet, recursiveHas, recursiveSet} from '../src/util'
+import {isObject, isString, recursiveGet, recursiveHas, recursiveSet} from './util'
 import * as validators from 'validator'
 
 const {isInt, isFloat} = validators
