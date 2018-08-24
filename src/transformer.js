@@ -3,12 +3,14 @@ import * as validators from 'validator'
 
 const {isInt, isFloat} = validators
 
-export function TransformationError(message) {
-  this.name = 'TransformationError'
-  this.message = message
+export class TransformationError extends Error {
+  constructor(...args){{
+    try {
+      super(...args)
+    }catch(err){}
+    this.message = args[0]
+  }}
 }
-
-TransformationError.prototype = Error.prototype
 
 export const transformationResult = req => req.__validationErrors || []
 
@@ -48,7 +50,7 @@ export default (path, {
           } catch (exception) {
             hasError = true
             let err
-            if (message) {
+            if (!(exception instanceof TransformationError) && message) {
               err = new TransformationError(message)
             } else
               err = exception

@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai'
 import chaiAsPromised from 'chai-as-promised'
 import {combineToAsync} from 'middleware-async'
 import {validateTransformation} from './helper'
-import transformer, {transformationResult} from '../src/transformer'
+import transformer, {TransformationError, transformationResult} from '../src/transformer'
 import {match, stub} from 'sinon'
 
 chai.use(sinonChai)
@@ -32,6 +32,22 @@ describe('Transform', () => {
   it('should accept constant message string', async () => {
     await expect(combineToAsync(
       transformer('key').message('hi').exists(),
+      validateTransformation
+    )({})).to.eventually.be.rejectedWith('hi')
+  })
+
+  it('should accept ignore message and get TransformationError', async () => {
+    const obj = {a: 1, b: 2}
+    const err = new TransformationError(obj)
+    await expect(combineToAsync(
+      transformer('key').message('hi').transform(() => Promise.reject(err), {force: true}),
+      validateTransformation
+    )({})).to.eventually.be.rejectedWith(obj)
+  })
+
+  it('should accept take message and ignore uncontrolled error in transformer', async () => {
+    await expect(combineToAsync(
+      transformer('key').message('hi').transform(() => Promise.reject(new Error('hello')), {force: true}),
       validateTransformation
     )({})).to.eventually.be.rejectedWith('hi')
   })
