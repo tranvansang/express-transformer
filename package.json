@@ -1,6 +1,6 @@
 {
   "name": "express-transformer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An express transformer, validator library",
   "main": "lib/transformer.js",
   "repository": "https://github.com/tranvansang/express-transformer",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "babel src -d lib",
+    "deploy": "rm -rf lib && babel src -d lib && yarn publish",
     "test": "mocha --require babel-core/register --require babel-polyfill --recursive",
     "coverage": "nyc mocha --require babel-core/register --require babel-polyfill --recursive"
   },
