@@ -115,9 +115,9 @@ export default (path, {
     return middleware
   }
 
-  middleware.exists = () =>
+  middleware.exists = ({acceptEmptyString = false} = {}) =>
     middleware.each((value, {path}) => {
-      if (value === undefined || value === '' || value === null)
+      if (value === undefined || (!acceptEmptyString && value === '') || value === null)
         throw new Error(`${path} is required`)
       return value
     }, {force: true})

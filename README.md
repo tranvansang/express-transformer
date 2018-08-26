@@ -81,13 +81,13 @@ app.use('/signup',
 
 **Basic APIs**
 
-- `transformer(path, option)`: return the transformation chain for value in `path`.
+- `transformer(path, option)`: return the transformation chain for value in `path`. `path` can be string or array of strings. For example: [`sender.email`, `sender.password`, `content`], ...
 
     The transformation chain should be placed as typical express middleware (see examples)
     
     `option` is optional where
   - `option.nonstop`: default `false`. Continue the transformation chain if this option is truthy
-  - `option.location`: default `body`. Location to look for value
+  - `option.location`: default `body`. Location to look for value. `body` can be multilevel. For example: `body.user`
 
 - `chain.message(callback)`: custom error message for the next transformer and return the chain
   - `callback` receives 2 parameter, the value to be transformed, and `{location, path, req}`
@@ -122,7 +122,7 @@ app.use('/signup',
   String message or any object returned by (not thrown by) `.message`'s callback is stored in `error.message` regardless of the returned value's type
   
 All next following chain APIs are built based on `every()` function. They all return the chain itself
-- `chain.exists()`: invalidate if value is `undefined`, `null`, `''` (empty string), or not provided
+- `chain.exists({acceptEmptyString = false} = {})`: invalidate if value is `undefined`, `null`, `''` (empty string), or not provided. If `acceptEmptyString` is truthy, empty string is a valid value
 - `chain.trim()`: trim value if exists and is string
 - `chain.defaultValue(defaultValue)`: transform value to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided
 - `chain.toInt({min, max})`: convert to integer number and validate its range. Throw error if value is not a valid number. `min`, `max` options are optional

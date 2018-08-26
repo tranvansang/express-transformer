@@ -75,6 +75,10 @@ describe('Transform', () => {
         transformer('key').exists(),
         validateTransformation
       )({body: {key: val}})
+    await combineToAsync(
+      transformer('key').exists({acceptEmptyString: true}),
+      validateTransformation
+    )({body: {key: ''}})
   })
 
   it('should trim', async () => {
