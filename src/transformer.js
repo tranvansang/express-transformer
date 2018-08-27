@@ -26,6 +26,7 @@ export default (path, {
     try {
       let hasError = transformationResult(req).length
       let message = null
+      let forcedMessage = null
 
       const appendError = error => {
         req.__validationErrors = req.__validationErrors || []
@@ -50,8 +51,8 @@ export default (path, {
           } catch (exception) {
             hasError = true
             let err
-            if (!(exception instanceof TransformationError) && message) {
-              err = new TransformationError(message)
+            if (!(exception instanceof TransformationError) && (message || forcedMessage)) {
+              err = new TransformationError(message || forcedMessage)
             } else
               err = exception
             appendError(err)
@@ -76,7 +77,11 @@ export default (path, {
             break
           case 'message':
             try {
-              message = isString(callback) ? callback : await callback(getValue(), {req})
+              if (force){
+                forcedMessage = isString(callback) ? callback : await callback(getValue(), {req})
+              }else {
+                message = isString(callback) ? callback : await callback(getValue(), {req})
+              }
             } catch (err) {
               hasError = true
               appendError(err)
@@ -98,8 +103,9 @@ export default (path, {
     return middleware
   }
 
-  middleware.message = callback => {
+  middleware.message = (callback, options = {}) => {
     stack.push({
+      ...options,
       type: 'message',
       callback
     })

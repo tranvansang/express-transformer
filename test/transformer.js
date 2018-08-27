@@ -59,6 +59,28 @@ describe('Transform', () => {
     )({body: {key: 'hi'}})).to.eventually.be.rejected
   })
 
+  it('should ignore custom message from second transformer', async () => {
+    await expect(combineToAsync(
+      transformer('key')
+        .message('hi')
+        .transform(val => val)
+        .exists()
+      ,
+      validateTransformation
+    )({body: {}})).to.eventually.be.rejectedWith('key is required')
+  })
+
+  it('should use custom forced message from second transformer', async () => {
+    await expect(combineToAsync(
+      transformer('key')
+        .message('hi', {force: true})
+        .transform(val => val)
+        .exists()
+      ,
+      validateTransformation
+    )({body: {}})).to.eventually.be.rejectedWith('hi')
+  })
+
   it('should check exist', async () => {
     await expect(combineToAsync(
       transformer('key').exists(),
