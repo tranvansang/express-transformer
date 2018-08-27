@@ -12,6 +12,23 @@
     "test": "mocha --require babel-core/register --require babel-polyfill --recursive",
     "coverage": "nyc mocha --require babel-core/register --require babel-polyfill --recursive"
   },
+  "keywords": [
+    "express",
+    "connect",
+    "validator",
+    "transform",
+    "transformer",
+    "validation",
+    "validate",
+    "async",
+    "await",
+    "promise",
+    "ES6",
+    "chain",
+    "multivalue",
+    "reuse",
+    "middleware"
+  ],
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
