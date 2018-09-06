@@ -8,8 +8,8 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "deploy": "rm -rf lib && babel src -d lib && yarn publish",
-    "test": "mocha --require babel-core/register --require babel-polyfill --recursive",
+    "deploy": "rm -rf lib && yarn babel src -d lib && yarn publish",
+    "test": "mocha --require @babel/generator --require @babel/polyfill --require @babel/register",
     "coverage": "nyc mocha --require babel-core/register --require babel-polyfill --recursive"
   },
   "keywords": [
@@ -30,10 +30,13 @@
     "middleware"
   ],
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-polyfill": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/generator": "^7.0.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/polyfill": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/register": "^7.0.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "middleware-async": "^0.0.1",
