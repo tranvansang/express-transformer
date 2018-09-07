@@ -10,7 +10,7 @@
   "scripts": {
     "deploy": "rm -rf lib && yarn babel src -d lib && yarn publish",
     "test": "mocha --require @babel/generator --require @babel/polyfill --require @babel/register",
-    "coverage": "nyc mocha --require babel-core/register --require babel-polyfill --recursive"
+    "coverage": "nyc mocha --require @babel/register --require @babel/polyfill --recursive"
   },
   "keywords": [
     "express",
