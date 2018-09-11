@@ -12,7 +12,7 @@ export class TransformationError extends Error {
   }}
 }
 
-export const transformationResult = req => req.__validationErrors || []
+export const transformationResult = req => req.__transformationErrors || []
 
 //NOTE: transformer ignore value that is not provided by default.
 //Check their existence via .exists() or append {force: true} option in .transform(..)
@@ -29,8 +29,8 @@ export default (path, {
       let forcedMessage = null
 
       const appendError = error => {
-        req.__validationErrors = req.__validationErrors || []
-        req.__validationErrors.push({
+        req.__transformationErrors = req.__transformationErrors || []
+        req.__transformationErrors.push({
           location, path, error
         })
       }
