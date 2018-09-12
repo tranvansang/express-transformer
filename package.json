@@ -8,9 +8,9 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "deploy": "rm -rf lib && yarn babel src -d lib && yarn publish",
-    "test": "mocha --require @babel/generator --require @babel/polyfill --require @babel/register",
-    "coverage": "nyc mocha --require @babel/register --require @babel/polyfill --recursive"
+    "build": "rm -rf lib && yarn babel src -d lib",
+    "test": "yarn mocha --require @babel/generator --require @babel/polyfill --require @babel/register",
+    "coverage": "yarn nyc mocha --require @babel/register --require @babel/polyfill --recursive"
   },
   "keywords": [
     "express",
