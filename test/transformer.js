@@ -393,16 +393,16 @@ describe('Transform', () => {
   })
 
   it('should work on array', async () => {
-    // clearErrs(req)
-    // req.body.key1 = 1
-    // req.body.key2 = 2
-    // await combineToAsync(
-    //   transformer(['key1', 'key2'])
-    //     .transform(([key1, key2]) => [key1 + key2, key2]),
-    //   validateTransformation
-    // )(req)
-    // expect(req.body.key1).to.equal(3)
-    // expect(req.body.key2).to.equal(2)
+    clearErrs(req)
+    req.body.key1 = 1
+    req.body.key2 = 2
+    await combineToAsync(
+      transformer(['key1', 'key2'])
+        .transform(([key1, key2]) => [key1 + key2, key2]),
+      validateTransformation
+    )(req)
+    expect(req.body.key1).to.equal(3)
+    expect(req.body.key2).to.equal(2)
 
     clearErrs(req)
     delete req.body.key1
@@ -410,10 +410,21 @@ describe('Transform', () => {
     const check = stub()
     await combineToAsync(
       transformer(['key1', 'key2'])
-        .transform(check),
+        .transform(check, {force: true}),
       validateTransformation
     )(req)
     expect(check).to.have.been.calledOnceWithExactly([undefined, undefined], match.any)
+
+    clearErrs(req)
+    delete req.body.key1
+    delete req.body.key2
+    const check1 = stub()
+    await combineToAsync(
+      transformer(['key1', 'key2'])
+        .transform(check1),
+      validateTransformation
+    )(req)
+    expect(check1).to.not.have.been.called
   })
 
   it('should validate array', async () => {

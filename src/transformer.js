@@ -43,8 +43,12 @@ export default (path, {
         Array.isArray(inlinePath)
           ? inlinePath.map((p, i) => recursiveSet(req, fullpath(p), isObject(values) && values.hasOwnProperty(i) ? values[i] : undefined))
           : recursiveSet(req, fullpath(inlinePath), values)
+      const hasValue = inlinePath =>
+        Array.isArray(inlinePath)
+          ? inlinePath.some(p => recursiveHas(req, fullpath(p)))
+          : recursiveHas(req, fullpath(inlinePath))
       const doTransform = async (inlinePath, callback, force) => {
-        if (force || Array.isArray(inlinePath) || recursiveHas(req, fullpath(inlinePath)))
+        if (force || hasValue(inlinePath))
           try {
             const sanitized = await callback(getValue(inlinePath), {req, path: inlinePath, location})
             setValue(inlinePath, sanitized)
