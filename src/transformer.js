@@ -4,12 +4,15 @@ import * as validators from 'validator'
 const {isInt, isFloat} = validators
 
 export class TransformationError extends Error {
-  constructor(...args){{
-    try {
-      super(...args)
-    }catch(err){}
-    this.message = args[0]
-  }}
+  constructor(...args) {
+    {
+      try {
+        super(...args)
+      } catch (err) {
+      }
+      this.message = args[0]
+    }
+  }
 }
 
 export const errorKey = '__transformationErrors'
@@ -35,45 +38,66 @@ export default (path, {
           location, path, error
         })
       }
-      const fullpath = p => `${location}.${p}`
-      const getValue = inlinePath =>
-        Array.isArray(inlinePath)
-          ? inlinePath.map(p => recursiveGet(req, fullpath(p)))
-          : recursiveGet(req, fullpath(inlinePath))
-      const setValue = (inlinePath, values) =>
-        Array.isArray(inlinePath)
-          ? inlinePath.map((p, i) => recursiveSet(req, fullpath(p), isObject(values) && values.hasOwnProperty(i) ? values[i] : undefined))
-          : recursiveSet(req, fullpath(inlinePath), values)
-      const hasValue = inlinePath =>
-        Array.isArray(inlinePath)
-          ? inlinePath.some(p => recursiveHas(req, fullpath(p)))
-          : recursiveHas(req, fullpath(inlinePath))
-
-      const doSubtransform = async (prefix, [fisrtArray, ...arrays], inlinePath, force) => {
-        if (firstArray){
-          const value = recursiveGet([...prefix, firstArray].join('.'))
-          if (Array.isArray(value)){
-            for(let i = 0; i < value.length; i++)
-              await doSubtransform([...prefix, i], arrays, inlinePath, force)
+      const fullPath = p => [location, p].join('.')
+      /**
+       *
+       * @param prefix Prefix added so far
+       * @param firstArray currently processing array prefix
+       * @param arrays remaining array prefixes
+       * @param inlinePath last path
+       * @param callback
+       * @param force
+       * @returns {Promise<void>}
+       */
+      const doSubtransform = async (prefix, [firstArray, ...arrays], inlinePath, callback, force) => {
+        const processArray = p => {
+          //force only effective when value does not exist
+          if (!recursiveHas(req, fullPath(p)) && !force) return []
+          let values = recursiveGet(req, fullPath(p))
+          //always reset existing value regardless force's value
+          if (!Array.isArray(values)) {
+            values = []
+            recursiveSet(req, fullPath(p), [])
           }
-        }else{
-          if (Array.isArray(inlinePath)){
-            const sanitized = await callback(getValue(inlinePath), {req, path: inlinePath, location})
-            setValue(inlinePath, sanitized)
+          return values
+        }
+        if (firstArray) {
+          prefix = [...prefix, firstArray]
+          const values = processArray(prefix.join('.'))
+          for (let i = 0; i < values.length; i++)
+            await doSubtransform([...prefix, i], arrays, inlinePath, callback, force)
+        } else {
+          if (/\[]$/.test(inlinePath)) {
+            inlinePath = [...prefix, inlinePath.slice(0, inlinePath.length - 2)].join('.')
+            const values = processArray(inlinePath)
+            for (let i = 0; i < values.length; i++) {
+              const p = [inlinePath, i].join('.')
+              const value = recursiveGet(req, fullPath(p))
+              const sanitized = await callback(value, {location, path: p, req})
+              recursiveSet(req, fullPath(p), sanitized)
+            }
           } else {
-            if (/\[]$/.test(inlinePath)){
-            }else {
+            inlinePath = [...prefix, inlinePath].join('.')
+            if (force || recursiveHas(req, fullPath(inlinePath))) {
+              const value = recursiveGet(req, fullPath(inlinePath))
+              const sanitized = await callback(value, {location, path: inlinePath, req})
+              recursiveSet(req, fullPath(inlinePath), sanitized)
             }
           }
         }
       }
+      //return positive if error
       const doTransform = async (inlinePath, callback, force) => {
         try {
-          if (!Array.isArray(inlinePath)){
+          if (!Array.isArray(inlinePath)) {
             const arraySplits = inlinePath.split(/\[]\./)
-            await doSubtransform([location], arraySplits.slice(0, arraySplits.length - 1), arraySplits[arraySplits.length - 1], force)
+            await doSubtransform([], arraySplits.slice(0, arraySplits.length - 1), arraySplits[arraySplits.length - 1], callback, force)
           } else {
-            await doSubtransform([location], [], inlinePath, force)
+            if (force || inlinePath.some(p => recursiveHas(req, fullPath(p)))) {
+              const values = inlinePath.map(p => recursiveGet(req, fullPath(p)))
+              const sanitized = await callback(values, {req, path: inlinePath, location})
+              inlinePath.forEach((p, i) => recursiveSet(req, fullPath(p), sanitized?.[i]))
+            }
           }
         } catch (exception) {
           hasError = true
@@ -85,6 +109,7 @@ export default (path, {
           appendError(err)
           return true
         }
+      }
       for (const {type, callback, force} of stack) {
         if (!nonstop && hasError)
           break
@@ -97,17 +122,20 @@ export default (path, {
               message = null
               break
             }
-            //break statement is removed intentionally
+          //break statement is removed intentionally
           case 'transformer':
             await doTransform(path, callback, force)
             message = null
             break
           case 'message':
             try {
-              if (force){
-                forcedMessage = isString(callback) ? callback : await callback(getValue(), {req})
-              }else {
-                message = isString(callback) ? callback : await callback(getValue(), {req})
+              const values = Array.isArray(path)
+                ? path.map(p => recursiveGet(req, fullPath(p)))
+                : recursiveGet(req, fullPath(path))
+              if (force) {
+                forcedMessage = isString(callback) ? callback : await callback(values, {req, path, location})
+              } else {
+                message = isString(callback) ? callback : await callback(values, {req, path, location})
               }
             } catch (err) {
               hasError = true
@@ -234,7 +262,7 @@ export default (path, {
 
   middleware.isLength = option => {
     const number = parseFloat(option)
-    if (!isNaN(number)){
+    if (!isNaN(number)) {
       option = {min: number, max: number}
     }
     return middleware.each((value, {path}) => {

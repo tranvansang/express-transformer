@@ -168,4 +168,122 @@ describe('Transformer library', () => {
     )({})
     expect(check).to.have.been.calledOnce
   })
+
+  it('should call message for array value', async () => {
+    const check = stub()
+    await combineToAsync(
+      transformer(['key1', 'key2']).message(check),
+      validateTransformation
+    )({})
+    expect(check).to.have.been.calledOnce
+  })
+
+  describe('array handling', () => {
+    it('should process array', async () => {
+      const check = stub()
+      await combineToAsync(
+        transformer('key[]').transform(check),
+        validateTransformation
+      )({})
+      expect(check).to.not.have.been.called
+    })
+
+    it('should set empty array with force', async () => {
+      const check = stub()
+      const req = {}
+      await combineToAsync(
+        transformer('key[]').transform(check, {force: true}),
+        validateTransformation
+      )(req)
+      expect(check).to.not.have.been.called
+      expect(req.body.key).to.eql([])
+    })
+
+    it('should set empty array without force', async () => {
+      const check = stub()
+      const req = {body: {key: {not_an_obj: 123}}}
+      await combineToAsync(
+        transformer('key[]').transform(check),
+        validateTransformation
+      )(req)
+      expect(check).to.not.have.been.called
+      expect(req.body.key).to.eql([])
+    })
+    it('should process with array last', async () => {
+      const req = {body: {key: [1]}}
+      await combineToAsync(
+        transformer('key[]').transform(x => x + 1),
+        validateTransformation
+      )(req)
+      expect(req.body.key[0]).to.equal(2)
+    })
+
+    it('should process transformer', async () => {
+      const req = {
+        body: {
+          long: {
+            path: {
+              around: {
+                arrayWrapper: [
+                  {
+                    long: {
+                      path: {
+                        around: {
+                          myArray: [
+                            {
+                              key1: 1,
+                              key2: 2
+                            },
+                            {
+                              key1: 3,
+                              key2: 4
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+      await combineToAsync(
+        transformer('long.path.around.arrayWrapper[].long.path.around.myArray[].key1').transform(x => x + 1),
+        transformer('long.path.around.arrayWrapper[].long.path.around.myArray[].key2').transform(x => x * 2),
+        validateTransformation
+      )(req)
+      expect(req).to.eql({
+        body: {
+          long: {
+            path: {
+              around: {
+                arrayWrapper: [
+                  {
+                    long: {
+                      path: {
+                        around: {
+                          myArray: [
+                            {
+                              key1: 2,
+                              key2: 4
+                            },
+                            {
+                              key1: 4,
+                              key2: 8
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      })
+    })
+  })
 })
