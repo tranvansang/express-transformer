@@ -12,7 +12,8 @@ export class TransformationError extends Error {
   }}
 }
 
-export const transformationResult = req => req.__transformationErrors || []
+export const errorKey = '__transformationErrors'
+export const transformationResult = req => req[errorKey] || []
 
 //NOTE: transformer ignore value that is not provided by default.
 //Check their existence via .exists() or append {force: true} option in .transform(..)
@@ -29,8 +30,8 @@ export default (path, {
       let forcedMessage = null
 
       const appendError = error => {
-        req.__transformationErrors = req.__transformationErrors || []
-        req.__transformationErrors.push({
+        req[errorKey] = req[errorKey] || []
+        req[errorKey].push({
           location, path, error
         })
       }
@@ -47,14 +48,23 @@ export default (path, {
         Array.isArray(inlinePath)
           ? inlinePath.some(p => recursiveHas(req, fullpath(p)))
           : recursiveHas(req, fullpath(inlinePath))
+
+      const doSubtransform = (prefixArray, [fisrtArray, ...arrays], inlinePath) => {
+        if (firstArray){
+        }
+        //if inlinePath is array, arrays will be empty
+        const sanitized = await callback(getValue(inlinePath), {req, path: inlinePath, location})
+        setValue(inlinePath, sanitized)
+      }
       const doTransform = async (inlinePath, callback, force) => {
         if (force || hasValue(inlinePath))
           try {
-          if (!Array.isArray(inlinePath)){
-            const arraySplits = inlinePath.split(/\[]\./)
-          }
-            const sanitized = await callback(getValue(inlinePath), {req, path: inlinePath, location})
-            setValue(inlinePath, sanitized)
+            if (!Array.isArray(inlinePath)){
+              const arraySplits = inlinePath.split(/\[]\./)
+              doSubtransform([location], arraySplits.slice(0, arraySplits.length - 1), arraySplits[arraySplits.length - 1])
+            } else {
+              doSubtransform([location], [], inlinePath)
+            }
           } catch (exception) {
             hasError = true
             let err
