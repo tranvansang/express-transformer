@@ -49,33 +49,42 @@ export default (path, {
           ? inlinePath.some(p => recursiveHas(req, fullpath(p)))
           : recursiveHas(req, fullpath(inlinePath))
 
-      const doSubtransform = (prefixArray, [fisrtArray, ...arrays], inlinePath) => {
+      const doSubtransform = async (prefix, [fisrtArray, ...arrays], inlinePath, force) => {
         if (firstArray){
+          const value = recursiveGet([...prefix, firstArray].join('.'))
+          if (Array.isArray(value)){
+            for(let i = 0; i < value.length; i++)
+              await doSubtransform([...prefix, i], arrays, inlinePath, force)
+          }
+        }else{
+          if (Array.isArray(inlinePath)){
+            const sanitized = await callback(getValue(inlinePath), {req, path: inlinePath, location})
+            setValue(inlinePath, sanitized)
+          } else {
+            if (/\[]$/.test(inlinePath)){
+            }else {
+            }
+          }
         }
-        //if inlinePath is array, arrays will be empty
-        const sanitized = await callback(getValue(inlinePath), {req, path: inlinePath, location})
-        setValue(inlinePath, sanitized)
       }
       const doTransform = async (inlinePath, callback, force) => {
-        if (force || hasValue(inlinePath))
-          try {
-            if (!Array.isArray(inlinePath)){
-              const arraySplits = inlinePath.split(/\[]\./)
-              doSubtransform([location], arraySplits.slice(0, arraySplits.length - 1), arraySplits[arraySplits.length - 1])
-            } else {
-              doSubtransform([location], [], inlinePath)
-            }
-          } catch (exception) {
-            hasError = true
-            let err
-            if (!(exception instanceof TransformationError) && (message || forcedMessage)) {
-              err = new TransformationError(message || forcedMessage)
-            } else
-              err = exception
-            appendError(err)
-            return true
+        try {
+          if (!Array.isArray(inlinePath)){
+            const arraySplits = inlinePath.split(/\[]\./)
+            await doSubtransform([location], arraySplits.slice(0, arraySplits.length - 1), arraySplits[arraySplits.length - 1], force)
+          } else {
+            await doSubtransform([location], [], inlinePath, force)
           }
-      }
+        } catch (exception) {
+          hasError = true
+          let err
+          if (!(exception instanceof TransformationError) && (message || forcedMessage)) {
+            err = new TransformationError(message || forcedMessage)
+          } else
+            err = exception
+          appendError(err)
+          return true
+        }
       for (const {type, callback, force} of stack) {
         if (!nonstop && hasError)
           break
