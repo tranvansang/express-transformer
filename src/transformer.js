@@ -50,6 +50,9 @@ export default (path, {
       const doTransform = async (inlinePath, callback, force) => {
         if (force || hasValue(inlinePath))
           try {
+          if (!Array.isArray(inlinePath)){
+            const arraySplits = inlinePath.split(/\[]\./)
+          }
             const sanitized = await callback(getValue(inlinePath), {req, path: inlinePath, location})
             setValue(inlinePath, sanitized)
           } catch (exception) {
