@@ -33,6 +33,8 @@ describe('Recursive get', () => {
     expect(recursiveGet({foo: undefined}, 'foo')).to.be.undefined
     expect(recursiveGet({foo: undefined}, 'foo.bar')).to.be.undefined
     expect(recursiveGet({foo: 0}, 'foo.bar')).to.be.undefined
+    expect(recursiveGet([1, 2, 3], '1')).to.equal(2)
+    expect(recursiveGet({foo: [1, {bar: 2}, 3]}, 'foo.1.bar')).to.equal(2)
   })
 })
 
@@ -55,9 +57,14 @@ describe('Recursive set', () => {
     expect(obj.a.b).to.equal('c')
     recursiveSet(obj, 'd.e', 'g')
     expect(obj.d.e).to.equal('g')
+    recursiveSet(obj, 'f.1', 'h')
+    expect(obj.f).to.eql({ 1: 'h' })
     let obj1
     recursiveSet(obj1, 'd.e', 'g')
     recursiveSet(1, 'd.e', 'g')
+    obj1 = {foo: [1]}
+    recursiveSet(obj1, 'foo.1', 2)
+    expect(obj1.foo).to.eql([1, 2])
   })
 })
 
@@ -71,6 +78,8 @@ describe('Recursive has', () => {
     expect(recursiveHas({a: {b: null}}, 'a.b')).to.equal(true)
     expect(recursiveHas({a: {}}, 'a.b')).to.equal(false)
     expect(recursiveHas({}, 'a.b')).to.equal(false)
+    expect(recursiveHas({a: [1,2,3]}, 'a.2')).to.equal(true)
+    expect(recursiveHas({a: [1,2,3]}, 'a.4')).to.equal(false)
     let x
     expect(recursiveHas(x, 'a.b')).to.equal(false)
   })
