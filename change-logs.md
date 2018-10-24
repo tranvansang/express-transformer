@@ -1,5 +1,24 @@
 # Change logs
 
+## Version 0.1.0
+
+- Support array handling
+
+    E.g. `transformer('foo.bar[].fooo.baar[]')` will transform all elements of array `req.body.foo.bar`, on each element, check its `fooo.baar`, then pass each element to the transformer callback
+
+    `force` option behaviour. Because of common practise, intended value should be ((array) or (not defined unless `force` is on)) eventually. In other words,
+
+    + If value is not set:
+      * `force` is on: set value be `[]`
+      * `force` is off. Ignore and quit process
+    + If value is set
+      * Value is not array type (`Array.isArray()`): force(set) value be `[]`
+      * Value is array: continue process
+
+    Multiple brackets can be passed. e.g. `transformer('foo.bar[].fooo.baaar[].foo[].bar')`
+
+    To process single array element. Use dot notation. `transformer('foo.bar.1.2.foo.0')`) will transform `req.body.foo.bar[1][2].foo[0]`
+
 ## Version 0.0.12
 
 - Handle optional array transformer
