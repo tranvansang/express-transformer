@@ -127,7 +127,7 @@ All next following chain APIs are built based on `every()` function. They all re
 - `chain.defaultValue(defaultValue)`: transform value to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided
 - `chain.toInt({min, max})`: convert to integer number and validate its range. Throw error if value is not a valid number. `min`, `max` options are optional
 - `chain.toFloat({min, max})`: similar to `toInt`
-- `chain.isLength(length)`: check value's `length`. Value can be array or string type.
+- `chain.isLength(option)`: check value's length. Value can be array or string type. Option can be number (can be in string format), or object contain `min` and `max` key (must be numbers literally)
 - `chain.matches(regex)`: check if value matches regex
 - `chain.isIn(array)`: check if value is in the provided list
 

@@ -266,33 +266,57 @@ describe('Transform', () => {
       validateTransformation
     )(req)).to.eventually.be.rejected
 
-    clearErrs(req)
-    req.body.key = '123456'
-    await expect(combineToAsync(
-      transformer('key').isLength({min: 1, max: 5}),
-      validateTransformation
-    )(req)).to.eventually.be.rejected
+    for(const key of ['123456',
+      123,
+      '',
+      [],
+      [1,2,3,4,5,6]
+    ]) {
+      clearErrs(req)
+      req.body.key = key
+      await expect(combineToAsync(
+        transformer('key').isLength({min: 1, max: 5}),
+        validateTransformation
+      )(req)).to.eventually.be.rejected
+    }
 
-    clearErrs(req)
-    req.body.key = 123
-    await expect(combineToAsync(
-      transformer('key').isLength({min: 1, max: 5}),
-      validateTransformation
-    )(req)).to.eventually.be.rejected
+    for(const key of [
+      '123',
+      [1,2,3],
+    ]) {
+      clearErrs(req)
+      req.body.key = key
+      await combineToAsync(
+        transformer('key').isLength({min: 1, max: 5}),
+        validateTransformation
+      )(req)
+    }
 
-    clearErrs(req)
-    req.body.key = ''
-    await expect(combineToAsync(
-      transformer('key').isLength({min: 1, max: 5}),
-      validateTransformation
-    )(req)).to.eventually.be.rejected
-
-    clearErrs(req)
-    req.body.key = '123'
-    await combineToAsync(
-      transformer('key').isLength({min: 1, max: 5}),
-      validateTransformation
-    )(req)
+    for(const length of [3, '3'])
+    for(const key of ['123456',
+      '12',
+      [],
+      [1,2,3,4,5,6]
+    ]) {
+      clearErrs(req)
+      req.body.key = key
+      await expect(combineToAsync(
+        transformer('key').isLength(length),
+        validateTransformation
+      )(req)).to.eventually.be.rejected
+    }
+    for(const length of [3, '3'])
+    for(const key of [
+      '123',
+      [1,2,3],
+    ]) {
+      clearErrs(req)
+      req.body.key = key
+      await combineToAsync(
+        transformer('key').isLength(length),
+        validateTransformation
+      )(req)
+    }
 
     clearErrs(req)
     req.body.key = 'test@gmail.com'

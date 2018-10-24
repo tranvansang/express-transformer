@@ -206,17 +206,22 @@ export default (path, {
       return value
     })
 
-  middleware.isLength = option =>
-    middleware.each((value, {path}) => {
-      if (isString(value)) {
-        if ('min' in option && value.length < option.min)
-          throw new Error(`${path} must be at least ${option.min} characters long`)
-        if ('max' in option && value.length > option.max)
-          throw new Error(`${path} must be at most ${option.max} characters long`)
+  middleware.isLength = option => {
+    const number = parseFloat(option)
+    if (!isNaN(number)){
+      option = {min: number, max: number}
+    }
+    return middleware.each((value, {path}) => {
+      if (isString(value) || Array.isArray(value)) {
+        if (option.hasOwnProperty('min') && value.length < option.min)
+          throw new Error(`${path} must have at least ${option.min} length`)
+        if (option.hasOwnProperty('max') && value.length > option.max)
+          throw new Error(`${path} must have at most ${option.max} length`)
         return value
       }
-      throw new Error(`${path} must be a string`)
+      throw new Error(`${path} must be a string or an array`)
     })
+  }
 
   middleware.matches = regex =>
     middleware.each((value, {path}) => {
