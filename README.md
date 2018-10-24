@@ -171,3 +171,7 @@ app.use('/article_name/:id',
         res.send(`Article's capitalized name is ${req.params.id}`)
     })
 ```
+
+## Change logs
+
+See [change logs](./change-logs.md)
