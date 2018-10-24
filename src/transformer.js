@@ -65,12 +65,13 @@ export default (path, {
         switch (type) {
           case 'every':
             if (Array.isArray(path)) {
-              for (const p of path) 
+              for (const p of path)
                 if (!nonstop && await doTransform(p, callback, force))
                   break
               message = null
               break
             }
+            //break statement is removed intentionally
           case 'transformer':
             await doTransform(path, callback, force)
             message = null
