@@ -4,16 +4,11 @@ import chai, {expect} from 'chai'
 import sinonChai from 'sinon-chai'
 import chaiAsPromised from 'chai-as-promised'
 import {
-  arrayToObject,
-  capitalize,
-  isObject,
   isString,
   recursiveDefault,
   recursiveGet,
   recursiveHas,
   recursiveSet,
-  reqLogin,
-  toDate
 } from '../src/util'
 
 chai.use(sinonChai)
@@ -38,17 +33,17 @@ describe('Recursive get', () => {
   })
 })
 
-describe('Is object', () => {
-  it('should correct', () => {
-    expect(isObject(null)).to.be.false
-    expect(isObject(undefined)).to.be.false
-    expect(isObject(false)).to.be.false
-    expect(isObject(0)).to.be.false
-    expect(isObject('hi')).to.be.false
-    expect(isObject({})).to.be.true
-    expect(isObject(new String(''))).to.be.true
-  })
-})
+// describe('Is object', () => {
+//   it('should correct', () => {
+//     expect(isObject(null)).to.be.false
+//     expect(isObject(undefined)).to.be.false
+//     expect(isObject(false)).to.be.false
+//     expect(isObject(0)).to.be.false
+//     expect(isObject('hi')).to.be.false
+//     expect(isObject({})).to.be.true
+//     expect(isObject(new String(''))).to.be.true
+//   })
+// })
 
 describe('Recursive set', () => {
   it('should set correct value', () => {
@@ -58,7 +53,7 @@ describe('Recursive set', () => {
     recursiveSet(obj, 'd.e', 'g')
     expect(obj.d.e).to.equal('g')
     recursiveSet(obj, 'f.1', 'h')
-    expect(obj.f).to.eql({ 1: 'h' })
+    expect(obj.f).to.eql({1: 'h'})
     let obj1
     recursiveSet(obj1, 'd.e', 'g')
     recursiveSet(1, 'd.e', 'g')
@@ -78,8 +73,8 @@ describe('Recursive has', () => {
     expect(recursiveHas({a: {b: null}}, 'a.b')).to.equal(true)
     expect(recursiveHas({a: {}}, 'a.b')).to.equal(false)
     expect(recursiveHas({}, 'a.b')).to.equal(false)
-    expect(recursiveHas({a: [1,2,3]}, 'a.2')).to.equal(true)
-    expect(recursiveHas({a: [1,2,3]}, 'a.4')).to.equal(false)
+    expect(recursiveHas({a: [1, 2, 3]}, 'a.2')).to.equal(true)
+    expect(recursiveHas({a: [1, 2, 3]}, 'a.4')).to.equal(false)
     let x
     expect(recursiveHas(x, 'a.b')).to.equal(false)
   })

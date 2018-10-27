@@ -8,9 +8,10 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "rm -rf lib && yarn babel src -d lib",
-    "test": "yarn mocha --require @babel/generator --require @babel/polyfill --require @babel/register",
-    "coverage": "yarn nyc mocha --require @babel/register --require @babel/polyfill --recursive"
+    "build": "rm -rf lib && yarn babel src -d lib --extensions \".ts,.js\" && yarn build:types",
+    "test": "yarn mocha --require @babel/generator --require @babel/polyfill --require babel-register-ts",
+    "coverage": "yarn nyc mocha --require babel-register-ts --require @babel/polyfill --recursive",
+    "build:types": "tsc --emitDeclarationOnly"
   },
   "keywords": [
     "express",
@@ -37,7 +38,9 @@
     "@babel/plugin-proposal-optional-chaining": "^7.0.0",
     "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
+    "@babel/preset-typescript": "^7.1.0",
     "@babel/register": "^7.0.0",
+    "babel-register-ts": "^7.0.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "middleware-async": "^0.0.1",
@@ -48,6 +51,8 @@
     "sinon-chai": "^3.2.0"
   },
   "dependencies": {
+    "@types/express": "^4.16.0",
+    "@types/validator": "^9.4.2",
     "validator": "^10.7.0"
   }
 }
