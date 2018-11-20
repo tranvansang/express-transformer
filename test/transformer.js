@@ -553,14 +553,4 @@ describe('Transform', () => {
       validateTransformation
     )()).to.eventually.be.rejected
   })
-
-  it('should check body itself', async () => {
-    clearErrs(req)
-    const callback = stub()
-    await combineToAsync(
-      transformer('').transform(callback),
-      validateTransformation
-    )({body: 123})
-    expect(callback).to.have.been.calledWith(123)
-  })
 })

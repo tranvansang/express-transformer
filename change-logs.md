@@ -1,5 +1,8 @@
 # Change logs
 
+## Version 0.3.2
+- Revert 0.3.1
+
 ## Version 0.3.1
 - Allow `path` to be empty string (`''`)
 
