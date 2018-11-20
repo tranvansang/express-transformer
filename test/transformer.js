@@ -19,7 +19,7 @@ const clearErrs = req => {
 describe('Transform', () => {
   let req
   beforeEach(() => {
-    req  = {body: {}}
+    req = {body: {}}
   })
 
   it('should check message', async () => {
@@ -157,11 +157,11 @@ describe('Transform', () => {
 
     clearErrs(req)
     req.body.key = '1.2'
-    await expect(combineToAsync(
+    await combineToAsync(
       transformer('key').toInt(),
       validateTransformation
-    )(req)).to.eventually.be.rejected
-    expect(req.body.key).to.equal('1.2')
+    )(req)
+    expect(req.body.key).to.equal(1)
 
     clearErrs(req)
     req.body.key = '1'
@@ -186,6 +186,14 @@ describe('Transform', () => {
       validateTransformation
     )(req)).to.eventually.be.rejected
     expect(req.body.key).to.equal('abc')
+
+    clearErrs(req)
+    delete req.body.key
+    await expect(combineToAsync(
+      transformer('key').toInt({force: true}),
+      validateTransformation
+    )(req)).to.eventually.be.rejected
+    expect(req.body.key).to.equal(undefined)
   })
 
   it('should check to float', async () => {
@@ -235,10 +243,19 @@ describe('Transform', () => {
       validateTransformation
     )(req)).to.eventually.be.rejected
     expect(req.body.key).to.equal('a123')
+
+    clearErrs(req)
+    delete req.body.key
+    await combineToAsync(
+      transformer('key').toFloat({max: 0}),
+      validateTransformation
+    )(req)
+    expect(req.body.key).to.equal(undefined)
   })
 
   it('should check other', async () => {
 
+    //isIn
     req.body.key = '4538136094603680'
     await combineToAsync(
       transformer('key').isCreditCard(),
@@ -266,11 +283,26 @@ describe('Transform', () => {
       validateTransformation
     )(req)).to.eventually.be.rejected
 
-    for(const key of ['123456',
+    clearErrs(req)
+    delete req.body.key
+    await expect(combineToAsync(
+      transformer('key').isIn(['1', '3'], {force: true}),
+      validateTransformation
+    )(req)).to.eventually.be.rejected
+
+    clearErrs(req)
+    delete req.body.key
+    await combineToAsync(
+      transformer('key').isIn(['1', '3', undefined], {force: true}),
+      validateTransformation
+    )(req)
+
+    //isLength
+    for (const key of ['123456',
       123,
       '',
       [],
-      [1,2,3,4,5,6]
+      [1, 2, 3, 4, 5, 6]
     ]) {
       clearErrs(req)
       req.body.key = key
@@ -280,9 +312,9 @@ describe('Transform', () => {
       )(req)).to.eventually.be.rejected
     }
 
-    for(const key of [
+    for (const key of [
       '123',
-      [1,2,3],
+      [1, 2, 3],
     ]) {
       clearErrs(req)
       req.body.key = key
@@ -292,32 +324,48 @@ describe('Transform', () => {
       )(req)
     }
 
-    for(const length of [3, '3'])
-    for(const key of ['123456',
-      '12',
-      [],
-      [1,2,3,4,5,6]
-    ]) {
-      clearErrs(req)
-      req.body.key = key
-      await expect(combineToAsync(
-        transformer('key').isLength(length),
-        validateTransformation
-      )(req)).to.eventually.be.rejected
-    }
-    for(const length of [3, '3'])
-    for(const key of [
-      '123',
-      [1,2,3],
-    ]) {
-      clearErrs(req)
-      req.body.key = key
-      await combineToAsync(
-        transformer('key').isLength(length),
-        validateTransformation
-      )(req)
-    }
+    for (const length of [3, '3'])
+      for (const key of ['123456',
+        '12',
+        [],
+        [1, 2, 3, 4, 5, 6]
+      ]) {
+        clearErrs(req)
+        req.body.key = key
+        await expect(combineToAsync(
+          transformer('key').isLength(length),
+          validateTransformation
+        )(req)).to.eventually.be.rejected
+      }
+    for (const length of [3, '3'])
+      for (const key of [
+        '123',
+        [1, 2, 3],
+      ]) {
+        clearErrs(req)
+        req.body.key = key
+        await combineToAsync(
+          transformer('key').isLength(length),
+          validateTransformation
+        )(req)
+      }
 
+    //empty val
+    clearErrs(req)
+    delete req.body.key
+    await expect(combineToAsync(
+      transformer('key').isLength(1, {force: true}),
+      validateTransformation
+    )(req)).to.eventually.be.rejected
+
+    clearErrs(req)
+    delete req.body.key
+    await combineToAsync(
+      transformer('key').isLength(1, {force: false}),
+      validateTransformation
+    )(req)
+
+    //other checker in validator package
     clearErrs(req)
     req.body.key = 'test@gmail.com'
     await combineToAsync(
@@ -333,6 +381,15 @@ describe('Transform', () => {
     )(req)).to.eventually.be.rejected
 
     clearErrs(req)
+    req.body.key = 123
+    await expect(combineToAsync(
+      transformer('key').isEmail(),
+      validateTransformation
+    )(req)).to.eventually.be.rejected
+
+
+    // matches
+    clearErrs(req)
     req.body.key = '123abcd'
     await combineToAsync(
       transformer('key').matches(/abc/),
@@ -347,26 +404,43 @@ describe('Transform', () => {
     )(req)).to.eventually.be.rejected
 
     clearErrs(req)
-    req.body.key = 123
+    delete req.body.key
     await expect(combineToAsync(
-      transformer('key').toDate(),
+      transformer('key').matches(/^\d*$/, {force: true}),
       validateTransformation
     )(req)).to.eventually.be.rejected
 
+    //toDate
     clearErrs(req)
-    req.body.key = 123
-    await expect(combineToAsync(
-      transformer('key').isEmail(),
-      validateTransformation
-    )(req)).to.eventually.be.rejected
-
-    clearErrs(req)
-    req.body.key = new Date().toISOString()
+    let date = new Date()
+    req.body.key = date.toISOString()
     await combineToAsync(
       transformer('key').toDate(),
       validateTransformation
     )(req)
+    expect(req.body.key).to.eql(date)
 
+    clearErrs(req)
+    date = new Date()
+    req.body.key = date.toISOString()
+    await combineToAsync(
+      transformer('key').toDate({resetTime: true}),
+      validateTransformation
+    )(req)
+    date.setMinutes(0)
+    date.setHours(0)
+    date.setMilliseconds(0)
+    date.setSeconds(0)
+    expect(req.body.key).to.eql(date)
+
+    clearErrs(req)
+    delete req.body.key
+    await expect(combineToAsync(
+      transformer('key').toDate({resetTime: true, force: true}),
+      validateTransformation
+    )(req)).to.eventually.be.rejected
+
+    //custom
     clearErrs(req)
     req.body.key = 1
     const inc = x => new Promise(resolve => setTimeout(() => resolve(x + 1), 1))

@@ -21,32 +21,27 @@ declare type MessageOption = {
     path: Path;
     req: Request;
 };
-declare type TransformedValue<T, V> = string | number | T | V;
+declare type TransformedValue<T, V> = Date | string | number | T | V;
 declare type OptionalPromise<T> = T | Promise<T>;
 declare type SingleCallback<T, V> = (value: T, option: Option) => OptionalPromise<TransformedValue<T, V>>;
 declare type ArrayCallback<T, V> = (value: T[], option: Option) => OptionalPromise<TransformedValue<T, V>[]>;
+declare type Callback<T, V> = SingleCallback<T, V> | ArrayCallback<T, V>;
 declare type MessageCallback<T> = (value: T | T[], option: MessageOption) => OptionalPromise<string>;
-declare type Callback<T, V> = string | SingleCallback<T, V> | ArrayCallback<T, V> | MessageCallback<T>;
+declare type TransformOption = {
+    force?: boolean;
+};
 interface Middleware<T, V> {
     (req: Request, res: express.Response, next: express.NextFunction): Promise<void>;
-    transform(callback: Callback<T, V>, option?: {
-        force?: boolean;
-    }): Middleware<T, V>;
-    message(callback: Callback<T, V>, option?: {
-        force?: boolean;
-    }): Middleware<T, V>;
-    every(callback: Callback<T, V>, option?: {
-        force?: boolean;
-    }): Middleware<T, V>;
-    each(callback: Callback<T, V>, option?: {
-        force?: boolean;
-    }): Middleware<T, V>;
+    transform(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
+    message(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
+    every(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
+    each(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
     exists(option?: {
         acceptEmptyString?: boolean;
     }): Middleware<T, V>;
     trim(): Middleware<T, V>;
     defaultValue(defaultValue: V): Middleware<T, V>;
-    [key: string]: ((options?: any) => Middleware<T, V>) | ((callback: Callback<T, V>, option?: {
+    [key: string]: ((options?: any) => Middleware<T, V>) | ((callback: Callback<T, V> | MessageCallback<T> | string, option?: {
         force?: boolean;
     }) => Middleware<T, V>);
 }

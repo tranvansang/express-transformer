@@ -1,5 +1,9 @@
 # Change logs
 
+## Version 0.3.0
+- Integrate `transformOption` into `isIn`, `isFloat`, `isInt`, `matches`, `isLength`
+- Add `toDate` API
+
 ## Version 0.1.0
 
 - Support array handling

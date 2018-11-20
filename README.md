@@ -122,14 +122,18 @@ app.use('/signup',
   String message or any object returned by (not thrown by) `.message`'s callback is stored in `error.message` regardless of the returned value's type
   
 All next following chain APIs are built based on `every()` function. They all return the chain itself
+
+`transformOption` is passed to `transform()`
+
 - `chain.exists({acceptEmptyString = false} = {})`: invalidate if value is `undefined`, `null`, `''` (empty string), or not provided. If `acceptEmptyString` is truthy, empty string is a valid value
 - `chain.trim()`: trim value if exists and is string
 - `chain.defaultValue(defaultValue)`: transform value to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided
-- `chain.toInt({min, max})`: convert to integer number and validate its range. Throw error if value is not a valid number. `min`, `max` options are optional
-- `chain.toFloat({min, max})`: similar to `toInt`
-- `chain.isLength(option)`: check value's length. Value can be array or string type. Option can be number (can be in string format), or object contain `min` and `max` key (must be numbers literally)
-- `chain.matches(regex)`: check if value matches regex
-- `chain.isIn(array)`: check if value is in the provided list
+- `chain.toInt({min, max, ...transformOption})`: convert to integer number and validate its range. Throw error if value is not a valid number. `min`, `max` options are optional
+- `chain.toFloat({min, max, ...transformOption})`: similar to `toInt`
+- `chain.isLength(option, transformOption)`: check value's length. Value can be array or string type. Option can be number (can be in string format), or object contain `min` and `max` key (must be numbers literally)
+- `chain.matches(regex, transformOption)`: check if value matches regex
+- `chain.isIn(array, transformOption)`: check if value is in the provided list
+- `chain.toDate({resetTime, ...transformOption})`: convert value to `Date` object. Throw error if value is invalid. Reset `hour`, `minute`, `second`, `milisecond` if `resetTime` is true
 
 All [validators](https://www.npmjs.com/package/validator#validators) starts with `is...`
 , and [transfomers](https://www.npmjs.com/package/validator#sanitizers) starts with `to...`
@@ -175,3 +179,22 @@ app.use('/article_name/:id',
 ## Change logs
 
 See [change logs](./change-logs.md)
+
+## Version 0.1.0
+
+- Support array handling
+
+    E.g. `transformer('foo.bar[].fooo.baar[]')` will transform all elements of array `req.body.foo.bar`, on each element, check its `fooo.baar`, then pass each element to the transformer callback
+
+    `force` option behaviour. Because of common practise, intended value should be ((array) or (not defined unless `force` is on)) eventually. In other words,
+
+    + If value is not set:
+      * `force` is on: set value be `[]`
+      * `force` is off. Ignore and quit process
+    + If value is set
+      * Value is not array type (`Array.isArray()`): force(set) value be `[]`
+      * Value is array: continue process
+
+    Multiple brackets can be passed. e.g. `transformer('foo.bar[].fooo.baaar[].foo[].bar')`
+
+    To process single array element. Use dot notation. `transformer('foo.bar.1.2.foo.0')`) will transform `req.body.foo.bar[1][2].foo[0]`
