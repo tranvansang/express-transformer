@@ -106,6 +106,8 @@ app.use('/signup',
         This `option.force` is falsy. `undefined`, `null`, empty string `''` are all ignored.
         
         Otherwise, always call `callback`
+        
+     if `path` is `''`, the whole body (`location` param) will be passed
   
     Example: with `req`  be `{body: {foo: undefined}}`.
     `transformer('foo').transform(callback)(req)`. `callback` **IS CALLED**. (`undefined` can be replaced with `null`, `''`, or any other falsy values. Same thing will happen)

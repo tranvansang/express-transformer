@@ -69,7 +69,7 @@ function transformer<T, V>(path: Path, {
           location, path, error
         })
       }
-      const fullPath = (p: string) => [location, p].join('.')
+      const fullPath = (p: string) => [location, p].filter(Boolean).join('.')
       /**
        *
        * @param prefix Prefix added so far
