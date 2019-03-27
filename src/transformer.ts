@@ -32,7 +32,7 @@ interface Middleware<T, V> {
 
   transform(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>
 
-  message(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>
+  message(callback: Callback<T, V> | string, option?: TransformOption): Middleware<T, V>
 
   every(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>
 

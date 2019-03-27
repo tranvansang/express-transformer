@@ -33,7 +33,7 @@ declare type TransformOption = {
 interface Middleware<T, V> {
     (req: Request, res: express.Response, next: express.NextFunction): Promise<void>;
     transform(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
-    message(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
+    message(callback: Callback<T, V> | string, option?: TransformOption): Middleware<T, V>;
     every(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
     each(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>;
     exists(option?: {

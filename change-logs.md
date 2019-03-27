@@ -1,5 +1,8 @@
 # Change logs
 
+## Version 0.3.3
+- Update types of `.message` transformer
+
 ## Version 0.3.2
 - Revert 0.3.1
 
