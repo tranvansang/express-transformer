@@ -133,6 +133,7 @@ All next following chain APIs are built based on `every()` function. They all re
 - `chain.isLength(option, transformOption)`: check value's length. Value can be array or string type. Option can be number (can be in string format), or object contain `min` and `max` key (must be numbers literally)
 - `chain.matches(regex, transformOption)`: check if value matches regex
 - `chain.isIn(array, transformOption)`: check if value is in the provided list
+- `chain.is(array, transformOption)`: check if value equals to an expected value
 - `chain.toDate({resetTime, ...transformOption})`: convert value to `Date` object. Throw error if value is invalid. Reset `hour`, `minute`, `second`, `milisecond` if `resetTime` is true
 
 All [validators](https://www.npmjs.com/package/validator#validators) starts with `is...`

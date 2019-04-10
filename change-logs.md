@@ -1,5 +1,9 @@
 # Change logs
 
+## Version 0.3.4
+- Add `.is()` transformer
+- Improve type checking
+
 ## Version 0.3.3
 - Update types of `.message` transformer
 

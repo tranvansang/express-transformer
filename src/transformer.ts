@@ -1,6 +1,6 @@
 import {isString, recursiveGet, recursiveHas, recursiveSet} from './util'
 import * as validators from 'validator'
-import express from 'express'
+import {Request, Response, NextFunction, RequestHandler} from 'express'
 
 export class TransformationError extends Error {
   constructor(message: string) {
@@ -15,8 +15,15 @@ export class TransformationError extends Error {
 }
 
 export const errorKey = '__transformationErrors'
+declare global {
+  namespace Express {
+    export interface Request {
+      [key: string]: Array<{ location: string, path: Path, error: Error }>
+    }
+  }
+}
+
 type Path = string | string[]
-type Request = express.Request & { [key: string]: { location: string, path: Path, error: Error }[] }
 type Option = { location: string, path: string, req: Request }
 type MessageOption = { location: string, path: Path, req: Request }
 type TransformedValue<T, V> = Date | string | number | T | V
@@ -27,8 +34,8 @@ type Callback<T, V> = SingleCallback<T, V> | ArrayCallback<T, V>
 type MessageCallback<T> = (value: T | T[], option: MessageOption) => OptionalPromise<string>
 type TransformOption = { force?: boolean }
 
-interface Middleware<T, V> {
-  (req: Request, res: express.Response, next: express.NextFunction): Promise<void>
+interface Middleware<T, V> extends RequestHandler {
+  (req: Request, res: Response, next: NextFunction): Promise<void>
 
   transform(callback: Callback<T, V>, option?: TransformOption): Middleware<T, V>
 
@@ -57,7 +64,7 @@ function transformer<T, V>(path: Path, {
 } = {}) {
   const stack: { type: string, callback: Callback<T, V> | MessageCallback<T> | string, force?: boolean }[] = []
 
-  const middleware: Middleware<T, V> = Object.assign(async (req: Request, res: express.Response, next: express.NextFunction) => {
+  const middleware: Middleware<T, V> = Object.assign(async (req: Request, res: Response, next: NextFunction) => {
     try {
       let hasError = !!transformationResult(req).length
       let message = ''
@@ -284,6 +291,12 @@ function transformer<T, V>(path: Path, {
     middleware.each((value: T, {path}: Option) => {
       if (!values.includes(value))
         throw new Error(`${path} has invalid value`)
+      return value
+    }, transformOptions)
+
+  middleware.is = (expectedValue: T, transformOptions?: TransformOption) =>
+    middleware.each((value: T, {path}: Option) => {
+      if (value !== expectedValue) throw new Error(`${path} has invalid value`)
       return value
     }, transformOptions)
 
