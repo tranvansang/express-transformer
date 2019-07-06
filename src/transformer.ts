@@ -166,20 +166,15 @@ export default <T, V>(path: IPath, {
               const values = Array.isArray(path)
                 ? path.map(p => recursiveGet(req, fullPath(p)))
                 : recursiveGet(req, fullPath(path))
-              if (force) forcedMessage = typeof callback === 'string'
+              const msg = typeof callback === 'string'
                 ? callback
                 : await (callback as ICallbackMsg<T>)(values, {
                   req,
                   path,
                   location
                 })
-              else message = typeof callback === 'string'
-                ? callback
-                : await (callback as ICallbackMsg<T>)(values, {
-                  req,
-                  path,
-                  location
-                })
+              if (force) forcedMessage = msg
+              else message = msg
             } catch (err) {
               hasError = true
               appendError(req, err)

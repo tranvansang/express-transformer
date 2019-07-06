@@ -29,7 +29,7 @@ describe('Transform', () => {
       '123',
       [1, 2, 3],
     ]) {
-      ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
+      (transformationResult(req as Request) as Array<any>).splice(0, 1)
       req.body.key = key
       await combineToAsync(
         transformer('key').isLength({min: 1, max: 5}),
@@ -75,6 +75,13 @@ describe('Transform', () => {
     delete req.body.key
     await combineToAsync(
       transformer('key').isLength(1, {force: false}),
+      validateTransformation
+    )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
+    req.body.key = '3'
+    await combineToAsync(
+      transformer('key').isLength('{}'),
       validateTransformation
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
   })
