@@ -2,12 +2,12 @@ import {ITransformOption, Middleware} from '../transformer'
 import TransformationError from '../TransformationError'
 
 declare module '../transformer' {
-  interface Middleware {
-    isLength(option: { min?: number, max?: number } | string | number, opts?: ITransformOption): Middleware
+  interface Middleware<T, V> {
+    isLength(option: { min?: number, max?: number } | string | number, opts?: ITransformOption): Middleware<T, V>
   }
 }
 
-export default (middleware: Middleware) => {
+export default (middleware: Middleware<T, V>) => {
   middleware.isLength = (option, transformOption) => {
     if (typeof option !== 'object') {
       const number = parseFloat(option as string)

@@ -72,7 +72,7 @@ describe('Transform', () => {
 
   test('should check other', async () => {
     //custom
-    transformationResult(req as Request).splice(0, 1)
+    (transformationResult(req as Request) as Array<any>).splice(0, 1)
     req.body.key = 1
     const inc = (x: number) => new Promise(resolve => setTimeout(() => resolve(x + 1), 1))
     await combineToAsync(
@@ -85,7 +85,7 @@ describe('Transform', () => {
   })
 
   test('should stop in the first err', async () => {
-    transformationResult(req as Request).splice(0, 1)
+    (transformationResult(req as Request) as Array<any>).splice(0, 1)
     req.body.key = 1
     await flipPromise(combineToAsync(
       transformer('key')
@@ -98,7 +98,7 @@ describe('Transform', () => {
   })
 
   test('should work on array', async () => {
-    transformationResult(req as Request).splice(0, 1)
+    (transformationResult(req as Request) as Array<any>).splice(0, 1)
     req.body.key1 = 1
     req.body.key2 = 2
     await combineToAsync(
@@ -109,7 +109,7 @@ describe('Transform', () => {
     expect(req.body.key1).toBe(3)
     expect(req.body.key2).toBe(2)
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key1
     delete req.body.key2
     const check = jest.fn()
@@ -120,7 +120,7 @@ describe('Transform', () => {
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls).toEqual([[[undefined, undefined], expect.anything()]])
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key1
     delete req.body.key2
     const check1 = jest.fn()
@@ -133,7 +133,7 @@ describe('Transform', () => {
   })
 
   test('should validate array', async () => {
-    transformationResult(req as Request).splice(0, 1)
+    (transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key1
     req.body.key2 = '1'
     let check = jest.fn()
@@ -144,7 +144,7 @@ describe('Transform', () => {
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls).toEqual([['1', expect.anything()]])
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key1
     req.body.key2 = '1'
     check = jest.fn()
@@ -155,7 +155,7 @@ describe('Transform', () => {
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls.length).toBe(2)
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key1
     req.body.key2 = '1'
     await flipPromise(combineToAsync(
@@ -164,7 +164,7 @@ describe('Transform', () => {
       validateTransformation
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key1
     req.body.key2 = 1
     req.body.key1 = 3

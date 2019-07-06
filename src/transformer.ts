@@ -28,19 +28,22 @@ export interface ITransformOption {
 }
 type ICallbackOptionParam = {
   location: string
-  path: string
+  path: IPath
   req: Request
 }
 interface ICallback<T, V> {
-  (value: T, opts: ICallbackOptionParam): V | Promise<V>
+  (value: T, opts: ICallbackOptionParam): V | T | Promise<V | T>
 }
-export interface Middleware extends RequestHandler {
-  transform<T, V>(callback: ICallback<T, V>, opts?: ITransformOption): Middleware
-  message<T>(callback: string | ICallback<T, string>, opts?: ITransformOption): Middleware
-  each<T, V>(callback: ICallback<T, V>, opts?: ITransformOption): Middleware
-  every<T, V>(callback: ICallback<T, V>, opts?: ITransformOption): Middleware
+interface ICallbackMsg<T> {
+  (value: T, opts: ICallbackOptionParam): string | Promise<string>
 }
-type IPlugin = <T, V>(middelware: Middleware) => void
+export interface Middleware<T, V> extends RequestHandler {
+  transform(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
+  message(callback: string | ICallbackMsg<T>, opts?: ITransformOption): Middleware<T, V>
+  each(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
+  every(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
+}
+type IPlugin = <T, V>(middelware: Middleware<T, V>) => void
 
 export const transformationResult = (req: Request): ReadonlyArray<IError> => req[errorKey] || []
 const plugins: IPlugin[] = []
@@ -62,9 +65,9 @@ export default <T, V>(path: IPath, {
     })
   }
   const fullPath = (p: string) => [location, p].join('.')
-  const stack: Array<{ type: CallbackType, callback: string | ICallback<T, V> | ICallback<T, string>} & ITransformOption> = []
+  const stack: Array<{ type: CallbackType, callback: string | ICallback<T, V> | ICallbackMsg<T>} & ITransformOption> = []
 
-  const middleware: Middleware = Object.assign(async (req: Request, res: Response, next: NextFunction) => {
+  const middleware = (async (req: Request, res: Response, next: NextFunction) => {
     try {
       let hasError = !!transformationResult(req).length
       let message = ''
@@ -82,7 +85,7 @@ export default <T, V>(path: IPath, {
         prefix: string[],
         [firstArray, ...arrays]: string[],
         inlinePath: string,
-        callback: ICallback<T, V> | ICallback<T, string>,
+        callback: ICallback<T, V> | ICallbackMsg<T>,
         force?: boolean
       ) => {
         const processArray = (p: string) => {
@@ -122,7 +125,7 @@ export default <T, V>(path: IPath, {
         }
       }
       //return positive if error
-      const doTransform = async (inlinePath: string, callback: ICallback<T, V> | ICallback<T, string>, force?: boolean) => {
+      const doTransform = async (inlinePath: string, callback: ICallback<T, V> | ICallbackMsg<T>, force?: boolean) => {
         try {
           if (!Array.isArray(inlinePath)) {
             const arraySplits = inlinePath.split(/\[]\./)
@@ -169,14 +172,14 @@ export default <T, V>(path: IPath, {
                 : recursiveGet(req, fullPath(path))
               if (force) forcedMessage = typeof callback === 'string'
                 ? callback
-                : await callback(values, {
+                : await (callback as ICallbackMsg<T>)(values, {
                   req,
                   path,
                   location
                 })
               else message = typeof callback === 'string'
                 ? callback
-                : await callback(values, {
+                : await (callback as ICallbackMsg<T>)(values, {
                   req,
                   path,
                   location
@@ -192,26 +195,24 @@ export default <T, V>(path: IPath, {
     } catch (err) {
       next(err)
     }
-  }, {
-    transform: (callback: ICallback<T, V>, options = {}) => {
-      stack.push({
-        ...options,
-        type: CallbackType.transformer,
-        callback
-      })
-      return middleware
-    },
-    message: (callback: ICallback<T, string>, options = {}) => {
-      stack.push({
-        ...options,
-        type: CallbackType.message,
-        callback
-      })
-      return middleware
-    }
-  })
-
-  middleware.every = middleware.each = (callback: ICallback<T, V>, options = {}) => {
+  }) as Middleware<T, V>
+  middleware.transform = (callback, options = {}) => {
+    stack.push({
+      ...options,
+      type: CallbackType.transformer,
+      callback
+    })
+    return middleware
+  }
+  middleware.message = (callback, options = {}) => {
+    stack.push({
+      ...options,
+      type: CallbackType.message,
+      callback
+    })
+    return middleware
+  }
+  middleware.every = middleware.each = (callback: ICallback<T, V>, options: ITransformOption = {}) => {
     stack.push({
       ...options,
       type: CallbackType.every,

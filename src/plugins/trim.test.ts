@@ -12,7 +12,7 @@ describe('Transform', () => {
       validateTransformation
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(req.body.key).toBe('12')
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
   })
   test('should not trim', async () => {
     const req = {body: {key: 123}}

@@ -17,7 +17,7 @@ describe('Transform', () => {
       [],
       [1, 2, 3, 4, 5, 6]
     ]) {
-      transformationResult(req as Request).splice(0, 1)
+      ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
       req.body.key = key
       await flipPromise(combineToAsync(
         transformer('key').isLength({min: 1, max: 5}),
@@ -29,7 +29,7 @@ describe('Transform', () => {
       '123',
       [1, 2, 3],
     ]) {
-      transformationResult(req as Request).splice(0, 1)
+      ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
       req.body.key = key
       await combineToAsync(
         transformer('key').isLength({min: 1, max: 5}),
@@ -43,7 +43,7 @@ describe('Transform', () => {
         [],
         [1, 2, 3, 4, 5, 6]
       ]) {
-        transformationResult(req as Request).splice(0, 1)
+        ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
         req.body.key = key
         await flipPromise(combineToAsync(
           transformer('key').isLength(length),
@@ -55,7 +55,7 @@ describe('Transform', () => {
         '123',
         [1, 2, 3],
       ]) {
-        transformationResult(req as Request).splice(0, 1)
+        ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
         req.body.key = key
         await combineToAsync(
           transformer('key').isLength(length),
@@ -64,14 +64,14 @@ describe('Transform', () => {
       }
 
     //empty val
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key
     await flipPromise(combineToAsync(
       transformer('key').isLength(1, {force: true}),
       validateTransformation
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key
     await combineToAsync(
       transformer('key').isLength(1, {force: false}),

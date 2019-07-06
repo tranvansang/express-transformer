@@ -16,7 +16,7 @@ describe('Transform', () => {
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(req.body.key).toEqual(date)
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     date = new Date()
     req.body.key = date.toISOString()
     await combineToAsync(
@@ -29,7 +29,7 @@ describe('Transform', () => {
     date.setSeconds(0)
     expect(req.body.key).toEqual(date)
 
-    transformationResult(req as Request).splice(0, 1)
+    ;(transformationResult(req as Request) as Array<any>).splice(0, 1)
     delete req.body.key
     await flipPromise(combineToAsync(
       transformer('key').toDate({resetTime: true, force: true}),
