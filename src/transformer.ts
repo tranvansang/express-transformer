@@ -1,5 +1,5 @@
 import {recursiveGet, recursiveHas, recursiveSet} from './util'
-import {NextFunction, Request, RequestHandler, Response,} from 'express'
+import {NextFunction, Request, RequestHandler, Response} from 'express'
 import TransformationError from './TransformationError'
 import exists from './plugins/exists'
 import isIn from './plugins/isIn'
@@ -68,9 +68,7 @@ export default <T, V>(path: IPath, {
 } = {}) => {
   const appendError = (req: Request, error: Error) => {
     req[errorKey] = req[errorKey] || []
-    req[errorKey].push({
-      location, path, error
-    })
+    req[errorKey].push({location, path, error})
   }
   const fullPath = (p: string) => [location, p].join('.')
   const stack: Array<{ type: CallbackType, callback: string | ICallback<T, V> | ICallbackMsg<T>} & ITransformOption> = []
@@ -133,44 +131,36 @@ export default <T, V>(path: IPath, {
         }
       }
       //return positive if error
-      const doTransform = async (inlinePath: string, callback: ICallback<T, V> | ICallbackMsg<T>, force?: boolean) => {
+      const doTransform = async (inlinePath: IPath, callback: ICallback<T, V> | ICallbackMsg<T>, force?: boolean) => {
         try {
           if (!Array.isArray(inlinePath)) {
             const arraySplits = inlinePath.split(/\[]\./)
             await subTransform([], arraySplits.slice(0, arraySplits.length - 1), arraySplits[arraySplits.length - 1], callback, force)
-          } else {
-            if (force || inlinePath.some(p => recursiveHas(req, fullPath(p)))) {
-              const values = inlinePath.map(p => recursiveGet(req, fullPath(p))) as unknown as T
-              const sanitized = (await callback(values, {req, path: inlinePath, location})) as unknown as ReadonlyArray<any>
-              inlinePath.forEach((p, i) => recursiveSet(req, fullPath(p), sanitized && sanitized[i]))
-            }
+          } else if (force || inlinePath.some(p => recursiveHas(req, fullPath(p)))) {
+            const values = inlinePath.map(p => recursiveGet(req, fullPath(p))) as unknown as T
+            const sanitized = (await callback(values, {req, path: inlinePath, location})) as unknown as ReadonlyArray<any>
+            inlinePath.forEach((p, i) => recursiveSet(req, fullPath(p), sanitized && sanitized[i]))
           }
         } catch (exception) {
           hasError = true
-          let err
-          if (!(exception instanceof TransformationError) && (message || forcedMessage)) {
-            err = new TransformationError(message || forcedMessage)
-          } else
-            err = exception
-          appendError(req, err)
+          appendError(req, !(exception instanceof TransformationError) && (message || forcedMessage)
+            ? new TransformationError(message || forcedMessage)
+            : exception)
           return true
         }
       }
       for (const {type, callback, force} of stack) {
-        if (!nonstop && hasError)
-          break
+        if (!nonstop && hasError) break
         switch (type) {
           case CallbackType.every:
             if (Array.isArray(path)) {
-              for (const p of path)
-                if (!nonstop && await doTransform(p, callback as ICallback<T, V>, force))
-                  break
+              for (const p of path) if (await doTransform(p, callback as ICallback<T, V>, force) && !nonstop) break
               message = ''
               break
             }
           //break statement is removed intentionally
           case CallbackType.transformer:
-            await doTransform(path as string, callback as ICallback<T, V>, force)
+            await doTransform(path, callback as ICallback<T, V>, force)
             message = ''
             break
           case CallbackType.message:
@@ -220,7 +210,7 @@ export default <T, V>(path: IPath, {
     })
     return middleware
   }
-  middleware.every = middleware.each = (callback: ICallback<T, V>, options: ITransformOption = {}) => {
+  middleware.every = middleware.each = (callback: ICallback<T, V>, options = {}) => {
     stack.push({
       ...options,
       type: CallbackType.every,
