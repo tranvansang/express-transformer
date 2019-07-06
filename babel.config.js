@@ -1,5 +1,5 @@
 module.exports = api => {
-  api.cache(true)
+  api.cache(false)
   return {
     presets: [
       '@babel/preset-env',
@@ -7,7 +7,7 @@ module.exports = api => {
     ],
     plugins: [
       '@babel/plugin-proposal-object-rest-spread',
-      '@babel/plugin-transform-runtime',
+      ['@babel/plugin-transform-runtime', { regenerator: true }],
     ]
   }
 }
