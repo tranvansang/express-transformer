@@ -3,7 +3,7 @@ import flipPromise from 'flip-promise'
 import {combineToAsync} from 'middleware-async'
 import {validateTransformation} from './testHelper'
 import transformer, {transformationResult} from './transformer'
-import TransformationError from './TransformationError'
+import TransformationError, {transformationErrorName} from './TransformationError'
 import {NextFunction, Request, Response} from 'express'
 
 describe('Transform', () => {
@@ -13,32 +13,40 @@ describe('Transform', () => {
   })
 
   test('should check message', async () => {
-    expect(await flipPromise(combineToAsync(
+    const err = await flipPromise(combineToAsync(
       transformer('key').message(() => 'hi').exists(),
       validateTransformation
-    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))).toBe('hi')
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+    expect(err.message).toBe('hi')
+    expect(err.name).toBe(transformationErrorName)
   })
 
   test('should accept constant message string', async () => {
-    expect(await flipPromise(combineToAsync(
+    const err = await flipPromise(combineToAsync(
       transformer('key').message('hi').exists(),
       validateTransformation
-    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))).toBe('hi')
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+    expect(err.message).toBe('hi')
+    expect(err.name).toBe(transformationErrorName)
   })
 
   test('should accept ignore message and get TransformationError', async () => {
     const err = new TransformationError('an error')
-    expect(await flipPromise(combineToAsync(
+    const error = await flipPromise(combineToAsync(
       transformer('key').message('hi').transform(() => Promise.reject(err), {force: true}),
       validateTransformation
-    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))).toBe(err)
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+    expect(error.message).toBe('hi')
+    expect(error.name).toBe(transformationErrorName)
   })
 
   test('should accept take message and ignore uncontrolled error in transformer', async () => {
-    expect(await flipPromise(combineToAsync(
+    const err = await flipPromise(combineToAsync(
       transformer('key').message('hi').transform(() => Promise.reject(new Error('hello')), {force: true}),
       validateTransformation
-    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))).toBe('hi')
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+    expect(err.message).toBe('hi')
+    expect(err.name).toBe(transformationErrorName)
   })
 
   test('should invalidate value if message callback throws error', async () => {
@@ -49,25 +57,28 @@ describe('Transform', () => {
   })
 
   test('should ignore custom message from second transformer', async () => {
-    expect(await flipPromise(combineToAsync(
+    const err = await flipPromise(combineToAsync(
       transformer('key')
         .message('hi')
         .transform(val => val)
         .exists(),
       validateTransformation
-    )({body: {}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)))
-      .toBe('key is required')
+    )({body: {}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+    expect(err.message).toBe('key is required')
+    expect(err.name).toBe(transformationErrorName)
   })
 
   test('should use custom forced message from second transformer', async () => {
-    expect(await flipPromise(combineToAsync(
+    const err = await flipPromise(combineToAsync(
       transformer('key')
         .message('hi', {force: true})
         .transform(val => val)
         .exists()
       ,
       validateTransformation
-    )({body: {}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))).toBe('hi')
+    )({body: {}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+    expect(err.message).toBe('hi')
+    expect(err.name).toBe(transformationErrorName)
   })
 
   test('should check other', async () => {

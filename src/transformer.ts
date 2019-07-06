@@ -143,7 +143,7 @@ export default <T, V>(path: IPath, {
           }
         } catch (exception) {
           hasError = true
-          appendError(req, !(exception instanceof TransformationError) && (message || forcedMessage)
+          appendError(req, message || forcedMessage
             ? new TransformationError(message || forcedMessage)
             : exception)
           return true
