@@ -74,10 +74,10 @@ describe('Transform', () => {
     //custom
     (transformationResult(req as Request) as Array<any>).splice(0, 1)
     req.body.key = 1
-    const inc = (x: number) => new Promise(resolve => setTimeout(() => resolve(x + 1), 1))
+    const inc = (x: number): Promise<number> => new Promise(resolve => setTimeout(() => resolve(x + 1), 1))
     await combineToAsync(
-      transformer('key')
-        .transform(async (val: number) => await inc(val))
+      transformer<number, number>('key')
+        .transform(async val => await inc(val))
         .transform(inc),
       validateTransformation
     )(req, undefined as unknown as Response, undefined as unknown as NextFunction)
@@ -90,8 +90,8 @@ describe('Transform', () => {
     await flipPromise(combineToAsync(
       transformer('key')
         .transform(async () => Promise.reject(1)),
-      transformer('key')
-        .transform((val: number) => val + 2),
+      transformer<number, number>('key')
+        .transform(val => val + 2),
       validateTransformation
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
     expect(req.body.key).toBe(1)
@@ -102,8 +102,8 @@ describe('Transform', () => {
     req.body.key1 = 1
     req.body.key2 = 2
     await combineToAsync(
-      transformer(['key1', 'key2'])
-        .transform(([key1, key2]: [string ,string]) => [key1 + key2, key2]),
+      transformer<[number, number], [number, number]>(['key1', 'key2'])
+        .transform(([key1, key2]) => [key1 + key2, key2]),
       validateTransformation
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(req.body.key1).toBe(3)
@@ -169,7 +169,7 @@ describe('Transform', () => {
     req.body.key2 = 1
     req.body.key1 = 3
     await combineToAsync(
-      transformer(['key2', 'key1'])
+      transformer<number, number>(['key2', 'key1'])
         .each((val: number) => val + 1),
       validateTransformation
     )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)

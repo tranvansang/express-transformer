@@ -7,7 +7,7 @@ declare module '../transformer' {
   }
 }
 
-export default (middleware: Middleware<T, V>) => {
+export default <T, V>(middleware: Middleware<T, V>) => {
   middleware.isLength = (option, transformOption) => {
     if (typeof option !== 'object') {
       const number = parseFloat(option as string)

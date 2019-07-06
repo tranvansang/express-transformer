@@ -7,7 +7,7 @@ declare module '../transformer' {
   }
 }
 
-export default <T, V>(middleware: Middleware<T, V>) => {
+export default (middleware: Middleware<string | number, number>) => {
   middleware.toInt = ({min, max, ...transformOption}: { min?: number, max?: number } & ITransformOption = {}) =>
     middleware.each((value: string | number, {path}) => {
         value = typeof value === 'string' ? parseInt(value) : value

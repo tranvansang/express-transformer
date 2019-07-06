@@ -7,10 +7,10 @@ declare module '../transformer' {
   }
 }
 
-export default <T, V>(middleware: Middleware<T, V>) => {
+export default (middleware: Middleware<string, Date>) => {
   middleware.toDate = ({resetTime, ...transformOption}: {resetTime?: boolean} & ITransformOption = {}) =>
     middleware.each((value, {path}) => {
-        const time = Date.parse(value as string)
+        const time = Date.parse(value)
         if (isNaN(time) || !isFinite(time)) throw new TransformationError(`${path} must be in date format`)
         const date = new Date(time)
         if (resetTime) {

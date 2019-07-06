@@ -2185,10 +2185,10 @@ flatted@^2.0.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-2.0.1.tgz#69e57caa8f0eacbc281d2e2cb458d46fdb449e08"
   integrity sha512-a1hQMktqW9Nmqr5aktAux3JMNqaucxGcjtjWnZLHX7yyPCmlSV3M54nGYbqT8K+0GhF3NBgmJCc3ma+WOgX8Jg==
 
-flip-promise@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/flip-promise/-/flip-promise-1.0.2.tgz#a9f9cf13a6426e7388d3f5e0b426de7092c0f9c0"
-  integrity sha512-zebl6XlVXCiILttfxuaEWvbG0Exn2j4D2BaShqlJHzh22VGN0Jbe9NtWJpxTgcipRnPhZOLBBKNW4UCLOwoxnw==
+flip-promise@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/flip-promise/-/flip-promise-1.0.3.tgz#92372492b469ec72f5c89534127325c5013f8969"
+  integrity sha512-yEIdHTe6suoDGaqo2Gb52dzdy6nZ9ZZWkadZA1MAMsMZDZwhGs+TcOr34thSUS9qPVSBdxq01p4a4IP/OhbEoA==
 
 for-in@^1.0.2:
   version "1.0.2"
@@ -3448,10 +3448,10 @@ micromatch@^3.1.10, micromatch@^3.1.4:
     snapdragon "^0.8.1"
     to-regex "^3.0.2"
 
-middleware-async@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/middleware-async/-/middleware-async-1.0.0.tgz#8867d675ccbb317d2028ba90014df29ac3a735ff"
-  integrity sha512-RDhdM9FqCOUgVzeOsGbwjnpUjUEJX7U3wSm/6oCY8/ArZbRBjNRnSqPbBlxW3BS6cOfZdgzZn+SH7q7PHHKYMw==
+middleware-async@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/middleware-async/-/middleware-async-1.0.1.tgz#bf108a74a690004e84a204ba64623f288fb8ff73"
+  integrity sha512-y496CapT+y4MRlUNBi3NROnc4Lo56o+PsoAket5hZU3GQb2OcTHHGJBR09O3Wo0cpzDHzMrP0hMuLcsYE0ACyg==
   dependencies:
     "@types/express" "^4.16.1"
     "@types/node" "^11.9.4"

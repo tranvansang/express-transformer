@@ -7,9 +7,9 @@ declare module '../transformer' {
   }
 }
 
-export default <T, V>(middleware: Middleware<T, V>) => {
+export default (middleware: Middleware<string | number, number>) => {
   middleware.toFloat = ({min, max, ...transformOption}: { min?: number, max?: number } & ITransformOption = {}) =>
-    middleware.each((value: string | number, {path}) => {
+    middleware.each((value, {path}) => {
         value = typeof value === 'string' ? parseFloat(value) : value
         if (isNaN(value) || !isFinite(value))
           throw new TransformationError(`${path} must be a number`)

@@ -50,7 +50,8 @@
     "prefer-destructuring": "off",
     "no-mixed-operators": "off",
     "no-return-await": "off",
-    "no-plusplus": "off"
+    "no-plusplus": "off",
+    "no-await-in-loop": "off"
   },
   "parser": "babel-eslint",
   "parserOptions": {

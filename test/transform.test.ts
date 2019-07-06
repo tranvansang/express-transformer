@@ -3,6 +3,7 @@ import {combineToAsync} from 'middleware-async'
 import {validateTransformation} from './helper'
 import transformer from '../src/transformer'
 import flipPromise from 'flip-promise'
+import {NextFunction, Request, Response} from 'express'
 
 describe('Transformer library', () => {
   test('should break if transformer throws error', async () => {
@@ -11,15 +12,15 @@ describe('Transformer library', () => {
         throw new Error('hi')
       }),
       validateTransformation
-    )({body: {any: undefined}}))
+    )({body: {any: undefined}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
   })
 
   test('should transform value', async () => {
     const req = {body: {key: 1}}
     await combineToAsync(
-      transformer('key').transform((key: number) => key + 1),
+      transformer<number, number>('key').transform(key => key + 1),
       validateTransformation
-    )(req)
+    )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(req.body.key).toBe(2)
   })
 
@@ -31,7 +32,7 @@ describe('Transformer library', () => {
         return val
       }),
       validateTransformation
-    )({body: {key: 1}, params: {key: 2}})
+    )({body: {key: 1}, params: {key: 2}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls).toEqual([[2]])
   })
 
@@ -56,18 +57,18 @@ describe('Transformer library', () => {
           }
         }
       }
-    })
+    } as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls).toEqual([[2]])
   })
 
   test('should chain transformer', async () => {
     const req = {body: {key: 1}}
     await combineToAsync(
-      transformer('key')
+      transformer<number, number>('key')
         .transform(key => key + 1)
         .transform(key => key + 1),
       validateTransformation
-    )(req)
+    )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(req.body.key).toBe(3)
   })
 
@@ -75,16 +76,16 @@ describe('Transformer library', () => {
     const check = jest.fn()
     const req = {body: {key: 1}}
     await flipPromise(combineToAsync(
-      transformer('key')
+      transformer<number, number>('key')
         .transform(() => {
-          throw 'err'
+          throw new Error('err')
         })
         .transform(key => {
           check()
           return key + 1
         }),
       validateTransformation
-    )(req))
+    )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
     expect(req.body.key).toBe(1)
     expect(check.mock.calls.length).toBe(0)
   })
@@ -93,16 +94,16 @@ describe('Transformer library', () => {
     const check = jest.fn()
     const req = {body: {key: 1}}
     await flipPromise(combineToAsync(
-      transformer('key', {nonstop: true})
+      transformer<number, number>('key', {nonstop: true})
         .transform(() => {
-          throw 'err'
+          throw new Error('err')
         })
         .transform(key => {
           check()
           return key + 1
         }),
       validateTransformation
-    )(req))
+    )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
     expect(req.body.key).toBe(2)
     expect(check.mock.calls).toEqual([[]])
   })
@@ -112,7 +113,7 @@ describe('Transformer library', () => {
     await combineToAsync(
       transformer('key').transform(() => check()),
       validateTransformation
-    )({})
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls.length).toBe(0)
   })
 
@@ -121,7 +122,7 @@ describe('Transformer library', () => {
     await combineToAsync(
       transformer('key').transform(() => check(), {force: true}),
       validateTransformation
-    )({})
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls.length).toBeGreaterThanOrEqual(1)
   })
 
@@ -131,7 +132,7 @@ describe('Transformer library', () => {
       await combineToAsync(
         transformer('key').transform(() => check()),
         validateTransformation
-      )({body: {key: val}})
+      )({body: {key: val}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
       expect(check.mock.calls.length).toBeGreaterThanOrEqual(1)
     }
   })
@@ -142,7 +143,7 @@ describe('Transformer library', () => {
     await combineToAsync(
       transformer('key').transform(check),
       validateTransformation
-    )(req)
+    )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls).toEqual([[1, {
       location: 'body',
       path: 'key',
@@ -155,7 +156,7 @@ describe('Transformer library', () => {
     await combineToAsync(
       transformer('key').message(check),
       validateTransformation
-    )({})
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls.length).toBe(1)
   })
 
@@ -164,7 +165,7 @@ describe('Transformer library', () => {
     await combineToAsync(
       transformer(['key1', 'key2']).message(check),
       validateTransformation
-    )({})
+    )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
     expect(check.mock.calls.length).toBe(1)
   })
 
@@ -174,19 +175,19 @@ describe('Transformer library', () => {
       await combineToAsync(
         transformer('key[]').transform(check),
         validateTransformation
-      )({})
+      )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
       expect(check.mock.calls.length).toBe(0)
     })
 
     test('should set empty array with force', async () => {
       const check = jest.fn()
-      const req = {}
+      const req: {body?: {key?: ReadonlyArray<any>}} = {}
       await combineToAsync(
         transformer('key[]').transform(check, {force: true}),
         validateTransformation
-      )(req)
+      )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
       expect(check.mock.calls.length).toBe(0)
-      expect(req.body.key).toEqual([])
+      expect(req.body!.key).toEqual([])
     })
 
     test('should set empty array without force', async () => {
@@ -195,16 +196,16 @@ describe('Transformer library', () => {
       await combineToAsync(
         transformer('key[]').transform(check),
         validateTransformation
-      )(req)
+      )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
       expect(check.mock.calls.length).toBe(0)
       expect(req.body.key).toEqual([])
     })
     test('should process with array last', async () => {
       const req = {body: {key: [1]}}
       await combineToAsync(
-        transformer('key[]').transform(x => x + 1),
+        transformer<number, number>('key[]').transform(x => x + 1),
         validateTransformation
-      )(req)
+      )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
       expect(req.body.key[0]).toBe(2)
     })
 
@@ -240,10 +241,12 @@ describe('Transformer library', () => {
         }
       }
       await combineToAsync(
-        transformer('long.path.around.arrayWrapper[].long.path.around.myArray[].key1').transform(x => x + 1),
-        transformer('long.path.around.arrayWrapper[].long.path.around.myArray[].key2').transform(x => x * 2),
+        transformer<number, number>('long.path.around.arrayWrapper[].long.path.around.myArray[].key1')
+          .transform(x => x + 1),
+        transformer<number, number>('long.path.around.arrayWrapper[].long.path.around.myArray[].key2')
+          .transform(x => x * 2),
         validateTransformation
-      )(req)
+      )(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
       expect(req).toEqual({
         body: {
           long: {

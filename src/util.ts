@@ -25,7 +25,6 @@ export const recursiveHas = (obj: any, path: string) => {
   } else return false
   return true
 }
-export const isString = (str: any) => typeof str === 'string' || str instanceof String
 export const recursiveDefault = <T, V>(obj: T, path: string, defaultValue: V) => {
   if (!recursiveHas(obj, path)) recursiveSet(obj, path, defaultValue)
 }

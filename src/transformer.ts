@@ -43,10 +43,18 @@ export interface Middleware<T, V> extends RequestHandler {
   each(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
   every(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
 }
-type IPlugin = <T, V>(middelware: Middleware<T, V>) => void
-
 export const transformationResult = (req: Request): ReadonlyArray<IError> => req[errorKey] || []
-const plugins: IPlugin[] = []
+const plugins = [
+  exists,
+  isIn,
+  isLength,
+  matches,
+  toDate,
+  toFloat,
+  toInt,
+  trim,
+  defaultValue,
+]
 enum CallbackType {
   transformer = 'transformer',
   every = 'every',
@@ -133,7 +141,7 @@ export default <T, V>(path: IPath, {
           } else {
             if (force || inlinePath.some(p => recursiveHas(req, fullPath(p)))) {
               const values = inlinePath.map(p => recursiveGet(req, fullPath(p))) as unknown as T
-              const sanitized = await callback(values, {req, path: inlinePath, location})
+              const sanitized = (await callback(values, {req, path: inlinePath, location})) as unknown as ReadonlyArray<any>
               inlinePath.forEach((p, i) => recursiveSet(req, fullPath(p), sanitized && sanitized[i]))
             }
           }
@@ -220,19 +228,16 @@ export default <T, V>(path: IPath, {
     })
     return middleware
   }
-  for (const plugin of plugins) plugin(middleware)
+  for (const plugin of plugins) plugin(middleware as unknown as
+    Parameters<typeof exists>[0]
+    & Parameters<typeof isIn>[0]
+    & Parameters<typeof isLength>[0]
+    & Parameters<typeof matches>[0]
+    & Parameters<typeof toDate>[0]
+    & Parameters<typeof toFloat>[0]
+    & Parameters<typeof toInt>[0]
+    & Parameters<typeof trim>[0]
+    & Parameters<typeof defaultValue>[0]
+  )
   return middleware
 }
-
-export const addTransformerPlugin = (plugin: IPlugin) => plugins.push(plugin)
-
-addTransformerPlugin(exists)
-addTransformerPlugin(isIn)
-addTransformerPlugin(isLength)
-addTransformerPlugin(matches)
-addTransformerPlugin(toDate)
-addTransformerPlugin(toFloat)
-addTransformerPlugin(toInt)
-addTransformerPlugin(trim)
-addTransformerPlugin(defaultValue)
-

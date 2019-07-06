@@ -6,7 +6,7 @@ import {validateTransformation} from '../../test/helper'
 import flipPromise from 'flip-promise'
 
 describe('Transform', () => {
-  test('isIn', async () => {
+  test('matches', async () => {
     const req = {body: {key: ''}}
     req.body.key = '123abcd'
     await combineToAsync(
