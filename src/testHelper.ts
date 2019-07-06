@@ -1,4 +1,4 @@
-import {transformationResult} from '../src/transformer'
+import {transformationResult} from './transformer'
 import {Request, RequestHandler} from 'express'
 
 export const validateTransformation: RequestHandler = (req, res, next) => {

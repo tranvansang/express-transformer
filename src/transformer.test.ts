@@ -1,9 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import flipPromise from 'flip-promise'
 import {combineToAsync} from 'middleware-async'
-import {validateTransformation} from './helper'
-import transformer, {transformationResult} from '../src/transformer'
-import TransformationError from '../src/TransformationError'
+import {validateTransformation} from './testHelper'
+import transformer, {transformationResult} from './transformer'
+import TransformationError from './TransformationError'
 import {NextFunction, Request, Response} from 'express'
 
 describe('Transform', () => {

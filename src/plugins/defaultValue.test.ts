@@ -2,7 +2,7 @@
 import {NextFunction, Request, Response} from 'express'
 import {combineToAsync} from 'middleware-async'
 import transformer from '../transformer'
-import {validateTransformation} from '../../test/helper'
+import {validateTransformation} from '../testHelper'
 
 describe('Transform', () => {
   test('should set default', async () => {

@@ -1,4 +1,4 @@
-import {errorKey, transformationResult} from '../src/transformer'
+import {errorKey, transformationResult} from './transformer'
 import {Request} from 'express'
 
 describe('Transformation result', () => {

@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {combineToAsync} from 'middleware-async'
 import transformer, {transformationResult} from '../transformer'
-import {validateTransformation} from '../../test/helper'
+import {validateTransformation} from '../testHelper'
 import {NextFunction, Request, Response} from 'express'
 
 describe('Transform', () => {

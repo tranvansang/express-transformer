@@ -2,7 +2,7 @@
 import {combineToAsync} from 'middleware-async'
 import {NextFunction, Request, Response} from 'express'
 import transformer from '../transformer'
-import {validateTransformation} from '../../test/helper'
+import {validateTransformation} from '../testHelper'
 import flipPromise from 'flip-promise'
 
 describe('Transform', () => {

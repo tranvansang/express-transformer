@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {combineToAsync} from 'middleware-async'
-import {validateTransformation} from './helper'
-import transformer from '../src/transformer'
+import {validateTransformation} from './testHelper'
+import transformer from './transformer'
 import flipPromise from 'flip-promise'
 import {NextFunction, Request, Response} from 'express'
 

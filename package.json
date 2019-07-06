@@ -8,10 +8,9 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "rm -rf lib && yarn babel src -d lib --extensions \".ts\" && yarn build:types",
     "test": "yarn jest",
     "coverage": "yarn jest --coverage",
-    "build:types": "tsc --emitDeclarationOnly"
+    "build": "tsc -d"
   },
   "keywords": [
     "express",
