@@ -23,9 +23,7 @@ declare module 'express' {
     __transformationErrors: Array<IError>
   }
 }
-export interface ITransformOption {
-  force?: boolean
-}
+export interface ITransformOption { force?: boolean }
 type ICallbackOptionParam = {
   location: string
   path: IPath
