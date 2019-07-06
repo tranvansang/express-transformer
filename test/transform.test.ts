@@ -1,36 +1,30 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import chai, {expect} from 'chai'
-import sinonChai from 'sinon-chai'
-import chaiAsPromised from 'chai-as-promised'
-import {stub} from 'sinon'
 import {combineToAsync} from 'middleware-async'
 import {validateTransformation} from './helper'
 import transformer from '../src/transformer'
-
-chai.use(sinonChai)
-chai.use(chaiAsPromised)
+import flipPromise from 'flip-promise'
 
 describe('Transformer library', () => {
-  it('should break if transformer throws error', async () => {
-    await expect(combineToAsync(
+  test('should break if transformer throws error', async () => {
+    await flipPromise(combineToAsync(
       transformer('any').transform(() => {
         throw new Error('hi')
       }),
       validateTransformation
-    )({body: {any: undefined}})).to.eventually.be.rejected
+    )({body: {any: undefined}}))
   })
 
-  it('should transform value', async () => {
+  test('should transform value', async () => {
     const req = {body: {key: 1}}
     await combineToAsync(
-      transformer('key').transform(key => key + 1),
+      transformer('key').transform((key: number) => key + 1),
       validateTransformation
     )(req)
-    expect(req.body.key).to.equal(2)
+    expect(req.body.key).toBe(2)
   })
 
-  it('should look at correct location', async () => {
-    const check = stub()
+  test('should look at correct location', async () => {
+    const check = jest.fn()
     await combineToAsync(
       transformer('key', {location: 'params'}).transform(val => {
         check(val)
@@ -38,11 +32,11 @@ describe('Transformer library', () => {
       }),
       validateTransformation
     )({body: {key: 1}, params: {key: 2}})
-    expect(check).to.have.been.calledOnceWithExactly(2)
+    expect(check.mock.calls).toEqual([[2]])
   })
 
-  it('should look at correct multilevel location', async () => {
-    const check = stub()
+  test('should look at correct multilevel location', async () => {
+    const check = jest.fn()
     await combineToAsync(
       transformer('deeper.level', {location: 'body.foo.bar'}).transform(val => {
         check(val)
@@ -63,10 +57,10 @@ describe('Transformer library', () => {
         }
       }
     })
-    expect(check).to.have.been.calledOnceWithExactly(2)
+    expect(check.mock.calls).toEqual([[2]])
   })
 
-  it('should chain transformer', async () => {
+  test('should chain transformer', async () => {
     const req = {body: {key: 1}}
     await combineToAsync(
       transformer('key')
@@ -74,13 +68,13 @@ describe('Transformer library', () => {
         .transform(key => key + 1),
       validateTransformation
     )(req)
-    expect(req.body.key).to.equal(3)
+    expect(req.body.key).toBe(3)
   })
 
-  it('should not go next if error', async () => {
-    const check = stub()
+  test('should not go next if error', async () => {
+    const check = jest.fn()
     const req = {body: {key: 1}}
-    await expect(combineToAsync(
+    await flipPromise(combineToAsync(
       transformer('key')
         .transform(() => {
           throw 'err'
@@ -90,15 +84,15 @@ describe('Transformer library', () => {
           return key + 1
         }),
       validateTransformation
-    )(req)).to.eventually.be.rejected
-    expect(req.body.key).to.equal(1)
-    expect(check).to.not.have.been.called
+    )(req))
+    expect(req.body.key).toBe(1)
+    expect(check.mock.calls.length).toBe(0)
   })
 
-  it('should go next if nonstop is on', async () => {
-    const check = stub()
+  test('should go next if nonstop is on', async () => {
+    const check = jest.fn()
     const req = {body: {key: 1}}
-    await expect(combineToAsync(
+    await flipPromise(combineToAsync(
       transformer('key', {nonstop: true})
         .transform(() => {
           throw 'err'
@@ -108,117 +102,113 @@ describe('Transformer library', () => {
           return key + 1
         }),
       validateTransformation
-    )(req)).to.eventually.be.rejected
-    expect(req.body.key).to.equal(2)
-    expect(check).to.have.been.calledOnceWithExactly()
+    )(req))
+    expect(req.body.key).toBe(2)
+    expect(check.mock.calls).toEqual([[]])
   })
 
-  // it('should throw error if location contains dot', () => {
-  //   expect(() => transformer(null, {location: '.'})).to.throw()
-  // })
-
-  it('should ignore value if not provded', async () => {
-    const check = stub()
+  test('should ignore value if not provded', async () => {
+    const check = jest.fn()
     await combineToAsync(
       transformer('key').transform(() => check()),
       validateTransformation
     )({})
-    expect(check).to.not.have.been.called
+    expect(check.mock.calls.length).toBe(0)
   })
 
-  it('should not ignore value if forced', async () => {
-    const check = stub()
+  test('should not ignore value if forced', async () => {
+    const check = jest.fn()
     await combineToAsync(
       transformer('key').transform(() => check(), {force: true}),
       validateTransformation
     )({})
-    expect(check).to.have.been.called
+    expect(check.mock.calls.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('should not ignore falsy', async () => {
+  test('should not ignore falsy', async () => {
     for (const val of [undefined, null, '', 0]) {
-      const check = stub()
+      const check = jest.fn()
       await combineToAsync(
         transformer('key').transform(() => check()),
         validateTransformation
       )({body: {key: val}})
-      expect(check).to.have.been.called
+      expect(check.mock.calls.length).toBeGreaterThanOrEqual(1)
     }
   })
 
-  it('should pass correct param to callback', async () => {
-    const check = stub()
+  test('should pass correct param to callback', async () => {
+    const check = jest.fn()
     const req = {body: {key: 1}}
     await combineToAsync(
       transformer('key').transform(check),
       validateTransformation
     )(req)
-    expect(check).to.have.been.calledOnceWithExactly(1, {
+    expect(check.mock.calls).toEqual([[1, {
       location: 'body',
       path: 'key',
       req
-    })
+    }]])
   })
 
-  it('should call message on non-provided value', async () => {
-    const check = stub()
+  test('should call message on non-provided value', async () => {
+    const check = jest.fn()
     await combineToAsync(
       transformer('key').message(check),
       validateTransformation
     )({})
-    expect(check).to.have.been.calledOnce
+    expect(check.mock.calls.length).toBe(1)
   })
 
-  it('should call message for array value', async () => {
-    const check = stub()
+  test('should call message for array value', async () => {
+    const check = jest.fn()
     await combineToAsync(
       transformer(['key1', 'key2']).message(check),
       validateTransformation
     )({})
-    expect(check).to.have.been.calledOnce
+    expect(check.mock.calls.length).toBe(1)
   })
 
   describe('array handling', () => {
-    it('should process array', async () => {
-      const check = stub()
+    test('should process array', async () => {
+      const check = jest.fn()
       await combineToAsync(
         transformer('key[]').transform(check),
         validateTransformation
       )({})
-      expect(check).to.not.have.been.called
+      expect(check.mock.calls.length).toBe(0)
     })
 
-    it('should set empty array with force', async () => {
-      const check = stub()
+    test('should set empty array with force', async () => {
+      const check = jest.fn()
       const req = {}
       await combineToAsync(
         transformer('key[]').transform(check, {force: true}),
         validateTransformation
       )(req)
-      expect(check).to.not.have.been.called
-      expect(req.body.key).to.eql([])
+      expect(check.mock.calls.length).toBe(0)
+      expect(req.body.key).toEqual([])
     })
 
-    it('should set empty array without force', async () => {
-      const check = stub()
+    test('should set empty array without force', async () => {
+      const check = jest.fn()
       const req = {body: {key: {not_an_obj: 123}}}
       await combineToAsync(
         transformer('key[]').transform(check),
         validateTransformation
       )(req)
-      expect(check).to.not.have.been.called
-      expect(req.body.key).to.eql([])
+      expect(check.mock.calls.length).toBe(0)
+      expect(req.body.key).toEqual([])
     })
-    it('should process with array last', async () => {
+    test('should process with array last', async () => {
       const req = {body: {key: [1]}}
       await combineToAsync(
         transformer('key[]').transform(x => x + 1),
         validateTransformation
       )(req)
-      expect(req.body.key[0]).to.equal(2)
+      expect(req.body.key[0]).toBe(2)
     })
 
-    it('should process transformer', async () => {
+    test('should process transformer', async () => {
       const req = {
         body: {
           long: {
@@ -254,7 +244,7 @@ describe('Transformer library', () => {
         transformer('long.path.around.arrayWrapper[].long.path.around.myArray[].key2').transform(x => x * 2),
         validateTransformation
       )(req)
-      expect(req).to.eql({
+      expect(req).toEqual({
         body: {
           long: {
             path: {
