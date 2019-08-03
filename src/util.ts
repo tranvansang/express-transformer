@@ -14,7 +14,7 @@ export const recursiveGet = <T, V>(obj: T, path: string, value?: V) => path
     acc: any, cur, index, pathArray
   ) => acc instanceof Object && Object.prototype.hasOwnProperty.call(acc, cur)
     ? acc[cur]
-    : (index === pathArray.length - 1 ? value : undefined),
+    : index === pathArray.length - 1 ? value : undefined,
   obj
   )
 export const recursiveHas = (obj: any, path: string) => {
