@@ -1,4 +1,4 @@
-import {ITransformOption, Middleware} from '../transformer'
+import {Middleware} from '../transformer'
 import TransformationError from '../TransformationError'
 import isEmailCore, {IIsEmailOptions} from './isEmailCore'
 
