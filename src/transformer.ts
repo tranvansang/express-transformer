@@ -1,6 +1,6 @@
 import {recursiveGet, recursiveHas, recursiveSet} from './util'
 import {NextFunction, Request, RequestHandler, Response} from 'express'
-import TransformationError from './TransformationError'
+import ImportedTransformationError from './TransformationError'
 import exists from './plugins/exists'
 import isIn from './plugins/isIn'
 import isLength from './plugins/isLength'
@@ -13,12 +13,14 @@ import defaultValue from './plugins/defaultValue'
 import isEmail from './plugins/isEmail'
 import {IIsEmailOptions} from './plugins/isEmailCore'
 
+export const TransformationError = ImportedTransformationError
+
 export const errorKey: '__transformationErrors' = '__transformationErrors'
 type IPath = string | string[]
 interface IError {
 	location: string
 	path: IPath
-	error: TransformationError
+	error: ImportedTransformationError
 }
 declare module 'express' {
 	interface Request {
