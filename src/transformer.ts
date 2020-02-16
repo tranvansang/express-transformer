@@ -11,20 +11,20 @@ import toInt from './plugins/toInt'
 import trim from './plugins/trim'
 import defaultValue from './plugins/defaultValue'
 
-export const errorKey = '__transformationErrors'
+export const errorKey: '__transformationErrors' = '__transformationErrors'
 type IPath = string | string[]
-type IError = {
+interface IError {
   location: string
   path: IPath
   error: TransformationError
 }
 declare module 'express' {
   interface Request {
-    __transformationErrors: Array<IError>
+    __transformationErrors: IError[]
   }
 }
 export interface ITransformOption { force?: boolean }
-type ICallbackOptionParam = {
+interface ICallbackOptionParam {
   location: string
   path: IPath
   req: Request

@@ -108,7 +108,7 @@ describe('Transformer library', () => {
     expect(check.mock.calls).toEqual([[]])
   })
 
-  test('should ignore value if not provded', async () => {
+  test('should ignore value if not provided', async () => {
     const check = jest.fn()
     await combineToAsync(
       transformer('key').transform(() => check()),
@@ -123,7 +123,7 @@ describe('Transformer library', () => {
       transformer('key').transform(() => check(), {force: true}),
       validateTransformation
     )({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
-    expect(check.mock.calls.length).toBeGreaterThanOrEqual(1)
+    expect(check.mock.calls.length).toBe(1)
   })
 
   test('should not ignore falsy', async () => {
@@ -133,7 +133,7 @@ describe('Transformer library', () => {
         transformer('key').transform(() => check()),
         validateTransformation
       )({body: {key: val}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
-      expect(check.mock.calls.length).toBeGreaterThanOrEqual(1)
+      expect(check.mock.calls.length).toBe(1)
     }
   })
 
