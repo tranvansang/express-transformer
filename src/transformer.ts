@@ -20,7 +20,7 @@ type IPath = string | string[]
 interface IError {
 	location: string
 	path: IPath
-	error: ImportedTransformationError
+	error: ImportedTransformationError | Error
 }
 declare module 'express' {
 	interface Request {
