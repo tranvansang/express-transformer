@@ -48,7 +48,7 @@
     "express": "^4.17.1",
     "flip-promise": "^1.0.4",
     "jest": "^25.1.0",
-    "middleware-async": "^1.0.3",
+    "middleware-async": "^1.1.0",
     "tslint": "^6.0.0",
     "typescript": "^3.7.5"
   },

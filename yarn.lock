@@ -3907,10 +3907,10 @@ micromatch@^4.0.2:
     braces "^3.0.1"
     picomatch "^2.0.5"
 
-middleware-async@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/middleware-async/-/middleware-async-1.0.3.tgz#7cbf319f84c1d0dde7f374ef18b38117839ac9e8"
-  integrity sha512-loeVHEK/WgQaxpPPaHUD9/32xEdqD++trppP/6/Qj6iYbKKVzLzQcYTCdLStO8RqqoJVt1Dj52/BAFL7Kef1pg==
+middleware-async@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/middleware-async/-/middleware-async-1.1.0.tgz#5b6c97c8a31529f98d1149a3a3ebe78e13ad02a2"
+  integrity sha512-Dc4Vz4QfhSTvZmHw/3N4gFNtkfjXv8A6lkXDKNCHjJdBJUZNxmmVzNJRAE4hIMV32G7mIY8I3bOr9CqifbsMXA==
   dependencies:
     "@types/express" "^4.16.1"
     "@types/node" "^11.9.4"
