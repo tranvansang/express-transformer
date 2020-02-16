@@ -1,6 +1,6 @@
 {
   "name": "express-transformer",
-  "version": "0.3.12",
+  "version": "0.4.0",
   "description": "An express transformer, validator library",
   "main": "lib/transformer.js",
   "repository": "https://github.com/tranvansang/express-transformer",
