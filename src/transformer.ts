@@ -10,6 +10,7 @@ import toFloat from './plugins/toFloat'
 import toInt from './plugins/toInt'
 import trim from './plugins/trim'
 import defaultValue from './plugins/defaultValue'
+import isEmail from './plugins/isEmail'
 
 export const errorKey: '__transformationErrors' = '__transformationErrors'
 type IPath = string | string[]
@@ -45,6 +46,7 @@ export const transformationResult = (req: Request): ReadonlyArray<IError> => req
 const plugins = [
 	exists,
 	isIn,
+	isEmail,
 	isLength,
 	matches,
 	toDate,
@@ -214,6 +216,7 @@ export default <T, V>(path: IPath, {
 	for (const plugin of plugins) plugin(middleware as unknown as
 		Parameters<typeof exists>[0]
 		& Parameters<typeof isIn>[0]
+		& Parameters<typeof isEmail>[0]
 		& Parameters<typeof isLength>[0]
 		& Parameters<typeof matches>[0]
 		& Parameters<typeof toDate>[0]
