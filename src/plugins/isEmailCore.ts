@@ -1,3 +1,4 @@
+//cloned from validator
 const isByteLength = (str: string, {min = 0, max}: {min?: number, max: number}) => {
 	const len = encodeURI(str).split(/%..|./).length - 1
 	return len >= min && (typeof max === 'undefined' || len <= max)
@@ -141,7 +142,7 @@ const validateDisplayName = (displayName: string) => {
 }
 
 
-export default (str: string, options?: {
+export interface IIsEmailOptions {
 	allowDisplayName?: boolean
 	requireDisplayName?: boolean
 	allowUtf8LocalPart?: boolean
@@ -149,7 +150,8 @@ export default (str: string, options?: {
 	ignoreMaxLength?: boolean
 	domainSpecificValidation?: boolean
 	allowIpDomain?: boolean
-}) => {
+}
+export default (str: string, options?: IIsEmailOptions) => {
 	options = {
 		allowDisplayName: false,
 		requireDisplayName: false,

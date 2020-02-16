@@ -11,6 +11,7 @@ import toInt from './plugins/toInt'
 import trim from './plugins/trim'
 import defaultValue from './plugins/defaultValue'
 import isEmail from './plugins/isEmail'
+import {IIsEmailOptions} from './plugins/isEmailCore'
 
 export const errorKey: '__transformationErrors' = '__transformationErrors'
 type IPath = string | string[]
@@ -24,7 +25,7 @@ declare module 'express' {
 		__transformationErrors: IError[]
 	}
 }
-export interface ITransformOption { force?: boolean }
+export interface ITransformOption extends Partial<IIsEmailOptions> { force?: boolean }
 interface ICallbackOptionParam {
 	location: string
 	path: IPath
