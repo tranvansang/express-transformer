@@ -21,6 +21,10 @@
     "jest"
   ],
   "rules": {
+    "indent": ["error", "tab"],
+    "no-tabs": ["error", {
+      "allowIndentationTabs": true
+    }],
     "no-irregular-whitespace": "off",
     "comma-dangle": "off",
     "function-paren-newline": "off",
