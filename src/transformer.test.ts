@@ -16,7 +16,7 @@ describe('Transform', () => {
 		const err = await flipPromise(combineToAsync(
 			transformer('key').message(() => 'hi').exists(),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)) as TransformationError
+		)({} as Request, undefined as unknown as Response)) as TransformationError
 		expect(err.message).toBe('hi')
 		expect(err.name).toBe(transformationErrorName)
 	})
@@ -25,7 +25,7 @@ describe('Transform', () => {
 		const err = await flipPromise(combineToAsync(
 			transformer('key').message('hi').exists(),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)) as TransformationError
+		)({} as Request, undefined as unknown as Response)) as TransformationError
 		expect(err.message).toBe('hi')
 		expect(err.name).toBe(transformationErrorName)
 	})
@@ -35,7 +35,7 @@ describe('Transform', () => {
 		const error = await flipPromise(combineToAsync(
 			transformer('key').message('hi').transform(() => Promise.reject(err), {force: true}),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)) as TransformationError
+		)({} as Request, undefined as unknown as Response)) as TransformationError
 		expect(error.message).toBe('hi')
 		expect(error.name).toBe(transformationErrorName)
 	})
@@ -44,7 +44,7 @@ describe('Transform', () => {
 		const err = await flipPromise(combineToAsync(
 			transformer('key').message('hi').transform(() => Promise.reject(new Error('hello')), {force: true}),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)) as TransformationError
+		)({} as Request, undefined as unknown as Response)) as TransformationError
 		expect(err.message).toBe('hi')
 		expect(err.name).toBe(transformationErrorName)
 	})
@@ -53,7 +53,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').message(() => Promise.reject(1)),
 			validateTransformation
-		)({body: {key: 'hi'}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)({body: {key: 'hi'}} as Request, undefined as unknown as Response))
 	})
 
 	test('should ignore custom message from second transformer', async () => {
@@ -63,7 +63,7 @@ describe('Transform', () => {
 				.transform(val => val)
 				.exists(),
 			validateTransformation
-		)({body: {}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)) as TransformationError
+		)({body: {}} as Request, undefined as unknown as Response)) as TransformationError
 		expect(err.message).toBe('key is required')
 		expect(err.name).toBe(transformationErrorName)
 	})
@@ -76,7 +76,7 @@ describe('Transform', () => {
 				.exists()
 			,
 			validateTransformation
-		)({body: {}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)) as TransformationError
+		)({body: {}} as Request, undefined as unknown as Response)) as TransformationError
 		expect(err.message).toBe('hi')
 		expect(err.name).toBe(transformationErrorName)
 	})
@@ -91,7 +91,7 @@ describe('Transform', () => {
 				.transform(async val => await inc(val))
 				.transform(inc),
 			validateTransformation
-		)(req, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req, undefined as unknown as Response)
 		expect(req.body.key).toBe(3)
 	})
 
@@ -104,7 +104,7 @@ describe('Transform', () => {
 			transformer<number, number>('key')
 				.transform(val => val + 2),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe(1)
 	})
 
@@ -116,7 +116,7 @@ describe('Transform', () => {
 			transformer<[number, number], [number, number]>(['key1', 'key2'])
 				.transform(([key1, key2]) => [key1 + key2, key2]),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key1).toBe(3)
 		expect(req.body.key2).toBe(2)
 
@@ -128,7 +128,7 @@ describe('Transform', () => {
 			transformer(['key1', 'key2'])
 				.transform(check, {force: true}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(check.mock.calls).toEqual([[[undefined, undefined], expect.anything()]])
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -139,7 +139,7 @@ describe('Transform', () => {
 			transformer(['key1', 'key2'])
 				.transform(check1),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(check1.mock.calls.length).toBe(0)
 	})
 
@@ -152,7 +152,7 @@ describe('Transform', () => {
 			transformer(['key2', 'key1'])
 				.each(check),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(check.mock.calls).toEqual([['1', expect.anything()]])
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -163,7 +163,7 @@ describe('Transform', () => {
 			transformer(['key2', 'key1'])
 				.each(check, {force: true}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(check.mock.calls.length).toBe(2)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -173,7 +173,7 @@ describe('Transform', () => {
 			transformer(['key2', 'key1'])
 				.exists(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		delete req.body.key1
@@ -183,7 +183,7 @@ describe('Transform', () => {
 			transformer<number, number>(['key2', 'key1'])
 				.each((val: number) => val + 1),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key2).toBe(2)
 		expect(req.body.key1).toBe(4)
 	})
@@ -193,6 +193,6 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').exists(),
 			validateTransformation
-		)(undefined as unknown as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(undefined as unknown as Request, undefined as unknown as Response))
 	})
 })

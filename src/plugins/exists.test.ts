@@ -10,21 +10,21 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').exists(),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)({} as Request, undefined as unknown as Response))
 		for (const val of [undefined, null, '']) {
 			await flipPromise(combineToAsync(
 				transformer('key').exists(),
 				validateTransformation
-			)({body: {key: val}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+			)({body: {key: val}} as Request, undefined as unknown as Response))
 		}
 		for (const val of [0, false, true, 1, 'hii'])
 			await combineToAsync(
 				transformer('key').exists(),
 				validateTransformation
-			)({body: {key: val}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+			)
 		await combineToAsync(
 			transformer('key').exists({acceptEmptyString: true}),
 			validateTransformation
-		)({body: {key: ''}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)({body: {key: ''}} as Request, undefined as unknown as Response)
 	})
 })

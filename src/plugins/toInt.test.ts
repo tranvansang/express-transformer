@@ -11,7 +11,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toInt(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(1)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -19,7 +19,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toInt(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(12)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -27,7 +27,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toInt(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(1)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -35,7 +35,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toInt({min: 3}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe('1')
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -43,7 +43,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toInt({max: 0}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe('1')
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -51,7 +51,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toInt({max: 0}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe('abc')
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -59,7 +59,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toInt({force: true}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe(undefined)
 	})
 })

@@ -11,27 +11,27 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').isIn(['1', '3']),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		req.body.key = '2'
 		await flipPromise(combineToAsync(
 			transformer('key').isIn(['1', '3']),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		delete req.body.key
 		await flipPromise(combineToAsync(
 			transformer('key').isIn(['1', '3'], {force: true}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		delete req.body.key
 		await combineToAsync(
 			transformer('key').isIn(['1', '3', undefined], {force: true}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 	})
 })

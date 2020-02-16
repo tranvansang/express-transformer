@@ -11,7 +11,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toFloat(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(1.5)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -19,7 +19,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toFloat(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(12.3)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -27,7 +27,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toFloat({min: 3}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe('1.5')
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -35,7 +35,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toFloat({max: 0}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe('1.7')
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -43,7 +43,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toFloat({max: 0}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBeUndefined()
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -51,7 +51,7 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toFloat({max: 0}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe('a123')
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -59,7 +59,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toFloat({max: 0}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(undefined)
 	})
 })

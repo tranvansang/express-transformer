@@ -12,7 +12,7 @@ describe('Transformer library', () => {
 				throw new Error('hi')
 			}),
 			validateTransformation
-		)({body: {any: undefined}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)({body: {any: undefined}} as Request, undefined as unknown as Response))
 	})
 
 	test('should transform value', async () => {
@@ -20,7 +20,7 @@ describe('Transformer library', () => {
 		await combineToAsync(
 			transformer<number, number>('key').transform(key => key + 1),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(2)
 	})
 
@@ -32,7 +32,7 @@ describe('Transformer library', () => {
 				return val
 			}),
 			validateTransformation
-		)({body: {key: 1}, params: {key: 2}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)({body: {key: 1}, params: {key: 2}} as Request, undefined as unknown as Response)
 		expect(check.mock.calls).toEqual([[2]])
 	})
 
@@ -57,7 +57,7 @@ describe('Transformer library', () => {
 					}
 				}
 			}
-		} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		} as Request, undefined as unknown as Response)
 		expect(check.mock.calls).toEqual([[2]])
 	})
 
@@ -68,7 +68,7 @@ describe('Transformer library', () => {
 				.transform(key => key + 1)
 				.transform(key => key + 1),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(3)
 	})
 
@@ -85,7 +85,7 @@ describe('Transformer library', () => {
 					return key + 1
 				}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe(1)
 		expect(check.mock.calls.length).toBe(0)
 	})
@@ -103,7 +103,7 @@ describe('Transformer library', () => {
 					return key + 1
 				}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe(2)
 		expect(check.mock.calls).toEqual([[]])
 	})
@@ -113,7 +113,7 @@ describe('Transformer library', () => {
 		await combineToAsync(
 			transformer('key').transform(() => check()),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)({} as Request, undefined as unknown as Response)
 		expect(check.mock.calls.length).toBe(0)
 	})
 
@@ -122,7 +122,7 @@ describe('Transformer library', () => {
 		await combineToAsync(
 			transformer('key').transform(() => check(), {force: true}),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)({} as Request, undefined as unknown as Response)
 		expect(check.mock.calls.length).toBe(1)
 	})
 
@@ -132,7 +132,7 @@ describe('Transformer library', () => {
 			await combineToAsync(
 				transformer('key').transform(() => check()),
 				validateTransformation
-			)({body: {key: val}} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+			)({body: {key: val}} as Request, undefined as unknown as Response)
 			expect(check.mock.calls.length).toBe(1)
 		}
 	})
@@ -143,7 +143,7 @@ describe('Transformer library', () => {
 		await combineToAsync(
 			transformer('key').transform(check),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(check.mock.calls).toEqual([[1, {
 			location: 'body',
 			path: 'key',
@@ -156,7 +156,7 @@ describe('Transformer library', () => {
 		await combineToAsync(
 			transformer('key').message(check),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)({} as Request, undefined as unknown as Response)
 		expect(check.mock.calls.length).toBe(1)
 	})
 
@@ -165,7 +165,7 @@ describe('Transformer library', () => {
 		await combineToAsync(
 			transformer(['key1', 'key2']).message(check),
 			validateTransformation
-		)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)({} as Request, undefined as unknown as Response)
 		expect(check.mock.calls.length).toBe(1)
 	})
 
@@ -175,7 +175,7 @@ describe('Transformer library', () => {
 			await combineToAsync(
 				transformer('key[]').transform(check),
 				validateTransformation
-			)({} as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+			)({} as Request, undefined as unknown as Response)
 			expect(check.mock.calls.length).toBe(0)
 		})
 
@@ -185,7 +185,7 @@ describe('Transformer library', () => {
 			await combineToAsync(
 				transformer('key[]').transform(check, {force: true}),
 				validateTransformation
-			)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+			)(req as Request, undefined as unknown as Response)
 			expect(check.mock.calls.length).toBe(0)
 			expect(req.body!.key).toEqual([])
 		})
@@ -196,7 +196,7 @@ describe('Transformer library', () => {
 			await combineToAsync(
 				transformer('key[]').transform(check),
 				validateTransformation
-			)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+			)(req as Request, undefined as unknown as Response)
 			expect(check.mock.calls.length).toBe(0)
 			expect(req.body.key).toEqual([])
 		})
@@ -205,7 +205,7 @@ describe('Transformer library', () => {
 			await combineToAsync(
 				transformer<number, number>('key[]').transform(x => x + 1),
 				validateTransformation
-			)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+			)(req as Request, undefined as unknown as Response)
 			expect(req.body.key[0]).toBe(2)
 		})
 
@@ -246,7 +246,7 @@ describe('Transformer library', () => {
 				transformer<number, number>('long.path.around.arrayWrapper[].long.path.around.myArray[].key2')
 					.transform(x => x * 2),
 				validateTransformation
-			)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+			)(req as Request, undefined as unknown as Response)
 			expect(req).toEqual({
 				body: {
 					long: {

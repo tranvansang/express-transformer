@@ -13,7 +13,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toDate(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toEqual(date)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
@@ -22,7 +22,7 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').toDate({resetTime: true}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		date.setMinutes(0)
 		date.setHours(0)
 		date.setMilliseconds(0)
@@ -34,6 +34,6 @@ describe('Transform', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').toDate({resetTime: true, force: true}),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 	})
 })

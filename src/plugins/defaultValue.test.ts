@@ -13,7 +13,7 @@ describe('Transform', () => {
 			transformer('key2').defaultValue('bar'),
 			transformer('key3').defaultValue('bar'),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 		expect(req).toEqual({
 			body: {
 				key: 'foo',

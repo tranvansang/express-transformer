@@ -11,14 +11,14 @@ describe('Transform', () => {
 		await combineToAsync(
 			transformer('key').isEmail(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction)
+		)(req as Request, undefined as unknown as Response)
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		req.body.key = '1'
 		await flipPromise(combineToAsync(
 			transformer('key').isEmail(),
 			validateTransformation
-		)(req as Request, undefined as unknown as Response, undefined as unknown as NextFunction))
+		)(req as Request, undefined as unknown as Response))
 
 		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 	})
