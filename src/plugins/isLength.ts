@@ -1,13 +1,13 @@
-import {ITransformOption, Middleware} from '../transformer'
+import {ITransformOption, ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
 
 declare module '../transformer' {
-	interface Middleware<T, V> {
-		isLength(option: { min?: number, max?: number } | string | number, opts?: ITransformOption): Middleware<T, V>
+	interface ITransformer<T, V> {
+		isLength(option: { min?: number, max?: number } | string | number, opts?: ITransformOption): ITransformer<T, V>
 	}
 }
 
-export default <T, V>(middleware: Middleware<T, V>) => {
+export default <T, V>(middleware: ITransformer<T, V>) => {
 	middleware.isLength = (option, transformOption) => {
 		let min: number | undefined
 		let max: number | undefined

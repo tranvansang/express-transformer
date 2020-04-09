@@ -1,13 +1,13 @@
-import {ITransformOption, Middleware} from '../transformer'
+import {ITransformOption, ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
 
 declare module '../transformer' {
-	interface Middleware<T, V> {
-		toFloat(opts?: { min?: number, max?: number } & ITransformOption): Middleware<T, V>
+	interface ITransformer<T, V> {
+		toFloat(opts?: { min?: number, max?: number } & ITransformOption): ITransformer<T, V>
 	}
 }
 
-export default (middleware: Middleware<string | number, number>) => {
+export default (middleware: ITransformer<string | number, number>) => {
 	middleware.toFloat = ({min, max, ...transformOption}: { min?: number, max?: number } & ITransformOption = {}) =>
 		middleware.each((value, {path}) => {
 				value = typeof value === 'string' ? parseFloat(value) : value

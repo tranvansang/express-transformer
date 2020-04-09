@@ -1,13 +1,13 @@
-import {ITransformOption, Middleware} from '../transformer'
+import {ITransformOption, ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
 
 declare module '../transformer' {
-	interface Middleware<T, V> {
-		toDate(opts?: { resetTime?: boolean } & ITransformOption): Middleware<T, V>
+	interface ITransformer<T, V> {
+		toDate(opts?: { resetTime?: boolean } & ITransformOption): ITransformer<T, V>
 	}
 }
 
-export default (middleware: Middleware<string, Date>) => {
+export default (middleware: ITransformer<string, Date>) => {
 	middleware.toDate = ({resetTime, ...transformOption}: {resetTime?: boolean} & ITransformOption = {}) =>
 		middleware.each((value, {path}) => {
 				const time = Date.parse(value)

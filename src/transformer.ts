@@ -22,9 +22,11 @@ interface IError {
 	path: IPath
 	error: ImportedTransformationError | Error
 }
-declare module 'express' {
-	interface Request {
-		__transformationErrors: IError[]
+declare global {
+	namespace Express {
+		export interface Request {//tslint:disable-line:interface-name
+			__transformationErrors: IError[]
+		}
 	}
 }
 export interface ITransformOption extends Partial<IIsEmailOptions> { force?: boolean }
@@ -39,11 +41,11 @@ interface ICallback<T, V> {
 interface ICallbackMsg<T> {
 	(value: T, opts: ICallbackOptionParam): string | Promise<string>
 }
-export interface Middleware<T, V> extends RequestHandler {
-	transform(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
-	message(callback: string | ICallbackMsg<T>, opts?: ITransformOption): Middleware<T, V>
-	each(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
-	every(callback: ICallback<T, V>, opts?: ITransformOption): Middleware<T, V>
+export interface ITransformer<T, V> extends RequestHandler {
+	transform(callback: ICallback<T, V>, opts?: ITransformOption): ITransformer<T, V>
+	message(callback: string | ICallbackMsg<T>, opts?: ITransformOption): ITransformer<T, V>
+	each(callback: ICallback<T, V>, opts?: ITransformOption): ITransformer<T, V>
+	every(callback: ICallback<T, V>, opts?: ITransformOption): ITransformer<T, V>
 }
 export const transformationResult = (req: Request): ReadonlyArray<IError> => req[errorKey] || []
 const plugins = [
@@ -191,7 +193,7 @@ export default <T, V>(path: IPath, {
 		} catch (err) {
 			next(err)
 		}
-	}) as Middleware<T, V>
+	}) as ITransformer<T, V>
 	middleware.transform = (callback, options = {}) => {
 		stack.push({
 			...options,

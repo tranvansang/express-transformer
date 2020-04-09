@@ -1,13 +1,13 @@
-import {ITransformOption, Middleware} from '../transformer'
+import {ITransformOption, ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
 
 declare module '../transformer' {
-	interface Middleware<T, V> {
-		matches(regex: RegExp, opts?: ITransformOption): Middleware<T, V>
+	interface ITransformer<T, V> {
+		matches(regex: RegExp, opts?: ITransformOption): ITransformer<T, V>
 	}
 }
 
-export default <T, V>(middleware: Middleware<T, V>) => {
+export default <T, V>(middleware: ITransformer<T, V>) => {
 	middleware.matches = (regex, transformOption) =>
 		middleware.each((value, {path}) => {
 				if (typeof value === 'string' && regex.test(value)) return value

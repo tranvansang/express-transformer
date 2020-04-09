@@ -1,13 +1,13 @@
-import {Middleware} from '../transformer'
+import {ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
 
 declare module '../transformer' {
-	interface Middleware<T, V> {
-		exists(opts?: { acceptEmptyString?: boolean }): Middleware<T, V>
+	interface ITransformer<T, V> {
+		exists(opts?: { acceptEmptyString?: boolean }): ITransformer<T, V>
 	}
 }
 
-export default <T, V>(middleware: Middleware<T, V>) => {
+export default <T, V>(middleware: ITransformer<T, V>) => {
 	middleware.exists = (
 		{acceptEmptyString = false}: { acceptEmptyString?: boolean } = {}
 	) => middleware.each((value, {path}) => {

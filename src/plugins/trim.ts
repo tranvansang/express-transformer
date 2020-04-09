@@ -1,12 +1,12 @@
-import {Middleware} from '../transformer'
+import {ITransformer} from '../transformer'
 
 declare module '../transformer' {
-	interface Middleware<T, V> {
-		trim(): Middleware<T, V>
+	interface ITransformer<T, V> {
+		trim(): ITransformer<T, V>
 	}
 }
 
-export default <T>(middleware: Middleware<T, T | string>) => {
+export default <T>(middleware: ITransformer<T, T | string>) => {
 	middleware.trim = () =>
 		middleware.each(value => {
 			if (typeof value === 'string') return value.trim()
