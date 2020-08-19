@@ -1,21 +1,22 @@
-import {ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
+import {ITransformCallbackOptions} from '../interfaces'
 
 declare module '../transformer' {
 	interface ITransformer<T, V> {
-		exists(opts?: { acceptEmptyString?: boolean }): ITransformer<T, V>
+		exists(options?: { acceptEmptyString?: boolean }): ITransformer<T, V>
 	}
 }
 
-export default <T, V>(middleware: ITransformer<T, V>) => {
-	middleware.exists = (
-		{acceptEmptyString = false}: { acceptEmptyString?: boolean } = {}
-	) => middleware.each((value, {path}) => {
+export default {
+	name: 'exists',
+	transform: <T>(
+		{acceptEmptyString}: { acceptEmptyString?: boolean } = {}
+	) => (value: T, {path}: ITransformCallbackOptions) => {
 		if (
 			value === undefined
-			|| (!acceptEmptyString && typeof value === 'string' && value === '')
 			|| value === null
+			|| (!acceptEmptyString && typeof value === 'string' && value === '')
 		) throw new TransformationError(`${path} is required`)
-		return value
-	}, {force: true})
+	},
+	options: {force: true, validateOnly: true}
 }

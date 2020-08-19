@@ -1,6 +1,6 @@
-import {ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
 import isEmailCore, {IIsEmailOptions} from './isEmailCore'
+import {ITransformer} from '../interfaces'
 
 declare module '../transformer' {
 	interface ITransformer<T, V> {

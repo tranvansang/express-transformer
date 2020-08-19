@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import {recursiveDefault, recursiveGet, recursiveHas, recursiveSet} from './util'
+import {recursiveDefault, recursiveGet, recursiveHas, recursiveSet} from './utils'
 
 describe('Recursive get', () => {
 	test('should get correct value', () => {

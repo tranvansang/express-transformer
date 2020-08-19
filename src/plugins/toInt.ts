@@ -1,14 +1,14 @@
-import {ITransformOption, ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
+import {ITransformer, ITransformOptions} from '../interfaces'
 
 declare module '../transformer' {
 	interface ITransformer<T, V> {
-		toInt(opts?: { min?: number, max?: number } & ITransformOption): ITransformer<T, V>
+		toInt(opts?: { min?: number, max?: number } & ITransformOptions): ITransformer<T, V>
 	}
 }
 
 export default (middleware: ITransformer<string | number, number>) => {
-	middleware.toInt = ({min, max, ...transformOption}: { min?: number, max?: number } & ITransformOption = {}) =>
+	middleware.toInt = ({min, max, ...transformOption}: { min?: number, max?: number } & ITransformOptions = {}) =>
 		middleware.each((value: string | number, {path}) => {
 				value = typeof value === 'number' ? Math.trunc(value) : parseInt(value)
 				if (isNaN(value) || !isFinite(value)) throw new TransformationError(`${path} must be an integer`)

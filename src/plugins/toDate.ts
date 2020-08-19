@@ -1,14 +1,14 @@
-import {ITransformOption, ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
+import {ITransformer, ITransformOptions} from '../interfaces'
 
 declare module '../transformer' {
 	interface ITransformer<T, V> {
-		toDate(opts?: { resetTime?: boolean } & ITransformOption): ITransformer<T, V>
+		toDate(opts?: { resetTime?: boolean } & ITransformOptions): ITransformer<T, V>
 	}
 }
 
 export default (middleware: ITransformer<string, Date>) => {
-	middleware.toDate = ({resetTime, ...transformOption}: {resetTime?: boolean} & ITransformOption = {}) =>
+	middleware.toDate = ({resetTime, ...transformOption}: {resetTime?: boolean} & ITransformOptions = {}) =>
 		middleware.each((value, {path}) => {
 				const time = Date.parse(value)
 				if (isNaN(time) || !isFinite(time)) throw new TransformationError(`${path} must be in date format`)

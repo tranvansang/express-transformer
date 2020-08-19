@@ -1,13 +1,18 @@
 {
   "extends": [
     "airbnb-base",
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "settings": {
+    "import/extensions": [".js",".ts"],
     "import/resolver": {
       "node": {
         "extensions": [".js", ".ts"]
       }
+    },
+    "react": {
+      "version": "detect"
     }
   },
   "env": {
@@ -17,16 +22,18 @@
   },
   "plugins": [
     "babel",
-    "jest"
+    "jest",
+    "@typescript-eslint"
   ],
   "rules": {
-    "no-irregular-whitespace": "off",
+    "no-tabs": "off",
+    "no-irregular-whitespace": "warn",
     "comma-dangle": "off",
     "function-paren-newline": "off",
     "no-param-reassign": "off",
     "semi": ["error", "never"],
-    "react/display-name": "off",
-    "react/prop-types": "off",
+    "semi-style": ["error", "first"],
+    "indent": ["error", "tab", {"SwitchCase": 1}],
     "import/first": "off",
     "import/order": "off",
     "import/prefer-default-export": "off",
@@ -39,11 +46,10 @@
     "lines-between-class-members": "off",
     "object-curly-newline": "off",
     "consistent-return": "off",
-    "max-len": ["error", {"code":  120}],
+    "max-len": ["error", {"code":	120}],
     "arrow-parens": ["error", "as-needed"],
     "no-async-promise-executor": "off",
     "no-confusing-arrow": "off",
-    "no-continue": "off",
     "no-nested-ternary": "off",
     "no-return-assign": "off",
     "no-restricted-syntax": "off",
@@ -54,12 +60,30 @@
     "no-return-await": "off",
     "no-plusplus": "off",
     "no-await-in-loop": "off",
-    "no-void": "off"
+    "no-void": "off",
+    "no-continue": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "ts": "never"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "camelcase": "off",
+    "eol-last": "off",
+    "@typescript-eslint/no-non-null-assertion": "off"
   },
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "babelOptions": {
-      "envName": "eslint"
+    "useJSXTextNode": true,
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "modules": true,
+      "jsx": true
     }
   },
   "globals": {

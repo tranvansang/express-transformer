@@ -1,4 +1,4 @@
-import {ITransformer} from '../transformer'
+import {ITransformer} from '../interfaces'
 
 declare module '../transformer' {
 	interface ITransformer<T, V> {

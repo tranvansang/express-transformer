@@ -1,9 +1,9 @@
-import {ITransformOption, ITransformer} from '../transformer'
 import TransformationError from '../TransformationError'
+import {ITransformer, ITransformOptions} from '../interfaces'
 
 declare module '../transformer' {
 	interface ITransformer<T, V> {
-		matches(regex: RegExp, opts?: ITransformOption): ITransformer<T, V>
+		matches(regex: RegExp, opts?: ITransformOptions): ITransformer<T, V>
 	}
 }
 
