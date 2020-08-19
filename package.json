@@ -6,6 +6,7 @@
   "repository": "https://github.com/tranvansang/express-transformer",
   "author": "Tran Sang",
   "license": "MIT",
+  "files": ["lib"],
   "private": false,
   "scripts": {
     "test": "yarn jest",
