@@ -1,8 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import {NextFunction, Request, Response} from 'express'
+import {Request, Response} from 'express'
 import {combineToAsync} from 'middleware-async'
-import transformer from '../transformer'
-import {validateTransformation} from '../testHelper'
+import {transformer} from '../transformer'
 
 describe('Transform', () => {
 	test('should set default', async () => {
@@ -12,7 +11,6 @@ describe('Transform', () => {
 			transformer('key').defaultValue('bar'),
 			transformer('key2').defaultValue('bar'),
 			transformer('key3').defaultValue('bar'),
-			validateTransformation
 		)(req as Request, undefined as unknown as Response)
 		expect(req).toEqual({
 			body: {

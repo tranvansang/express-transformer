@@ -1,8 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {combineToAsync} from 'middleware-async'
-import {NextFunction, Request, Response} from 'express'
-import transformer, {transformationResult} from '../transformer'
-import {validateTransformation} from '../testHelper'
+import {Request, Response} from 'express'
+import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
 describe('Transform', () => {
@@ -12,16 +11,13 @@ describe('Transform', () => {
 		req.body.key = date.toISOString()
 		await combineToAsync(
 			transformer('key').toDate(),
-			validateTransformation
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toEqual(date)
 
-		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		date = new Date()
 		req.body.key = date.toISOString()
 		await combineToAsync(
 			transformer('key').toDate({resetTime: true}),
-			validateTransformation
 		)(req as Request, undefined as unknown as Response)
 		date.setMinutes(0)
 		date.setHours(0)
@@ -29,11 +25,9 @@ describe('Transform', () => {
 		date.setSeconds(0)
 		expect(req.body.key).toEqual(date)
 
-		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		delete req.body.key
 		await flipPromise(combineToAsync(
 			transformer('key').toDate({resetTime: true, force: true}),
-			validateTransformation
 		)(req as Request, undefined as unknown as Response))
 	})
 })

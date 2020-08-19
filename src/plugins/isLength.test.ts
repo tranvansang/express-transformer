@@ -1,8 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {combineToAsync} from 'middleware-async'
-import {NextFunction, Request, Response} from 'express'
-import transformer, {transformationResult} from '../transformer'
-import {validateTransformation} from '../testHelper'
+import {Request, Response} from 'express'
+import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
 describe('Transform', () => {
@@ -17,11 +16,9 @@ describe('Transform', () => {
 			[],
 			[1, 2, 3, 4, 5, 6]
 		]) {
-			;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 			req.body.key = key
 			await flipPromise(combineToAsync(
 				transformer('key').isLength({min: 1, max: 5}),
-				validateTransformation
 			)(req as Request, undefined as unknown as Response))
 		}
 
@@ -29,11 +26,9 @@ describe('Transform', () => {
 			'123',
 			[1, 2, 3],
 		]) {
-			(transformationResult(req as Request) as Array<any>).splice(0, 1)
 			req.body.key = key
 			await combineToAsync(
 				transformer('key').isLength({min: 1, max: 5}),
-				validateTransformation
 			)(req as Request, undefined as unknown as Response)
 		}
 
@@ -43,11 +38,9 @@ describe('Transform', () => {
 				[],
 				[1, 2, 3, 4, 5, 6]
 			]) {
-				;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 				req.body.key = key
 				await flipPromise(combineToAsync(
 					transformer('key').isLength(length),
-					validateTransformation
 				)(req as Request, undefined as unknown as Response))
 			}
 		for (const length of [3, '3'])
@@ -55,34 +48,26 @@ describe('Transform', () => {
 				'123',
 				[1, 2, 3],
 			]) {
-				;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 				req.body.key = key
 				await combineToAsync(
 					transformer('key').isLength(length),
-					validateTransformation
 				)(req as Request, undefined as unknown as Response)
 			}
 
 		//empty val
-		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		delete req.body.key
 		await flipPromise(combineToAsync(
 			transformer('key').isLength(1, {force: true}),
-			validateTransformation
 		)(req as Request, undefined as unknown as Response))
 
-		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		delete req.body.key
 		await combineToAsync(
 			transformer('key').isLength(1, {force: false}),
-			validateTransformation
 		)(req as Request, undefined as unknown as Response)
 
-		;(transformationResult(req as Request) as Array<any>).splice(0, 1)
 		req.body.key = '3'
 		await combineToAsync(
 			transformer('key').isLength('{}'),
-			validateTransformation
 		)(req as Request, undefined as unknown as Response)
 	})
 })
