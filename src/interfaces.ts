@@ -5,19 +5,25 @@ export type ITransformOptions = {
 	validateOnly?: boolean
 }
 
-export interface ITransformCallbackOptions {
+export interface ITransformCallbackOptionsSingular {
 	location: string
-	path: string | string[]
+	path: string
 	req: Request
 }
+export interface ITransformCallbackOptionsPlural {
+	location: string
+	path: string[]
+	req: Request
+}
+export type ITransformCallbackOptions = ITransformCallbackOptionsSingular | ITransformCallbackOptionsPlural
 
 type Promisable<T> = T | Promise<T>
 
 export type ITransformCallbackSingular<T, V> = (
-	value: T, options: ITransformCallbackOptions
+	value: T, options: ITransformCallbackOptionsSingular
 ) => Promisable<V | T | void>
 export type ITransformCallbackPlural<T, V> = (
-	value: T[], options: ITransformCallbackOptions
+	value: T[], options: ITransformCallbackOptionsPlural
 ) => Promisable<V[] | T[] | void>
 export type ITransformCallback<T, V> = ITransformCallbackSingular<T, V> | ITransformCallbackPlural<T, V>
 export type IMessageCallback<T> = string | ((value: T | T[], options: ITransformCallbackOptions) => Promisable<string>)

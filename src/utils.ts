@@ -39,18 +39,7 @@ export const recursiveHas = (obj: any, path: string) => {
 export const recursiveDefault = <T, V>(obj: T, path: string, defaultValue: V) => {
 	if (!recursiveHas(obj, path)) recursiveSet(obj, path, defaultValue)
 }
-const throwError = async <T>(
-	e: Error,
-	message: IMessageCallback<T> | undefined,
-	value: T | T[],
-	transformCallbackOptions: ITransformCallbackOptions
-) => {
-	if (message) {
-		if (typeof message === 'function') throw new TransformationError(await message(value, transformCallbackOptions))
-		throw new TransformationError(message)
-	}
-	throw e
-}
+
 /**
  * @param prefix Prefix added so far
  * @param firstArray currently processing array prefix
@@ -63,14 +52,14 @@ const throwError = async <T>(
 const subTransform = async <T, V>(
 	req: Request,
 	location: string,
-	callback: ITransformCallbackSingular<T, V>,
 	message: IMessageCallback<T> | undefined,
 	options: ITransformOptions,
 	prefix: string[],
 	[firstArray, ...arrays]: string[],
 	path: string,
+	callback: ITransformCallbackSingular<T, V>,
 ) => {
-	const {force, validateOnly} = options
+	const {force} = options
 	const fullPath = (s: string) => [location, s].join('.')
 	const getArrayOrAssignEmpty = (p: string) => {
 		//force only effective when value does not exist
@@ -89,12 +78,12 @@ const subTransform = async <T, V>(
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			location,
-			callback,
 			message,
 			options,
 			[...prefix, String(i)],
 			arrays,
-			path
+			path,
+			callback,
 		)
 	} else if (/\[]$/.test(path)) { // last selector is an array selector
 		path = path.slice(0, path.length - 2)
@@ -102,26 +91,33 @@ const subTransform = async <T, V>(
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			location,
-			callback,
 			message,
 			options,
 			prefix,
 			arrays,
-			[path, i].join('.')
+			[path, i].join('.'),
+			callback,
 		)
 	} else {
 		path = [...prefix, path].join('.')
-		if (force || recursiveHas(req, fullPath(path))) {
-			const value = recursiveGet(req, fullPath(path))
-			const transformCallbackOptions = {location, path, req}
-			try {
-				const sanitized = await callback(value, transformCallbackOptions)
-				if (!validateOnly) recursiveSet(req, fullPath(path), sanitized)
-			} catch (e) {
-				await throwError(e, message, value, transformCallbackOptions)
-			}
-		}
+		if (force || recursiveHas(req, fullPath(path))) await callback(
+			recursiveGet(req, fullPath(path)),
+			{location, path, req}
+		)
 	}
+}
+
+const throwError = async <T>(
+	e: Error,
+	message: IMessageCallback<T> | undefined,
+	value: T | T[],
+	transformCallbackOptions: ITransformCallbackOptions
+) => {
+	if (message) {
+		if (typeof message === 'function') throw new TransformationError(await message(value, transformCallbackOptions))
+		throw new TransformationError(message)
+	}
+	throw e
 }
 
 export const doTransform = async <T, V>(
@@ -132,35 +128,56 @@ export const doTransform = async <T, V>(
 	options: ITransformOptions = {},
 	message?: IMessageCallback<T>
 ) => {
-	const {force, validateOnly} = options
-	if (!Array.isArray(path)) {
-		const arraySplits = path.split(/\[]\./) // only split arrays in middle
+	const {validateOnly} = options
+	const fullPath = (p: string) => [location, p].join('.')
+	const makeSub = async (p: string, cb: ITransformCallbackSingular<T, V>) => {
+		const arraySplits = p.split('[].') // only split arrays in middle
 		await subTransform(
 			req,
 			location,
-			callback as ITransformCallbackSingular<T, V>,
 			message,
 			options,
 			[],
 			arraySplits.slice(0, arraySplits.length - 1),
 			arraySplits[arraySplits.length - 1],
+			cb
 		)
-	} else {
-		const fullPath = (p: string) => [location, p].join('.')
-		const transformCallbackOptions = {req, path, location}
-		if (force || path.some(p => recursiveHas(req, fullPath(p)))) {
-			// if any value exists, process the transformation
-			const values = path.map(p => recursiveGet(req, fullPath(p)))
+	}
+	if (!Array.isArray(path)) await makeSub(
+		path,
+		async (value, transformCallbackOptions) => {
 			try {
-				const sanitized = await (callback as ITransformCallbackPlural<T, V>)(values, transformCallbackOptions)
-				if (!validateOnly) path.forEach((p, i) => recursiveSet(
-					req,
-					fullPath(p),
-					(sanitized as V[])?.[i]
-				))
+				const sanitized = await (callback as ITransformCallbackSingular<T, V>)(
+					value,
+					transformCallbackOptions
+				)
+				if (!validateOnly) recursiveSet(req, fullPath(transformCallbackOptions.path), sanitized)
 			} catch (e) {
-				await throwError(e, message, values, transformCallbackOptions)
+				await throwError(e, message, value, transformCallbackOptions)
 			}
 		}
+	)
+	else {
+		const makeSubLoop = async (index: number, values: T[], paths: string[]) => {
+			if (index === path.length) {
+				const transformCallbackOptions = {req, path: paths, location}
+				try {
+					const sanitized = await (callback as ITransformCallbackPlural<T, V>)(
+						values,
+						transformCallbackOptions
+					)
+					if (!validateOnly) paths.forEach((p, i) => recursiveSet(
+						req,
+						fullPath(p),
+						(sanitized as V[])?.[i]
+					))
+				} catch (e) {
+					await throwError(e, message, values, transformCallbackOptions)
+				}
+			} else await makeSub(path[index], async (value, {path: subPath}) => {
+				await makeSubLoop(index + 1, [...values, value], [...paths, subPath])
+			})
+		}
+		await makeSubLoop(0, [], [])
 	}
 }
