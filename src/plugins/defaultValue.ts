@@ -2,7 +2,7 @@ import {ITransformer, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V> {
-		defaultValue(defaultValue: T): ITransformer<T, V>
+		defaultValue(defaultValue: T): ITransformer<T, T | V>
 	}
 }
 

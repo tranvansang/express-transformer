@@ -9,6 +9,7 @@
   "files": ["lib"],
   "private": false,
   "scripts": {
+    "clear": "rm -rf lib",
     "test": "yarn jest",
     "coverage": "yarn jest --coverage",
     "build": "yarn tsc"

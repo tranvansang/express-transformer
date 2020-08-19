@@ -3,7 +3,7 @@ import {ITransformer, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V> {
-		matches(regex: RegExp, options?: {force?: boolean}): ITransformer<T, V>
+		matches(regex: RegExp, options?: {force?: boolean}): ITransformer<T, T>
 	}
 }
 

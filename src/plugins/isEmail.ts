@@ -4,7 +4,7 @@ import {ITransformer, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V> {
-		isEmail(options?: IIsEmailOptions): ITransformer<string, V>
+		isEmail(options?: IIsEmailOptions): ITransformer<string, string>
 	}
 }
 

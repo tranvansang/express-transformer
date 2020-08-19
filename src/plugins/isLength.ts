@@ -6,7 +6,7 @@ declare module '../interfaces' {
 		isLength(
 			options: { min?: number, max?: number } | string | number,
 			transformOptions?: {force?: boolean}
-		): ITransformer<T, V>
+		): ITransformer<T, T>
 	}
 }
 

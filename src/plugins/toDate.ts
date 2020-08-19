@@ -6,7 +6,7 @@ declare module '../interfaces' {
 		toDate(options?: {
 			resetTime?: boolean
 			force?: boolean
-		}): ITransformer<T, V>
+		}): ITransformer<string | number, Date>
 	}
 }
 

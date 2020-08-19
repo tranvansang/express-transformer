@@ -7,7 +7,7 @@ declare module '../interfaces' {
 			min?: number
 			max?: number
 			force?: boolean
-		}): ITransformer<T, V>
+		}): ITransformer<string | number, number>
 	}
 }
 
