@@ -163,7 +163,7 @@ export default <T, V>(path: IPath, {
 							message = ''
 							break
 						}
-					//break statement is removed intentionally
+					//break statement is omitted intentionally
 					case CallbackType.transformer:
 						await doTransform(path, callback as ICallback<T, V>, force)
 						message = ''

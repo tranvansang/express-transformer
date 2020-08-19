@@ -6,14 +6,13 @@
   "settings": {
     "import/resolver": {
       "node": {
-        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+        "extensions": [".js", ".ts"]
       }
     }
   },
   "env": {
     "node": true,
     "es6": true,
-    "browser": true,
     "jest": true
   },
   "plugins": [
@@ -21,15 +20,13 @@
     "jest"
   ],
   "rules": {
-    "indent": ["error", "tab"],
-    "no-tabs": ["error", {
-      "allowIndentationTabs": true
-    }],
     "no-irregular-whitespace": "off",
     "comma-dangle": "off",
     "function-paren-newline": "off",
     "no-param-reassign": "off",
     "semi": ["error", "never"],
+    "react/display-name": "off",
+    "react/prop-types": "off",
     "import/first": "off",
     "import/order": "off",
     "import/prefer-default-export": "off",
@@ -46,6 +43,7 @@
     "arrow-parens": ["error", "as-needed"],
     "no-async-promise-executor": "off",
     "no-confusing-arrow": "off",
+    "no-continue": "off",
     "no-nested-ternary": "off",
     "no-return-assign": "off",
     "no-restricted-syntax": "off",
@@ -55,12 +53,13 @@
     "no-mixed-operators": "off",
     "no-return-await": "off",
     "no-plusplus": "off",
-    "no-await-in-loop": "off"
+    "no-await-in-loop": "off",
+    "no-void": "off"
   },
   "parser": "babel-eslint",
   "parserOptions": {
-    "ecmaFeatures": {
-      "legacyDecorators": true
+    "babelOptions": {
+      "envName": "eslint"
     }
   },
   "globals": {
