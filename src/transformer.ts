@@ -10,7 +10,14 @@ import exists from './plugins/exists'
 // import defaultValue from './plugins/defaultValue'
 // import isEmail from './plugins/isEmail'
 import asyncMiddleware from 'middleware-async'
-import {ITransformCallback, IMessageCallback, ITransformer, ITransformOptions, ITransformPlugin} from './interfaces'
+import {
+	IMessageCallback,
+	ITransformCallback,
+	ITransformCallbackOptions,
+	ITransformer,
+	ITransformOptions,
+	ITransformPlugin
+} from './interfaces'
 import {doTransform} from './utils'
 
 export {TransformationError}
@@ -67,7 +74,13 @@ export const transformer = <T, V>(path: string | string[], { location = 'body' }
 	for (
 		const {name, transform, options} of plugins
 	) middleware[name] = <Options>(pluginOptions: Options) => middleware
-		.transform((...params) => transform<Options, T, V>(pluginOptions)(...params), options)
+		.transform(
+			(
+				value: T | T[],
+				transformCallbackOptions: ITransformCallbackOptions
+			) => transform<Options, T, V>(pluginOptions)(value, transformCallbackOptions) as Promise<T | V | void>,
+			options
+		)
 	return middleware
 }
 export default transformer

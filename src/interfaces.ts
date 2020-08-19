@@ -11,14 +11,16 @@ export interface ITransformCallbackOptions {
 	req: Request
 }
 
+type Promisable<T> = T | Promise<T>
+
 export type ITransformCallbackSingle<T, V> = (
 	value: T, options: ITransformCallbackOptions
-) => V | T | void | Promise<V | T | void>
+) => Promisable<V | T | void>
 export type ITransformCallbackPlural<T, V> = (
 	value: T[], options: ITransformCallbackOptions
-) => V[] | T[] | void | Promise<V[] | T[] | void>
+) => Promisable<V[] | T[] | void>
 export type ITransformCallback<T, V> = ITransformCallbackSingle<T, V> | ITransformCallbackPlural<T, V>
-export type IMessageCallback<T> = string | ((value: T | T[], options: ITransformCallbackOptions) => string | Promise<string>)
+export type IMessageCallback<T> = string | ((value: T | T[], options: ITransformCallbackOptions) => Promisable<string>)
 
 export interface ITransformer<T, V> extends RequestHandler {
 	transform(callback: ITransformCallback<T, V>, options?: ITransformOptions): ITransformer<T, V>
@@ -31,6 +33,10 @@ export interface ITransformer<T, V> extends RequestHandler {
 
 export type ITransformPlugin = {
 	name: string
-	transform: <Option, T, V>(options: Option) => (value: T, callbackOptions: ITransformCallbackOptions) => V | void
+	transform: <Option, T, V>(
+		options: Option
+	) => (
+		value: T | T[], callbackOptions: ITransformCallbackOptions
+	) => Promisable<T | T[] | V | V[] | void>
 	options?: ITransformOptions
 }

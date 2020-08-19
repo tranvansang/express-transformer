@@ -41,7 +41,7 @@ export const recursiveDefault = <T, V>(obj: T, path: string, defaultValue: V) =>
  * @param force
  * @returns {Promise<void>}
  */
-export const subTransform = async <T, V>(
+const subTransform = async <T, V>(
 	req: Request,
 	location: string,
 	prefix: string[],
@@ -52,21 +52,21 @@ export const subTransform = async <T, V>(
 ) => {
 	const {force, validateOnly} = options
 	const fullPath = (s: string) => [...prefix, s].join('.')
-	const setWithCheck = (p: string, value: V) => void (!validateOnly && recursiveSet(req, fullPath(p), value))
-	const processArray = (p: string) => {
+	const setWithCheck = (p: string, value?: V) => void (!validateOnly && recursiveSet(req, fullPath(p), value))
+	const getArrayOrAssignEmpty = (p: string) => {
 		//force only effective when value does not exist
 		if (!recursiveHas(req, fullPath(p)) && !force) return []
 		let values = recursiveGet(req, fullPath(p))
-		//always reset existing value regardless force's value
+		//always reset existing value regardless force and validateOnly's values
 		if (!Array.isArray(values)) {
 			values = []
-			setWithCheck(p, [])
+			recursiveSet(req, fullPath(p), [])
 		}
 		return values
 	}
 	if (firstArray) {
 		prefix = [...prefix, firstArray]
-		const values = processArray(prefix.join('.'))
+		const values = getArrayOrAssignEmpty(prefix.join('.'))
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			location,
@@ -76,21 +76,21 @@ export const subTransform = async <T, V>(
 			callback,
 			options
 		)
-	} else if (/\[]$/.test(path)) {
+	} else if (/\[]$/.test(path)) { // last selector is an array selector
 		path = [...prefix, path.slice(0, path.length - 2)].join('.')
-		const values = processArray(path)
+		const values = getArrayOrAssignEmpty(path)
 		for (let i = 0; i < values.length; i++) {
 			const p = [path, i].join('.')
 			const value = recursiveGet(req, fullPath(p))
 			const sanitized = await callback(value, {location, path: p, req})
-			setWithCheck(p, sanitized)
+			setWithCheck(p, sanitized as V)
 		}
 	} else {
 		path = [...prefix, path].join('.')
 		if (force || recursiveHas(req, fullPath(path))) {
 			const value = recursiveGet(req, fullPath(path))
 			const sanitized = await callback(value, {location, path, req})
-			setWithCheck(path, sanitized)
+			setWithCheck(path, sanitized as V)
 		}
 	}
 }
@@ -106,7 +106,7 @@ export const doTransform = async <T, V>(
 	const {force, validateOnly} = options
 	const transformCallbackOptions = {req, path, location}
 	if (!Array.isArray(path)) {
-		const arraySplits = path.split(/\[]\.?/)
+		const arraySplits = path.split(/\[]\./) // only split arrays in middle
 		await subTransform(
 			req,
 			location,
