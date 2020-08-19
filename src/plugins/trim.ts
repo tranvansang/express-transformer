@@ -1,15 +1,20 @@
-import {ITransformer} from '../interfaces'
+import {ITransformer, ITransformPlugin} from '../interfaces'
 
-declare module '../transformer' {
+declare module '../interfaces' {
 	interface ITransformer<T, V> {
 		trim(): ITransformer<T, V>
 	}
 }
 
-export default <T>(middleware: ITransformer<T, T | string>) => {
-	middleware.trim = () =>
-		middleware.each(value => {
-			if (typeof value === 'string') return value.trim()
-			return value
-		})
-}
+export default {
+	name: 'trim',
+	getConfig() {
+		return {
+			transform(value) {
+				if (typeof value === 'string') return value.trim()
+				return value
+			},
+			options: {force: false, validateOnly: false}
+		}
+	}
+} as ITransformPlugin

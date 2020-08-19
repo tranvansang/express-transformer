@@ -1,18 +1,22 @@
 import TransformationError from '../TransformationError'
 import isEmailCore, {IIsEmailOptions} from './isEmailCore'
-import {ITransformer} from '../interfaces'
+import {ITransformer, ITransformPlugin} from '../interfaces'
 
-declare module '../transformer' {
+declare module '../interfaces' {
 	interface ITransformer<T, V> {
-		isEmail(opts?: IIsEmailOptions): ITransformer<string, V>
+		isEmail(options?: IIsEmailOptions): ITransformer<string, V>
 	}
 }
 
-export default <T, V>(middleware: ITransformer<string, V>) => {
-	middleware.isEmail = (opts?: IIsEmailOptions) =>
-		middleware.each((value: string, {path}) => {
-			if (!isEmailCore(value)) throw new TransformationError(`${path} has invalid value`)
-			return value
-		}, opts)
-
-}
+export default {
+	name: 'isEmail',
+	getConfig({force, ...options}: IIsEmailOptions & {force?: boolean} = {}) {
+		return {
+			transform(value: string, {path}) {
+				if (!isEmailCore(value, options)) throw new TransformationError(`${path} has invalid value`)
+				return value
+			},
+			options: {force}
+		}
+	}
+} as ITransformPlugin

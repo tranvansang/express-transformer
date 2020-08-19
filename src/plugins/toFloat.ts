@@ -1,24 +1,38 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformOptions} from '../interfaces'
+import {ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
 
-declare module '../transformer' {
+declare module '../interfaces' {
 	interface ITransformer<T, V> {
-		toFloat(opts?: { min?: number, max?: number } & ITransformOptions): ITransformer<T, V>
+		toFloat(options?: {
+			min?: number
+			max?: number
+			force?: boolean
+		}): ITransformer<T, V>
 	}
 }
 
-export default (middleware: ITransformer<string | number, number>) => {
-	middleware.toFloat = ({min, max, ...transformOption}: { min?: number, max?: number } & ITransformOptions = {}) =>
-		middleware.each((value, {path}) => {
-				value = typeof value === 'string' ? parseFloat(value) : value
-				if (isNaN(value) || !isFinite(value))
-					throw new TransformationError(`${path} must be a number`)
-				if (min !== undefined && value < min)
-					throw new TransformationError(`${path} must be at least ${min}`)
-				if (max !== undefined && value > max) {
-					throw new TransformationError(`${path} must be at most ${max}`)
-				}
-				return value
+export default {
+	name: 'toFloat',
+	getConfig({min, max, force}: {
+		min?: number
+		max?: number
+		force?: boolean
+	} = {}) {
+		return {
+			transform(value: string | number, {path}) {
+				const floatValue = typeof value === 'string' ? parseFloat(value) : value
+				if (
+					isNaN(floatValue) || !isFinite(floatValue)
+				) throw new TransformationError(`${path} must be a number`)
+				if (
+					min !== undefined && floatValue < min
+				) throw new TransformationError(`${path} must be at least ${min}`)
+				if (
+					max !== undefined && floatValue > max
+				) throw new TransformationError(`${path} must be at most ${max}`)
+				return floatValue
 			},
-			transformOption)
-}
+			config: {force, validateOnly: false}
+		}
+	}
+} as ITransformPlugin

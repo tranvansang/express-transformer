@@ -141,7 +141,6 @@ const validateDisplayName = (displayName: string) => {
 	return true
 }
 
-
 export interface IIsEmailOptions {
 	allowDisplayName?: boolean
 	requireDisplayName?: boolean

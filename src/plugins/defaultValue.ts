@@ -1,19 +1,23 @@
-import {ITransformer} from '../interfaces'
+import {ITransformer, ITransformPlugin} from '../interfaces'
 
-declare module '../transformer' {
+declare module '../interfaces' {
 	interface ITransformer<T, V> {
 		defaultValue(defaultValue: T): ITransformer<T, V>
 	}
 }
 
-export default <T, V>(middleware: ITransformer<T, V>) => {
-	middleware.defaultValue = (defaultValue: T) =>
-		middleware.each(
-			(value: T) => value === undefined
-			|| value as unknown as string === ''
-			|| value === null
-				? defaultValue
-				: value,
-			{force: true}
-		)
-}
+export default {
+	name: 'defaultValue',
+	getConfig<T>(defaultValue: T) {
+		return {
+			transform(value) {
+				return value === undefined
+				|| value as unknown as string === ''
+				|| value === null
+					? defaultValue
+					: value
+			},
+			options: {force: true, validateOnly: false}
+		}
+	}
+} as ITransformPlugin

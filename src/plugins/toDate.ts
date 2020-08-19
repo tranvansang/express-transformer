@@ -1,16 +1,24 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformOptions} from '../interfaces'
+import {ITransformer, ITransformPlugin} from '../interfaces'
 
-declare module '../transformer' {
+declare module '../interfaces' {
 	interface ITransformer<T, V> {
-		toDate(opts?: { resetTime?: boolean } & ITransformOptions): ITransformer<T, V>
+		toDate(options?: {
+			resetTime?: boolean
+			force?: boolean
+		}): ITransformer<T, V>
 	}
 }
 
-export default (middleware: ITransformer<string, Date>) => {
-	middleware.toDate = ({resetTime, ...transformOption}: {resetTime?: boolean} & ITransformOptions = {}) =>
-		middleware.each((value, {path}) => {
-				const time = Date.parse(value)
+export default {
+	name: 'toDate',
+	getConfig({force, resetTime}: {
+		resetTime?: boolean
+		force?: boolean
+	} = {}) {
+		return {
+			transform(value: string | number, {path}) {
+				const time = typeof value === 'string' ? Date.parse(value) : new Date(value).getTime()
 				if (isNaN(time) || !isFinite(time)) throw new TransformationError(`${path} must be in date format`)
 				const date = new Date(time)
 				if (resetTime) {
@@ -21,5 +29,7 @@ export default (middleware: ITransformer<string, Date>) => {
 				}
 				return date
 			},
-			transformOption)
-}
+			options: {force, validateOnly: false}
+		}
+	}
+} as ITransformPlugin

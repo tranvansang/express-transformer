@@ -28,15 +28,17 @@ export interface ITransformer<T, V> extends RequestHandler {
 		callback: IMessageCallback<T>,
 		options?: {force?: boolean}
 	): ITransformer<T, V>
-	[key: string]: (pluginOptions: any) => ITransformer<T, V>
+	[key: string]: (...pluginOptions: any[]) => ITransformer<T, V>
 }
 
 export type ITransformPlugin = {
 	name: string
-	transform: <Option, T, V>(
-		options: Option
-	) => (
-		value: T | T[], callbackOptions: ITransformCallbackOptions
-	) => Promisable<T | T[] | V | V[] | void>
-	options?: ITransformOptions
+	getConfig: <Params extends []>(
+		...params: Params
+	) => {
+		transform<T, V>(
+			value: T | T[], callbackOptions: ITransformCallbackOptions
+		): Promisable<T | T[] | V | V[] | void>
+		options?: ITransformOptions
+	}
 }
