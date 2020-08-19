@@ -45,13 +45,14 @@ export const transformer = <T, V>(path: string | string[], { location = 'body' }
 	}> = []
 	const middleware = asyncMiddleware(async (req, res, next) => {
 		for (
-			const {transform, options} of stack
+			const {transform, options, message} of stack
 		) await doTransform<T, V>(
 			req,
 			location,
 			path,
 			transform,
-			options
+			options,
+			message
 		)
 		next()
 	}) as ITransformer<T, V>
@@ -71,7 +72,7 @@ export const transformer = <T, V>(path: string | string[], { location = 'body' }
 		const {name, getConfig} of plugins
 	) middleware[name] = <Params extends []>(...params: Params) => {
 		const {options, transform} = getConfig(...params)
-		middleware
+		return middleware
 			.transform(
 				(
 					value: T | T[],

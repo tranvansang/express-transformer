@@ -45,17 +45,19 @@ describe('Transform', () => {
 	})
 
 	test('should invalidate value if message callback throws error', async () => {
-		await flipPromise(combineToAsync(
-			transformer('key').message(() => Promise.reject(1)),
-		)({body: {key: 'hi'}} as Request, undefined as unknown as Response))
+		expect(await flipPromise(combineToAsync(
+			transformer('key')
+				.transform(() => Promise.reject(2))
+				.message(() => Promise.reject(1)),
+		)({body: {key: 'hi'}} as Request, undefined as unknown as Response))).toBe(1)
 	})
 
 	test('should ignore custom message from second transformer', async () => {
 		const err = await flipPromise(combineToAsync(
 			transformer('key')
 				.transform(val => val)
-				.exists()
-				.message('hi'),
+				.message('hi')
+				.exists(),
 		)({body: {}} as Request, undefined as unknown as Response)) as TransformationError
 		expect(err.message).toBe('key is required')
 		expect(err.name).toBe(transformationErrorName)
@@ -99,7 +101,7 @@ describe('Transform', () => {
 		req.body.key1 = 1
 		req.body.key2 = 2
 		await combineToAsync(
-			transformer<[number, number], [number, number]>(['key1', 'key2'])
+			transformer(['key1', 'key2'])
 				.transform(([key1, key2]) => [key1 + key2, key2]),
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key1).toBe(3)
@@ -122,43 +124,6 @@ describe('Transform', () => {
 				.transform(check1),
 		)(req as Request, undefined as unknown as Response)
 		expect(check1.mock.calls.length).toBe(0)
-	})
-
-	test('should validate array', async () => {
-		delete req.body.key1
-		req.body.key2 = '1'
-		let check = jest.fn()
-		await combineToAsync(
-			transformer(['key2', 'key1'])
-				.each(check),
-		)(req as Request, undefined as unknown as Response)
-		expect(check.mock.calls).toEqual([['1', expect.anything()]])
-
-		delete req.body.key1
-		req.body.key2 = '1'
-		check = jest.fn()
-		await combineToAsync(
-			transformer(['key2', 'key1'])
-				.each(check, {force: true}),
-		)(req as Request, undefined as unknown as Response)
-		expect(check.mock.calls.length).toBe(2)
-
-		delete req.body.key1
-		req.body.key2 = '1'
-		await flipPromise(combineToAsync(
-			transformer(['key2', 'key1'])
-				.exists(),
-		)(req as Request, undefined as unknown as Response))
-
-		delete req.body.key1
-		req.body.key2 = 1
-		req.body.key1 = 3
-		await combineToAsync(
-			transformer<number, number>(['key2', 'key1'])
-				.each((val: number) => val + 1),
-		)(req as Request, undefined as unknown as Response)
-		expect(req.body.key2).toBe(2)
-		expect(req.body.key1).toBe(4)
 	})
 
 	test('should reject something dirty', async () => {

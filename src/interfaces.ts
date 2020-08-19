@@ -13,13 +13,13 @@ export interface ITransformCallbackOptions {
 
 type Promisable<T> = T | Promise<T>
 
-export type ITransformCallbackSingle<T, V> = (
+export type ITransformCallbackSingular<T, V> = (
 	value: T, options: ITransformCallbackOptions
 ) => Promisable<V | T | void>
 export type ITransformCallbackPlural<T, V> = (
 	value: T[], options: ITransformCallbackOptions
 ) => Promisable<V[] | T[] | void>
-export type ITransformCallback<T, V> = ITransformCallbackSingle<T, V> | ITransformCallbackPlural<T, V>
+export type ITransformCallback<T, V> = ITransformCallbackSingular<T, V> | ITransformCallbackPlural<T, V>
 export type IMessageCallback<T> = string | ((value: T | T[], options: ITransformCallbackOptions) => Promisable<string>)
 
 export interface ITransformer<T, V> extends RequestHandler {

@@ -83,23 +83,6 @@ describe('Transformer library', () => {
 		expect(check.mock.calls.length).toBe(0)
 	})
 
-	test('should go next if nonstop is on', async () => {
-		const check = jest.fn()
-		const req = {body: {key: 1}}
-		await flipPromise(combineToAsync(
-			transformer<number, number>('key', {nonstop: true})
-				.transform(() => {
-					throw new Error('err')
-				})
-				.transform(key => {
-					check()
-					return key + 1
-				}),
-		)(req as Request, undefined as unknown as Response))
-		expect(req.body.key).toBe(2)
-		expect(check.mock.calls).toEqual([[]])
-	})
-
 	test('should ignore value if not provided', async () => {
 		const check = jest.fn()
 		await combineToAsync(
@@ -139,20 +122,12 @@ describe('Transformer library', () => {
 		}]])
 	})
 
-	test('should call message on non-provided value', async () => {
+	test('should not call message on non-provided value', async () => {
 		const check = jest.fn()
 		await combineToAsync(
 			transformer('key').message(check),
 		)({} as Request, undefined as unknown as Response)
-		expect(check.mock.calls.length).toBe(1)
-	})
-
-	test('should call message for array value', async () => {
-		const check = jest.fn()
-		await combineToAsync(
-			transformer(['key1', 'key2']).message(check),
-		)({} as Request, undefined as unknown as Response)
-		expect(check.mock.calls.length).toBe(1)
+		expect(check.mock.calls.length).toBe(0)
 	})
 
 	describe('array handling', () => {
