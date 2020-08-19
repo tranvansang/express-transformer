@@ -28,7 +28,7 @@ export interface ITransformer<T, V> extends RequestHandler {
 		callback: IMessageCallback<T>,
 		options?: {force?: boolean}
 	): ITransformer<T, V>
-	[key: string]: (...pluginOptions: any[]) => ITransformer<T, V>
+	[key: string]: (...pluginOptions: any[]) => any
 }
 
 export type ITransformPlugin = {
