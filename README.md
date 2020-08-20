@@ -60,7 +60,7 @@ app.use('/signup',
 	transformer('email')
 		.exists()
         .message('Please provide email')
-		.isLength({min: 8}) //note that .exists() is required because if value is not provided, transformer will not be triggered
+		.isLength({min: 8}) //note that .exists() is required because if value is omitted, transformer will not be triggered
         .message('Email is too short')
 		.transform(async email => { // transformer can be async function
 			const existingUser = await User.findByEmail(email).exec()
@@ -151,11 +151,11 @@ Associated Typescript typing extend is also available.
                     If `transformerOptions` is `{foo: 'bar'}`, `options` will be `{location: 'body', foo: 'bar'}`.
                     If `transformerOptions` is `{foo: 'bar', location: 'params'}`, `options` will be `{location: 'params', foo: 'bar'}`.
         - `(optional)options: Object`: an optional option object with the following properties.
-            - `(optional) force: boolean (default: false)`: when the input value is not provided, the transformation will be skipped.
+            - `(optional) force: boolean (default: false)`: when the input value is omitted, the transformation will be skipped.
             
                 Note 1: the library uses `Object.hasOwnProperty()` to determine whether a value at path exists, which means even if you specify `undefined` at the path, the transformation is **not** skipped.
             
-                Note 2: if `force` is `true` and {`path` or element in `path`} includes an array notion (`[]`), the necessary updates will occur along path traversal to make sure the access to the end of the path possible.
+                Note 2: if `force` is `true` and {`path` or element in `path`} includes an array notation (`[]`), the necessary updates will occur along path traversal to make sure the access to the end of the path possible.
                 This behavior ignores the value of `validateOnly`.
                 
                 For example: With `path = 'foo.bar[].fooo.baar[]'`, `context = {}`, `context` will be updated to be `{foo: {bar: []}}`.
@@ -187,7 +187,7 @@ In these plugin config, mostly, when the `force` option exist, it indicates the 
 ### Validators:
 
 These plugins only validate, does not change the inputs in the paths. In other words, they have `validateOnly` be `false`.
-- `chain.exists({acceptEmptyString = false} = {})`: invalidate if the input is `undefined`, `null`, `''` (empty string), or not provided.
+- `chain.exists({acceptEmptyString = false} = {})`: invalidate if the input is `undefined`, `null`, `''` (empty string), or omitted.
     If `acceptEmptyString` is `true`, empty string is accepted as valid.
 - `chain.isEmail(options)`: check if the input is a string and in email format.
 
@@ -218,7 +218,7 @@ These plugins only validate, does not change the inputs in the paths. In other w
 
 These plugins probably change the inputs in the paths. In other words, they have `validateOnly` be `true`.
 
-- `chain.defaultValue(defaultValue)`: change the input to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided.
+- `chain.defaultValue(defaultValue)`: change the input to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or omitted.
 - `chain.toDate(options?: {resetTime?: boolean, force?: boolean})`: convert the input to a `Date` object.
     Throw an error if the input is not a number, not a string, not a Date object.
     Otherwise, check if the input can be converted to a valid Date object.
@@ -247,7 +247,9 @@ Consult the [validator](https://www.npmjs.com/package/validator) package for mor
     - `(optional) options: Object`: the options object which will be passed to `.transform()`.
      It is highly recommended to set `validateOnly` option here to explicitly indicate that your plugin is a validator or a transformer.
      
- It is recommended to make use of the exported `TransformationError` error when throwing an error.
+It is recommended to make use of the exported `TransformationError` error when throwing an error.
+
+To extend 
 
 ## Utility functions
 
@@ -291,14 +293,47 @@ Giving a context object `obj`. The following `path` values make the library to l
 - For example, if `path` is `foo[].bar.foo.baar[]`, the library will look at `obj.foo[0].bar.foo.baar[0]`, `obj.foo[1].bar.foo.baar[0]`, `obj.foo[2].bar.foo.baar[0]`, `obj.foo[0].bar.foo.baar[1]`.
 
 ## Array of arrays validation
+
+This library is very useful if you want to validate/transform every element in an array, or every pair of elements between many arrays.
+
+To indicate an array iteration, use the `[]` notation in the `path` value.
+
+Let's see by examples:
+
+- If `path` is `'foo[].bar.baar[]'`, the library will do the following
+    - Travel to `req.body.foo`, if the current value is an array, iterator through all elements in the array.
+    On each element, go deeper via the path `bar.baar`.
+    - At `bar.baar` of the children object, iterate through all values in the array, pass it to the transformer callback.
+    - If `validateOnly` is `false`, replace the value by the result returned from the callback (`Promise` returned value is also supported).
+    
+- If `path` is an array. Things become more complicated.
+
+Base on the common sense, we **decided** to manually force the validation (ignoring the value of `force` when needed), to avoid several use cases.
+Assume that you want to make an API to change user password. There are following requirements which the API should satisfy.
+
+- If `password` and `passwordConfirm` are omitted, skip changing the password (, and may change other provided values).
+- If `password` or `passwordConfirm` are provided, check if they equal with some condition (length, ...etc) before process the changing.
+
+`transformer(['password', 'passwordConfirm']).transform(callback)` is designed to do that for you.
+
+- The most useful path of the array of arrays validation, is that if there are multiple elements in the `path` object (which is an array of `string`) have the array notation (`[]`),
+the library will pair them one by one, and pass their values in a list and call the `callback`.
+The library also replaces the returned values in the corresponding locations, if `validateOnly` is `false`.
+Accordingly, when `validateOnly` is `false` and `path` is an array, the `callback` is required to return an array.
  
 # QA
 
-1. How do I customize the error handler?
+Q1. How do I customize the error handler?
+A1. Place your own error handler and check the error with `instanceof`
 
-2. How do I collect all errors and throw at once?
-
-Currently, there is no way to do. The transformation chains always stop at the first error.
+```
+app.use(transformer().transform(), (err, req, res, next) => {
+    if (err instanceof TransformationError) {
+        console.log(err.info)
+    }
+    //...
+})
+```
 
 ## Change logs
 
