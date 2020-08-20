@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import {recursiveDefault, recursiveGet, recursiveHas, recursiveSet} from './utils'
+import {recursiveGet, recursiveHas, recursiveSet} from './utils'
 
 describe('Recursive get', () => {
 	test('should get correct value', () => {
@@ -55,19 +55,3 @@ describe('Recursive has', () => {
 	})
 })
 
-describe('Recursive default', () => {
-	test('should check correctly', () => {
-		const obj = {a: {b: 'c'}}
-		recursiveDefault(obj, 'a.b', 'd')
-		expect(obj).toEqual({a: {b: 'c'}})
-		recursiveDefault(obj, 'a.a1.a2', 3)
-		expect(obj).toEqual({
-			a: {
-				b: 'c',
-				a1: {
-					a2: 3
-				}
-			}
-		})
-	})
-})

@@ -1,93 +1,138 @@
 # Express transformer [![Build Status](https://travis-ci.org/tranvansang/express-transformer.svg?branch=master)](https://travis-ci.org/tranvansang/express-transformer)
 [![NPM](https://nodei.co/npm/express-transformer.png)](https://nodei.co/npm/express-transformer/)
 
-An express transformer, validator library
+Connect-like middleware to validate/transform data.
 
-This [medium post](https://medium.com/p/f9cf12cc5986) is related to this package.
+This library helps you easier to get along with writing express validator middlewares,
+be more confident to implement your business logic without worrying about the data's validity.
 
-This tiny library helps you easier to get along with writing express validator middlewares, be more confident
-when writing controller middleware when all parameters are ensured to satisfy requirements.
+# Usage samples
 
-Check these real life samples
-
-- Fully working sample
+- Ensure a value exists
 ```javascript
 import express from 'express'
-import transformer, {transformationResult, TransformationError} from 'express-transformer'
-
-const validate = (req, res, next) => {
-  const errors = transformationResult(req)
-  if (errors.length) {
-    const err = next(errors[0])
-    if (err instanceof TransformationError)
-      return res.send(err.message)
-    return next(err) //or return res.send('internal error')
-  }
-  next()
-}
+import {transformer} from 'express-transformer'
 
 const app = express()
-app.use('/change_age',
-  transformer('age').toInt({min: 18}),
-  validate,
-  (req, res, next) => {
-  ///req.body.age is ensured to be int and >= 18
-  })
+app.use('/login',
+	transformer('username').exists(),
+	transformer('password').exists(),
+	(req, res, next) => {
+	//req.body.age and req.body.password exist, for sure
+	})
 app.listen(3000)
 ```
-It is common to convert string type query's parameter into backend type. For example the page parameter
+
+- Check passwords be the same
 ```javascript
-app.use('/get_article',
-  transformer('page', {location: 'query'})
-    .defaultValue(1)
-    .toInt({min: 1})
-    .transform(val => val - 1),
-  validate,
-  (req, res, next) => {
-  ///req.query.pagee is ensured to exist, be integer type, and >= 0, and subtracted 1 from value passed from client
-  })
+import express from 'express'
+import {transformer} from 'express-transformer'
+
+const app = express()
+app.use('/signup',
+	transformer('username').exists(),
+	transformer('password').exists(),
+	transformer(['password', 'passwordConfirm']).transform(([password, passwordConfirm]) => {
+        if (password !== passwordConfirm) throw new Error('Passwords do not match')
+    }, {validateOnly: true}),
+	(req, res, next) => {
+	//req.body.age and req.body.password exist
+    //and, req.body.password === req.body.passwordConfirm
+	})
+app.listen(3000)
 ```
+
+- Convert 1-base `page` parameter in query to a 0-base number
+```javascript
+app.use('/article',
+	transformer('page', {location: 'query'})
+		.defaultValue(1)
+		.toInt({min: 1})
+		.transform(val => val - 1),
+	(req, res, next) => {
+	})
+```
+
+- Check password length, validate email
 More complicated, but obviously common case
 ```javascript
 app.use('/signup',
-  transformer('email')
-    .exists()
-    .isLength({min: 8}) //note that .exists() is required because if value is not provided, transformer will not be triggered
-    .transform(async email => { // transformer can be async function
-      let existingUser = await User.findByEmail(email).exec()
-      if (existingUser) throw 'Email already existed'
-      return email
-    }),
-  transformer(['password', 'passwordConfirm'], {force: false}) //force is false by default
-    .exists()
-    .trim()
-    .isLength({min: 8})
-    .transform(([password, passwordConfirm]) => {
-      //because force option is false. If email transformer throws error, this transformer will be ignored
-      if (password !== passwordConfirm)
-        throw 'Passwords do not match'
-      return [password, passwordConfirm]//return the original values is required
-    }),
-  validate,
-  (req, res, next) => {
-  //now email, password, passwordConfirm are safe to be used
-  }
+	transformer('email')
+		.exists()
+        .message('Please provide email')
+		.isLength({min: 8}) //note that .exists() is required because if value is not provided, transformer will not be triggered
+        .message('Email is not long enough')
+		.transform(async email => { // transformer can be async function
+			const existingUser = await User.findByEmail(email).exec()
+			if (existingUser) throw new Error('Email already existed')
+		}, {validateOnly: true}),
+	transformer(['password', 'passwordConfirm'], {validateOnly: true}) //force is false by default
+		.exists()
+		.trim()
+		.isLength({min: 8})
+		.transform(([password, passwordConfirm]) => {
+			if (password !== passwordConfirm) throw new Error('Passwords do not match')
+		}),
+	(req, res, next) => {}
 )
 ```
 
-## API
+# API reference and usage
 
-`import transformer, {transformationResult, TransformationError} from 'express-transformer'`
+There are two named exported `transformer` and `addTransformerPlugin`.
 
-**Basic APIs**
+`import {transformer, addTransformerPlugin} from 'express-transformer'`
 
-- `transformer(path, option)`: return the transformation chain for value in `path`. `path` can be string or array of strings. For example: [`sender.email`, `sender.password`, `content`], ...
+## Create a transformation chain
+`transformer(path, option)`
+- Parameters:
+    - `(required) path: string | string[]`: path or array of paths. Support array of arrays validation.
+     Sample values: `'email''`, `'foo[]'`, `['foo', 'bar']`, `['foo[]', 'foo[].bar.baar[]', 'fooo']`.
+    - `(optional) option`: an option object with following properties.
+        - `location: string (default: 'body')`: a *universal path format* string with `req` as the context object, which specifies where to find the input value
+- Returned value: a connect-like middleware which inherits all functionalities of a transformation chain.
+
+## Universal path format
+A versatile string which support accessing value at any deep level and array iteration.
+
+Giving a context object `obj`. The following `path` values make the library to looks at the appropriate location in the context object.
+
+- For example, if `path` is `'foo.bar'`, the library will look at `obj.foo.bar`.
+- If `path` contains `[]`, the library will iterate all value at the path right before the `[]`'s occurrences.
+- For example, if `path` is `foo[].bar.foo.baar[]`, the library will look at `obj.foo[0].bar.foo.baar[0]`, `obj.foo[1].bar.foo.baar[0]`, `obj.foo[2].bar.foo.baar[0]`, `obj.foo[0].bar.foo.baar[1]`.
+
+## Array of arrays validation
+         
+## Transformation chain
+A transformation chain supports following methods.
+
+This list of methods can be added via `addTransformerPlugin`, Typescript extend is also supported.
+
+- `chain.transform(callback, option)`: append a transformation to the chain.
+    - Parameters:
+        - `(required) callback`: the callback of transformation, which should accept following parameters
+            - `value`:
+                - If the `path` option in `transformer(path, option)` is a string, `value` will be value of the input.
+                - If the `path` option in `transformer(path, option)` is an array of string, `value` will be array of values of the input.
+            - `info`: an object which includes the following properties.
+                - `path`
+                - `location`
+                - `req`
+        - `(optional)option`: an optional option object with the following properties.
+            - `(optional) force: boolean (default: false)`: when the input value is not provided, the transformation specified by `.transform` is skipped.
+            
+                Note: if the input is specified with `undefined`, the transformation is not skipped.
+            - `(optional) validateOnly: boolean (default: false)`: keep the value after the transformation
+            
+## Plugins
+
+## How to add a plugin
+
+## Utility functions
+
+## Error class
 
     The transformation chain should be placed as typical express middleware (see examples)
-    
-    `option` is optional where
-  - `option.nonstop`: default `false`. Continue the transformation chain if this option is truthy
-  - `option.location`: default `body`. Location to look for value. `body` can be multilevel. For example: `body.user`
 
 - `chain.message(callback)`: custom error message for the next transformer and return the chain
   - `callback` receives 2 parameter, the value to be transformed, and `{location, path, req}`
@@ -112,19 +157,6 @@ app.use('/signup',
     
     However, with `req` be `{body: {}}`. (remember `foo` key is not provided). `callback` is **NOT** called
     
-- `chain.each` (or `chain.every`): pass individual value to the transformer if path is an array.
-   Otherwise, automatically fallback to `transform` (if path is not an array)
-    
-- `transformationResult(req)`: returns array of transformation result. Each element has form of `{location, path, error}`.
-
-  `error` has type of `TransformationError` if and only if the error was thrown from `callback` of transformer that has preceded by a custom message chain `.message()`
-  
-  String message or any object returned by (not thrown by) `.message`'s callback is stored in `error.message` regardless of the returned value's type
-  
-All next following chain APIs are built based on `every()` function. They all return the chain itself
-
-`transformOption` is passed to `transform()`
-
 - `chain.exists({acceptEmptyString = false} = {})`: invalidate if value is `undefined`, `null`, `''` (empty string), or not provided. If `acceptEmptyString` is truthy, empty string is a valid value
 - `chain.trim()`: trim value if exists and is string
 - `chain.defaultValue(defaultValue)`: transform value to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided
@@ -146,55 +178,26 @@ Note that error will be thrown if non-string type value passed to transformers i
 Transformers can chain the previous likes
 ```javascript
 transformer('page', {location: 'query'})
-  .message(() => 'invalid page number')
-  .toInt({min: 1})
-  .transform(page => page - 1)
+	.message(() => 'invalid page number')
+	.toInt({min: 1})
+	.transform(page => page - 1)
 ````
 or
 ```javascript
-import transformer, {transformationResult, TransformationError} from 'express-transformer'
-const validate = (req, res, next) => {
-  const errors = transformationResult(req)
-  if (errors.length) {
-    const err = next(errors[0])
-    if (err instanceof TransformationError)
-      return res.send(err.message)
-    return next(err) //or return res.send('internal error')
-  }
-  next()
-}
+import {transformer} from 'express-transformer'
 
 app.use('/article_name/:id',
-    transformer('id', {location: 'params'})
-        .message(() => 'invalid article ID')
-        .transform(async id => await Article.findById(id).exec())
-        .transform(article => article.name)
-        .transform(name => capitalize(name)),
-    validate,
-    (req, res) => {
-        res.send(`Article's capitalized name is ${req.params.id}`)
-    })
+		transformer('id', {location: 'params'})
+				.message(() => 'invalid article ID')
+				.transform(async id => await Article.findById(id).exec())
+				.transform(article => article.name)
+				.transform(name => capitalize(name)),
+		validate,
+		(req, res) => {
+				res.send(`Article's capitalized name is ${req.params.id}`)
+		})
 ```
 
 ## Change logs
 
 See [change logs](./change-logs.md)
-
-## Version 0.1.0
-
-- Support array handling
-
-    E.g. `transformer('foo.bar[].fooo.baar[]')` will transform all elements of array `req.body.foo.bar`, on each element, check its `fooo.baar`, then pass each element to the transformer callback
-
-    `force` option behaviour. Because of common practise, intended value should be ((array) or (not defined unless `force` is on)) eventually. In other words,
-
-    + If value is not set:
-      * `force` is on: set value be `[]`
-      * `force` is off. Ignore and quit process
-    + If value is set
-      * Value is not array type (`Array.isArray()`): force(set) value be `[]`
-      * Value is array: continue process
-
-    Multiple brackets can be passed. e.g. `transformer('foo.bar[].fooo.baaar[].foo[].bar')`
-
-    To process single array element. Use dot notation. `transformer('foo.bar.1.2.foo.0')`) will transform `req.body.foo.bar[1][2].foo[0]`

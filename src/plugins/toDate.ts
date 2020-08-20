@@ -2,11 +2,11 @@ import TransformationError from '../TransformationError'
 import {ITransformer, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
-	interface ITransformer<T, V> {
+	interface ITransformer<T, V, Options> {
 		toDate(options?: {
 			resetTime?: boolean
 			force?: boolean
-		}): ITransformer<string | number, Date>
+		}): ITransformer<string | number, Date, Options>
 	}
 }
 
@@ -17,9 +17,11 @@ export default {
 		force?: boolean
 	} = {}) {
 		return {
-			transform(value: string | number, {path}) {
+			transform(value: string | number, info) {
 				const time = typeof value === 'string' ? Date.parse(value) : new Date(value).getTime()
-				if (isNaN(time) || !isFinite(time)) throw new TransformationError(`${path} must be in date format`)
+				if (
+					isNaN(time) || !isFinite(time)
+				) throw new TransformationError(`${info.path} must be in date format`, info)
 				const date = new Date(time)
 				if (resetTime) {
 					date.setHours(0)

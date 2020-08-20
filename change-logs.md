@@ -1,5 +1,11 @@
 # Change logs
 
+## Version 1.0.0
+- Always throw error if a transformation fails
+- **Support array of arrays**
+- Support plugin
+- Pass transformer options to callback, and remove the `location` property from the info parameter.
+
 ## Version 0.3.3
 - Update types of `.message` transformer
 

@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {Request, RequestHandler} from 'express'
 
 export type ITransformOptions = {
@@ -5,35 +6,40 @@ export type ITransformOptions = {
 	validateOnly?: boolean
 }
 
-export interface ITransformCallbackOptionsSingular {
-	location: string
+export type ITransformerOptions = {
+	location?: string
+}
+
+export interface ITransformCallbackInfoSingular<Options> {
+	options: Options & ITransformerOptions
 	path: string
 	req: Request
 }
-export interface ITransformCallbackOptionsPlural {
-	location: string
+export interface ITransformCallbackInfoPlural<Options> {
+	options: Options & ITransformerOptions
 	path: string[]
 	req: Request
 }
-export type ITransformCallbackOptions = ITransformCallbackOptionsSingular | ITransformCallbackOptionsPlural
+export type ITransformCallbackInfo<Options> = ITransformCallbackInfoSingular<Options>
+	| ITransformCallbackInfoPlural<Options>
 
 type Promisable<T> = T | Promise<T>
 
-export type ITransformCallbackSingular<T, V> = (
-	value: T, options: ITransformCallbackOptionsSingular
+export type ITransformCallbackSingular<T, V, Options> = (
+	value: T, options: ITransformCallbackInfoSingular<Options>
 ) => Promisable<V | T | void>
-export type ITransformCallbackPlural<T, V> = (
-	value: T[], options: ITransformCallbackOptionsPlural
+export type ITransformCallbackPlural<T, V, Options> = (
+	value: T[], options: ITransformCallbackInfoPlural<Options>
 ) => Promisable<V[] | T[] | void>
-export type ITransformCallback<T, V> = ITransformCallbackSingular<T, V> | ITransformCallbackPlural<T, V>
-export type IMessageCallback<T> = string | ((value: T | T[], options: ITransformCallbackOptions) => Promisable<string>)
+export type ITransformCallback<T, V, Options> = ITransformCallbackSingular<T, V, Options> | ITransformCallbackPlural<T, V, Options>
+export type IMessageCallback<T, Options> = string | ((value: T | T[], options: ITransformCallbackInfo<Options>) => Promisable<string>)
 
-export interface ITransformer<T, V> extends RequestHandler {
-	transform(callback: ITransformCallback<T, V>, options?: ITransformOptions): ITransformer<T, V>
+export interface ITransformer<T, V, Options> extends RequestHandler {
+	transform(callback: ITransformCallback<T, V, Options>, options?: ITransformOptions): ITransformer<T, V, Options>
 	message(
-		callback: IMessageCallback<T>,
+		callback: IMessageCallback<T, Options>,
 		options?: {force?: boolean}
-	): ITransformer<T, V>
+	): ITransformer<T, V, Options>
 	[key: string]: (...pluginOptions: any[]) => any
 }
 
@@ -42,8 +48,8 @@ export type ITransformPlugin = {
 	getConfig: <Params extends []>(
 		...params: Params
 	) => {
-		transform<T, V>(
-			value: T | T[], callbackOptions: ITransformCallbackOptions
+		transform<T, V, Options>(
+			value: T | T[], callbackOptions: ITransformCallbackInfo<Options>
 		): Promisable<T | T[] | V | V[] | void>
 		options?: ITransformOptions
 	}

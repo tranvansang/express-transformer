@@ -116,7 +116,19 @@ describe('Transformer library', () => {
 			transformer('key').transform(check),
 		)(req as Request, undefined as unknown as Response)
 		expect(check.mock.calls).toEqual([[1, {
-			location: 'body',
+			options: {location: 'body'},
+			path: 'key',
+			req
+		}]])
+	})
+	test('should pass additional param to callback', async () => {
+		const check = jest.fn()
+		const req = {body: {key: 1}}
+		await combineToAsync(
+			transformer('key', {foo: 'bar'}).transform(check),
+		)(req as Request, undefined as unknown as Response)
+		expect(check.mock.calls).toEqual([[1, {
+			options: {location: 'body', foo: 'bar'},
 			path: 'key',
 			req
 		}]])

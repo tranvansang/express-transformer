@@ -13,14 +13,15 @@ import asyncMiddleware from 'middleware-async'
 import {
 	IMessageCallback,
 	ITransformCallback,
-	ITransformCallbackOptions,
+	ITransformCallbackInfo,
 	ITransformer,
+	ITransformerOptions,
 	ITransformOptions,
 	ITransformPlugin
 } from './interfaces'
-import {doTransform} from './utils'
+import {doTransform, recursiveGet, recursiveHas, recursiveSet} from './utils'
 
-export {TransformationError}
+export {TransformationError, recursiveGet, recursiveSet, recursiveHas}
 
 const plugins = [] as ITransformPlugin[]
 export const addTransformerPlugin = (plugin: ITransformPlugin) => void plugins.push(plugin)
@@ -37,26 +38,33 @@ addTransformerPlugin(defaultValue)
 
 //NOTE: transformer ignores value that is not provided by default.
 //Check their existence via .exists() or set {force: true} option in .transform(callback, options)
-export const transformer = <T, V>(path: string | string[], { location = 'body' } = {}) => {
+export const transformer = <T, V, Options>(
+	path: string | string[],
+	transformerOptions?: Options & ITransformerOptions
+) => {
+	if (!transformerOptions) transformerOptions = {} as Options
+	if (!transformerOptions.location) transformerOptions.location = 'body'
+	const { location = 'body' } = transformerOptions
 	const stack: Array<{
-		transform: ITransformCallback<T, V>
-		message?: IMessageCallback<T>
+		transform: ITransformCallback<T, V, Options>
+		message?: IMessageCallback<T, Options>
 		options?: ITransformOptions
 	}> = []
 	const middleware = asyncMiddleware(async (req, res, next) => {
 		for (
 			const {transform, options, message} of stack
-		) await doTransform<T, V>(
+		) await doTransform<T, V, Options>(
 			req,
 			location,
 			path,
 			transform,
 			options,
-			message
+			message,
+			transformerOptions!
 		)
 		next()
-	}) as ITransformer<T, V>
-	middleware.transform = (callback, options = {}) => {
+	}) as ITransformer<T, V, Options>
+	middleware.transform = (callback, options) => {
 		stack.push({
 			options,
 			transform: callback
@@ -76,8 +84,8 @@ export const transformer = <T, V>(path: string | string[], { location = 'body' }
 			.transform(
 				(
 					value: T | T[],
-					transformCallbackOptions: ITransformCallbackOptions
-				) => transform(value, transformCallbackOptions) as Promise<T | V | void>,
+					info: ITransformCallbackInfo<Options>
+				) => transform(value, info) as Promise<T | V | void>,
 				options
 			)
 	}

@@ -1,8 +1,8 @@
 import {ITransformer, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
-	interface ITransformer<T, V> {
-		defaultValue(defaultValue: T): ITransformer<T, T | V>
+	interface ITransformer<T, V, Options> {
+		defaultValue(defaultValue: T): ITransformer<T, T | V, Options>
 	}
 }
 
