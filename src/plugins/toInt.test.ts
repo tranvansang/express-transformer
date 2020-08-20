@@ -17,7 +17,7 @@ describe('Transform', () => {
 		]) {
 			req.body.key = inp
 			await combineToAsync(
-					transformer('key').toInt(opts),
+				transformer('key').toInt(opts),
 			)(req as Request, undefined as unknown as Response)
 			expect(req.body.key).toBe(out)
 		}
@@ -28,7 +28,7 @@ describe('Transform', () => {
 		]) {
 			req.body.key = inp
 			await flipPromise(combineToAsync(
-					transformer('key').toInt(opts),
+				transformer('key').toInt(opts),
 			)(req as Request, undefined as unknown as Response))
 			expect(req.body.key).toBe(inp)
 		}

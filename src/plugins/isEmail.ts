@@ -1,12 +1,14 @@
 import TransformationError from '../TransformationError'
 import isEmailCore, {IIsEmailOptions} from './isEmailCore'
-import {ITransformCallbackInfo, ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
+import {ITransformCallbackInfo, ITransformOptions, ITransformPlugin} from '../interfaces'
 
-declare module '../interfaces' {
-	interface ITransformer<T, V, Options> {
-		isEmail(
-			options?: IIsEmailOptions & Omit<ITransformOptions, 'validateOnly'>
-		): ITransformer<T, string, Options>
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			isEmail(
+				options?: IIsEmailOptions & Omit<ITransformOptions, 'validateOnly'>
+			): ITransformer<T, string, Options>
+		}
 	}
 }
 

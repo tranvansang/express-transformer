@@ -1,11 +1,13 @@
 import TransformationError from '../TransformationError'
-import {ITransformCallbackInfo, ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
+import {ITransformCallbackInfo, ITransformOptions, ITransformPlugin} from '../interfaces'
 
-declare module '../interfaces' {
-	interface ITransformer<T, V, Options> {
-		toDate(options?: {
-			resetTime?: boolean
-		} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, Date, Options>
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			toDate(options?: {
+				resetTime?: boolean
+			} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, Date, Options>
+		}
 	}
 }
 

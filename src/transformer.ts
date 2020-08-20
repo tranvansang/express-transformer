@@ -36,6 +36,8 @@ addTransformerPlugin(toInt)
 addTransformerPlugin(trim)
 addTransformerPlugin(defaultValue)
 
+type PluginName = 'defaultValue'
+
 //NOTE: transformer ignores value that is not provided by default.
 //Check their existence via .exists() or set {force: true} option in .transform(callback, options)
 export const transformer = <T, V, Options>(
@@ -74,6 +76,7 @@ export const transformer = <T, V, Options>(
 	middleware.message = (message, {force, disableOverwriteWarning} = {}) => {
 		if (stack.length) {
 			if (stack[stack.length - 1].message) {
+				// eslint-disable-next-line no-console
 				if (!disableOverwriteWarning) console.warn(
 					'You are specify the .message twice for a same transformation.'
 					+ ' Only the last .message is applied.'
@@ -93,7 +96,7 @@ export const transformer = <T, V, Options>(
 This is disabled by default.\
 To force this overwrite, please set overwriteRootMethods option in the plugin object.`)
 		}
-		middleware[name] = <Params extends []>(...params: Params) => {
+		middleware[name as PluginName] = <Params extends []>(...params: Params) => {
 			const {options, transform} = getConfig(...params)
 			return middleware
 				.transform(

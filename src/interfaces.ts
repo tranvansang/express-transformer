@@ -1,11 +1,21 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {Request, RequestHandler} from 'express'
 
-// declare global {
-// 	namespace ExpressTransformer {
-// 		export type ITransformer<T, V, Options> = RequestHandler
-// 	}
-// }
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> extends RequestHandler {
+			transform(
+				callback: ITransformCallback<T, V, Options>,
+				options?: ITransformOptions
+			): ITransformer<T, V, Options>
+			message(
+				callback: IMessageCallback<T, Options>,
+				options?: IMessageOptions
+			): ITransformer<T, V, Options>
+			// [key: string]: (...pluginOptions: any[]) => any
+		}
+	}
+}
 
 export type ITransformOptions = {
 	force?: boolean
@@ -46,14 +56,8 @@ export type IMessageOptions = {
 	disableOverwriteWarning?: boolean
 }
 
-export interface ITransformer<T, V, Options> extends RequestHandler {
-	transform(callback: ITransformCallback<T, V, Options>, options?: ITransformOptions): ITransformer<T, V, Options>
-	message(
-		callback: IMessageCallback<T, Options>,
-		options?: IMessageOptions
-	): ITransformer<T, V, Options>
-	[key: string]: (...pluginOptions: any[]) => any
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ITransformer<T, V, Options> extends ExpressTransformer.ITransformer<T, V, Options> {}
 
 export type ITransformPlugin = {
 	name: string

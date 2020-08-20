@@ -1,15 +1,17 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
+import {ITransformOptions, ITransformPlugin} from '../interfaces'
 
-declare module '../interfaces' {
-	interface ITransformer<T, V, Options> {
-		isLength(
-			options: {
-				min?: number
-				max?: number
-			} | string | number,
-			transformOptions?: Omit<ITransformOptions, 'validateOnly'>
-		): ITransformer<T, T, Options>
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			isLength(
+				options: {
+					min?: number
+					max?: number
+				} | string | number,
+				transformOptions?: Omit<ITransformOptions, 'validateOnly'>
+			): ITransformer<T, T & (string | Array<unknown>), Options>
+		}
 	}
 }
 

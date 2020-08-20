@@ -1,9 +1,11 @@
 import TransformationError from '../TransformationError'
 import {ITransformPlugin} from '../interfaces'
 
-declare module '../utils' {
-	interface ITransformer<T, V, Options> {
-		exists(options?: { acceptEmptyString?: boolean }): ITransformer<T, T, Options>
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			exists(options?: { acceptEmptyString?: boolean }): ITransformer<T, T, Options>
+		}
 	}
 }
 

@@ -95,7 +95,7 @@ app.use('/get-user/:id',
 # Usage
 
 The library exports following methods and objects
-- `transformer` (also exported as `default`)
+- `transformer`
 - `addTransformerPlugin`
 - `recursiveGet`
 - `recursiveSet`
@@ -230,7 +230,7 @@ These plugins probably change the inputs in the paths. In other words, they have
 - `chain.toInt(options?: {min, max, force})`: convert the input to an integer number.
     Throw an error if the input is a valid number or cannot be parsed to an integer number.
     Support range checking with the `min`, `max` in the options.
-- `chain.trim()`: trim value if it exists and is in string format.
+- `chain.trim()`: trim value if it exists and is in string format. This transformer never throws any error.
 
 ## How to add a plugin
 
@@ -251,7 +251,20 @@ It is recommended to make use of the exported `TransformationError` error when t
 
 ### How to extend the Typescrript typing.
 
-TODO: need helps.
+The transformations chain's interface can be exported via namespace and global declaration like below.
+
+```typescript
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			isPostalCode(
+				value: T,
+				options?: {force?: boolean}
+			): ITransformer<T, string, Options>
+		}
+	}
+}
+```
 
 ## Utility functions
 

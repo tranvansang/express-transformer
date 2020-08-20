@@ -1,8 +1,10 @@
-import {ITransformer, ITransformPlugin} from '../interfaces'
+import {ITransformPlugin} from '../interfaces'
 
-declare module '../interfaces' {
-	interface ITransformer<T, V, Options> {
-		trim(): ITransformer<T, string, Options>
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			trim(): ITransformer<T, V, Options>
+		}
 	}
 }
 

@@ -1,12 +1,14 @@
 import TransformationError from '../TransformationError'
-import {ITransformCallbackInfo, ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
+import {ITransformCallbackInfo, ITransformOptions, ITransformPlugin} from '../interfaces'
 
-declare module '../interfaces' {
-	interface ITransformer<T, V, Options> {
-		toInt(options?: {
-			min?: number
-			max?: number
-		} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, number, Options>
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			toInt(options?: {
+				min?: number
+				max?: number
+			} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, number, Options>
+		}
 	}
 }
 
