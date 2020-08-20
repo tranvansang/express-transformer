@@ -8,7 +8,7 @@ be more confident to implement your business logic without worrying about the da
 
 # Usage samples
 
-- Ensure a value exist
+- Ensure a value exist.
 ```javascript
 import express from 'express'
 import {transformer} from 'express-transformer'
@@ -18,12 +18,12 @@ app.use('/login',
 	transformer('username').exists(),
 	transformer('password').exists(),
 	(req, res, next) => {
-	//req.body.age and req.body.password exist, for sure
+	//req.body.age and req.body.password must exist, for sure
 	})
 app.listen(3000)
 ```
 
-- Check passwords be the same
+- Check passwords be the same.
 ```javascript
 import express from 'express'
 import {transformer} from 'express-transformer'
@@ -42,7 +42,7 @@ app.use('/signup',
 app.listen(3000)
 ```
 
-- Convert 1-base `page` parameter in query to a 0-base number
+- Convert 1-base `page` parameter in query to a 0-base number.
 ```javascript
 app.use('/article',
 	transformer('page', {location: 'query'})
@@ -53,8 +53,8 @@ app.use('/article',
 	})
 ```
 
-- Check password length, validate email
-More complicated, but obviously common case
+- Check password length, validate email.
+More complicated, but obviously common case.
 ```javascript
 app.use('/signup',
 	transformer('email')
@@ -66,7 +66,7 @@ app.use('/signup',
 			const existingUser = await User.findByEmail(email).exec()
 			if (existingUser) throw new Error('Email already existed')
 		}, {validateOnly: true}),
-	transformer(['password', 'passwordConfirm'], {validateOnly: true}) //force is false by default
+	transformer(['password', 'passwordConfirm'], {validateOnly: true})
 		.exists()
 		.trim()
 		.isLength({min: 8})
@@ -77,7 +77,7 @@ app.use('/signup',
 )
 ```
 
-- Convert id to user
+- Convert an id to a user object.
 ```javascript
 app.use('/get-user/:id',
 	transformer('email', {location: 'params'})
@@ -95,7 +95,7 @@ app.use('/get-user/:id',
 # Usage
 
 The library exports following methods and objects
-- `transformer` (also exported as the `default`)
+- `transformer` (also exported as `default`)
 - `addTransformerPlugin`
 - `recursiveGet`
 - `recursiveSet`
