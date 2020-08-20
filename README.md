@@ -341,7 +341,8 @@ Accordingly, when `validateOnly` is `false` and `path` is an array, the `callbac
 # QA
 
 Q1. How do I customize the error handler?
-A1. Place your own error handler and check the error with `instanceof`
+
+A1. Place your own error handler and check the error with `instanceof`.
 
 ```
 app.use(transformer().transform(), (err, req, res, next) => {

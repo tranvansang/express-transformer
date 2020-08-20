@@ -14,7 +14,7 @@ export default {
 	getConfig(regex: RegExp, options?: Omit<ITransformOptions, 'validateOnly'>) {
 		return {
 			transform(value, info) {
-				if (typeof value !== 'string' || regex.test(value)) {
+				if (typeof value !== 'string' || !regex.test(value)) {
 					throw new TransformationError(`${info.path} is not valid`, info)
 				}
 			},
