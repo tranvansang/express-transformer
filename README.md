@@ -95,7 +95,7 @@ app.use('/get-user/:id',
 # Usage
 
 The library exports following methods and objects
-- `transformer`
+- `transformer` (also exported as `default`)
 - `addTransformerPlugin`
 - `recursiveGet`
 - `recursiveSet`
