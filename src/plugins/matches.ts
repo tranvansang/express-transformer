@@ -1,22 +1,23 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformPlugin} from '../interfaces'
+import {ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V, Options> {
-		matches(regex: RegExp, options?: {force?: boolean}): ITransformer<T, T, Options>
+		matches(regex: RegExp, options?: Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, T, Options>
 	}
 }
 
 export default {
 	name: 'matches',
-	getConfig(regex: RegExp, {force}: {force?: boolean} = {}) {
+	getConfig(regex: RegExp, options?: Omit<ITransformOptions, 'validateOnly'>) {
 		return {
 			transform(value, info) {
-				if (typeof value === 'string' && regex.test(value)) return value
-				throw new TransformationError(`${info.path} is not valid`, info)
+				if (typeof value !== 'string' || regex.test(value)) {
+					throw new TransformationError(`${info.path} is not valid`, info)
+				}
 			},
 			options: {
-				force,
+				...options,
 				validateOnly: true
 			}
 		}

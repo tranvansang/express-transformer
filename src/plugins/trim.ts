@@ -2,7 +2,7 @@ import {ITransformer, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V, Options> {
-		trim(): ITransformer<string, string, Options>
+		trim(): ITransformer<T, string, Options>
 	}
 }
 

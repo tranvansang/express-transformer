@@ -3,12 +3,12 @@
 
 Connect-like middleware to validate/transform data.
 
-This library helps you easier to get along with writing express validator middlewares,
+This library helps you easier to get along with writing express validation/transformation middlewares,
 be more confident to implement your business logic without worrying about the data's validity.
 
 # Usage samples
 
-- Ensure a value exists
+- Ensure a value exist
 ```javascript
 import express from 'express'
 import {transformer} from 'express-transformer'
@@ -101,78 +101,134 @@ The library exports following methods and objects
 - `recursiveSet`
 - `recursiveHas`
 
-Typically, you only need to use the `transformer` in most of the cases.
-This method returns a transformations chain used to validate/transform input data.
+Typically, you only need to use the `transformer()` method in most of the cases.
+This method returns a transformations chain whcih is used to validate/transform input data.
 The transformations chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)``).
 
 A transformation/validation can be appended to a transformations chain by calling `chain.<method>`.
-Basically, the library only defines two methods in a transformations chain, namely `.message` and `.transform`.
+Basically, the library only defines two methods in a transformations chain, namely `.message()` and `.transform()`.
 
-`addTransformerPlugin` is used to add custom methods along with transformers/validators.
-By default, the library adds various plugins for your uses. Such as: `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
+`addTransformerPlugin` is used to add custom methods as transformers/validators.
+Initially, the library adds various plugins for uses, in advance. Such as: `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
 Check the Plugins section below for more information.
 
-All methods from any transformations chain, including the methods defined by plugins and the default methods, always return the chain itself.
-It is possible and recommended to add transformations to the chain by **chain**ing methods.
-Such as: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
+All methods from any transformations chain, including the methods defined by plugins and the default basic methods (`.message()`, `.transform()`), always return the chain itself.
+It is possible and recommended adding transformations to the chain by **chain**ing method calls.
+For example: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
 
 # API references
 
 ## Create a transformations chain
 `transformer: (path, transformerOptions) => chain`
 - Parameters:
-    - `(required) path: string | string[]`: path or array of paths in *universal-path* format string.
+    - `(required) path: string | string[]`: a *universal-path* formatted string or an array of *universal-path* formatted string.
     
-        Sample values: `'email''`, `'foo[]'`, `['foo', 'bar']`, `['foo[]', 'foo[].bar.baar[]', 'fooo']`.
-    - `(optional) transformerOptions: Object`: an option object with the following properties.
-        - `(optional) location: string (default: 'body')`: a *universal-path* format string, which specifies where to find the input value from the `req` object.
-- Returned value: a connect-like middleware which inherits all functionalities of a transformation chain.
+        Sample values: `'email'`, `'foo[]'`, `['foo', 'bar']`, `['foo[]', 'foo[].bar.baar[]', 'fooo']`.
+    - `(optional) transformerOptions: Object`: an object with the following properties.
+        - `(optional) location: string (default: 'body')`: a *universal-path* formatted string, which specifies where to find the input value from the `req` object.
+- Returned value: a connect-like middleware which inherits all methods from transformations chain's prototype.
 
 ## Transformation chain
-A transformation chain supports following methods.
+A transformation chain has the following methods.
 
-This list of methods can be extended via `addTransformerPlugin`.
-Typescript extend is also supported.
+This methods list can be extended via `addTransformerPlugin`.
+Associated Typescript typing extend is also available.
 
-- `chain.transform(callback, options)`: append a transformation to the chain.
+- `chain.transform(callback, options)`: append a custom transformation/validation to the chain.
     - Parameters:
-        - `(required) callback: (value, info) => any`: the callback of the transformation, which should accept following parameters.
+        - `(required) callback: (value, info) => any`: the callback of the transformation/validation, which should accept the following parameters.
             - `value`: value or array of values
-                - If the `path` option in `transformer(path, transformerOptions)` is a string, `value` will be the value of the current input.
-                - If the `path` option in `transformer(path, transformerOptions)` is an array of string, `value` will be array of the values of the list of current inputs.
+                - If the `path` parameter in `transformer(path, transformerOptions)` is a string, `value` will be the value of the current input.
+                - If the `path` parameter in `transformer(path, transformerOptions)` is an array of string, `value` will be array of the values of the list of current inputs.
             - `info: Object`: an object which includes the following properties.
-                - `path`: path to the current input.
+                - `path`: path to the current input or array of paths to the current list of inputs.
                 - `req`: the request `req` object from the connect-like middleware.
-                - `options: Object`: the `transformerOptions` object passed in `.transform(callback, transformerOptions)`.
+                - `options: Object`: the `transformerOptions` object passed in `.transform(callback, transformerOptions)` with default fields (i.e., the `location` field) filled.
                 
-                    Note: this `options` object is always defined (i.e., not `undefined`), with `options.location` reflects the currently being used value of the `location`.
-                    Which means, for e.g., if `transformerOptions` is `undefined`, the value of `options` will be `{location: 'body'}`.
-                    If `transformerOptions` is `{foo: 'bar'}`, the value of `options` will be `{location: 'body', foo: 'bar'}`.
-                    If `transformerOptions` is `{foo: 'bar', location: 'params'}`, the value of `options` will be `{location: 'params', foo: 'bar'}`.
+                    Note: this `options` object is always a non-null object, with `options.location` reflects the currently being used value of the `location` config.
+                    Which means, for e.g., if `transformerOptions` is `undefined`, `options` will be `{location: 'body'}`.
+                    If `transformerOptions` is `{foo: 'bar'}`, `options` will be `{location: 'body', foo: 'bar'}`.
+                    If `transformerOptions` is `{foo: 'bar', location: 'params'}`, `options` will be `{location: 'params', foo: 'bar'}`.
         - `(optional)options: Object`: an optional option object with the following properties.
-            - `(optional) force: boolean (default: false)`: when the input value is not provided, the transformation specified by `.transform` is skipped.
+            - `(optional) force: boolean (default: false)`: when the input value is not provided, the transformation will be skipped.
             
-                Note: if the input is specified with `undefined`, the transformation is not skipped.
-            - `(optional) validateOnly: boolean (default: false)`: keep the value unchanged after the transformation
+                Note 1: the library uses `Object.hasOwnProperty()` to determine whether a value at path exists, which means even if you specify `undefined` at the path, the transformation is **not** skipped.
+            
+                Note 2: if `force` is `true` and {`path` or element in `path`} includes an array notion (`[]`), the necessary updates will occur along path traversal to make sure the access to the end of the path possible.
+                This behavior ignores the value of `validateOnly`.
+                
+                For example: With `path = 'foo.bar[].fooo.baar[]'`, `context = {}`, `context` will be updated to be `{foo: {bar: []}}`.
+                With `path = 'foo.bar[].fooo.baar[]'`, `context = {foo: {bar: 0}}`, `context` will be updated to be `{foo: {bar: []}}` (because `Array.isArray(0)` is `false`, the library overwrites it with `[]`).
+            - `(optional) validateOnly: boolean (default: false)`: keep the value unchanged after the transformation. In other words, this config specifies whether the transformation is a transformer (check and change the value) or a validator (only check).
+
+            *Note 1*: when `force` is `false`, and `path` is an array of string, the following rules are applied (and overwriting the default behavior).
+            - If **all of** value specified by `path` do not exist, skip the transformation (respecting the value of `force`).
+            - If **at least one** value specified by `path` exists, `force` is forced to be `true`. And the `info` param in the transformation `callback` will have the forced value.
     - Returned value: the chain itself
 - `chain.message(callback, option)`: overwrite the error message of the one or more previous transformations in the chain.
     - Parameters:
-        - `(required) callback: Function | string`: the string indicating the message or the function which accepts the same parameters as of the transformation (`value` and `info`).
-        - `(optional) option: Object`: an object specifying the behavior of the overwriting message, which includes following properties
-            - `(optional) force: boolean (default: false)`: regardless of the value of `force`, the message overwrites the error message of the most recent transformation if exist.
-                If two consecutive messages are provided, the latter is preferred.
-                - if `force` is `true`: overwrite the error message of all transformations in the chain from begin until when the message is called, *if there is no **overwritten** message*.
+        - `(required) callback: Function | string`: the string indicating the message or the function which accepts the same parameters as of `chain.transform()`'s `callback` (i.e., `value` and `info`).
+        - `(optional) option: Object`: an object specifying the behavior of the overwriting message, which includes the following properties.
+            - `(optional) force: boolean (default: false)`:
+                - if `force` is `true`: overwrite the error message of all transformations in the chain, which does not have error message overwritten, from begin until when this message is called.
+                
+                Note: the error message of the most recent transformation will be overwritten even if it exists, regardless of the value of `force`.
+                If two consecutive messages are provided, the latter is preferred (with a configuration `console.warn`'s message).
+    - Returned value: the chain itself
 
 ## Plugins
-- `chain.exists({acceptEmptyString = false} = {})`: invalidate if value is `undefined`, `null`, `''` (empty string), or not provided. If `acceptEmptyString` is truthy, empty string is a valid value
-- `chain.trim()`: trim value if exists and is string
-- `chain.defaultValue(defaultValue)`: transform value to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided
-- `chain.toInt({min, max, ...transformOption})`: convert to integer number and validate its range. Throw error if value is not a valid number. `min`, `max` options are optional
-- `chain.toFloat({min, max, ...transformOption})`: similar to `toInt`
-- `chain.isLength(option, transformOption)`: check value's length. Value can be array or string type. Option can be number (can be in string format), or object contain `min` and `max` key (must be numbers literally)
-- `chain.matches(regex, transformOption)`: check if value matches regex
-- `chain.isIn(array, transformOption)`: check if value is in the provided list
-- `chain.toDate({resetTime, ...transformOption})`: convert value to `Date` object. Throw error if value is invalid. Reset `hour`, `minute`, `second`, `milisecond` if `resetTime` is true
+
+Initially, the library adds these chain plugins (by calling `addTransformerPlugin` internally).
+
+In these plugin config, mostly, when the `force` option exist, it indicates the `force` config in the transformation.
+
+### Validators:
+
+These plugins only validate, does not change the inputs in the paths. In other words, they have `validateOnly` be `false`.
+- `chain.exists({acceptEmptyString = false} = {})`: invalidate if the input is `undefined`, `null`, `''` (empty string), or not provided.
+    If `acceptEmptyString` is `true`, empty string is accepted as valid.
+- `chain.isEmail(options)`: check if the input is a string and in email format.
+
+    `options` is an optional object with the following properties
+
+    - `force?: boolean`
+	- `allowDisplayName?: boolean`
+	- `requireDisplayName?: boolean`
+	- `allowUtf8LocalPart?: boolean`
+	- `requireTld?: boolean`
+	- `ignoreMaxLength?: boolean`
+	- `domainSpecificValidation?: boolean`
+	- `allowIpDomain?: boolean`
+	
+	Please consult the [validator](https://www.npmjs.com/package/validator) package for more details.
+- `chain.isIn(values, options?: {force?: boolean})`: check if the input is in the provided `values` list.
+- `chain.isLength(options, transformOptions?: {force?: boolean})`: check the input's length.
+    If the input is an array, check for number of its elements.
+    Else If the input is a string, check for its length.
+    Otherwise, throw an error.
+    
+    The `options` object can be a number (in number or in string format), or an object of type `{min?: number, max?: number}`.
+    If `options` is a number, the transformation fixes the input's length.
+    Otherwise, it validates the length by `min`, `max`, if the option exists, accordingly.
+- `chain.matches(regex, options?: {force?: boolean})`: check if the input is a string and matches a regex.
+
+### Transformers:
+
+These plugins probably change the inputs in the paths. In other words, they have `validateOnly` be `true`.
+
+- `chain.defaultValue(defaultValue)`: change the input to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided.
+- `chain.toDate(options?: {resetTime?: boolean, force?: boolean})`: convert the input to a `Date` object.
+    Throw an error if the input is not a number, not a string, not a Date object.
+    Othewise, check if the input can be converted to a valid Date object.
+    
+    When `resetTime` is `true`, reset `hour`, `minute`, `second`, and `milisecond` to zero.
+- `chain.toFloat(options?: {min?: number, max?: number, force?: boolean})`: convert the input to a number.
+    Throw an error if the input is a valid number or cannot be parsed to a number.
+    Support range checking with the `min`, `max` in the options.
+- `chain.toInt(options?: {min, max, force})`: convert the input to an integer number.
+    Throw an error if the input is a valid number or cannot be parsed to an integer number.
+    Support range checking with the `min`, `max` in the options.
+- `chain.trim()`: trim value if it exists and is in string format.
 
 ## How to add a plugin
 - For example: `isUUID`, `isPostalCode`, `isCreditCard`, ...

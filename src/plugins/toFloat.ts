@@ -1,27 +1,28 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformPlugin} from '../interfaces'
+import {ITransformCallbackInfo, ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V, Options> {
 		toFloat(options?: {
 			min?: number
 			max?: number
-			force?: boolean
-		}): ITransformer<string | number, number, Options>
+		} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, number, Options>
 	}
 }
 
 export default {
 	name: 'toFloat',
-	getConfig({min, max, force}: {
+	getConfig({min, max, ...options}: {
 		min?: number
 		max?: number
-		force?: boolean
-	} = {}) {
+	} & Omit<ITransformOptions, 'validateOnly'> = {}) {
 		return {
-			transform(value: string | number, info) {
+			transform<T, V, Option>(value: T, info: ITransformCallbackInfo<Option>) {
 				const {path} = info
-				const floatValue = typeof value === 'string' ? parseFloat(value) : value
+				if (typeof value !== 'number' && typeof value !== 'string') {
+					throw new TransformationError(`${path} must be a string or a number`, info)
+				}
+				const floatValue = typeof value === 'string' ? parseFloat(value as string) : value as number
 				if (
 					isNaN(floatValue) || !isFinite(floatValue)
 				) throw new TransformationError(`${path} must be a number`, info)
@@ -33,7 +34,7 @@ export default {
 				) throw new TransformationError(`${path} must be at most ${max}`, info)
 				return floatValue
 			},
-			config: {force, validateOnly: false}
+			config: {...options, validateOnly: false}
 		}
 	}
 } as ITransformPlugin

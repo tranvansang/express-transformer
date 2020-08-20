@@ -1,11 +1,14 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformPlugin} from '../interfaces'
+import {ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V, Options> {
 		isLength(
-			options: { min?: number, max?: number } | string | number,
-			transformOptions?: {force?: boolean}
+			options: {
+				min?: number
+				max?: number
+			} | string | number,
+			transformOptions?: Omit<ITransformOptions, 'validateOnly'>
 		): ITransformer<T, T, Options>
 	}
 }
@@ -14,7 +17,7 @@ export default {
 	name: 'isLength',
 	getConfig(
 		options: { min?: number, max?: number } | string | number,
-		{force}: {force?: boolean} = {}
+		transformOptions?: Omit<ITransformOptions, 'validateOnly'>
 	) {
 		let min: number | undefined
 		let max: number | undefined
@@ -43,8 +46,8 @@ export default {
 				throw new TransformationError(`${path} must be a string or an array`, info)
 			},
 			options: {
+				...transformOptions,
 				validateOnly: true,
-				force
 			}
 		}
 	}

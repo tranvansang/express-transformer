@@ -1,39 +1,40 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformPlugin} from '../interfaces'
+import {ITransformCallbackInfo, ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V, Options> {
 		toInt(options?: {
 			min?: number
 			max?: number
-			force?: boolean
-		}): ITransformer<string | number, number, Options>
+		} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, number, Options>
 	}
 }
 
 export default {
 	name: 'toInt',
-	getConfig({min, max, force}: {
+	getConfig({min, max, ...options}: {
 		min?: number
 		max?: number
-		force?: boolean
-	} = {}) {
+	} & Omit<ITransformOptions, 'validateOnly'> = {}) {
 		return {
-			transform(value: string | number, info) {
+			transform<T, V, Options>(value: T, info: ITransformCallbackInfo<Options>) {
 				const {path} = info
-				value = typeof value === 'number' ? Math.trunc(value) : parseInt(value)
+				if (typeof value !== 'number' && typeof value !== 'string') {
+					throw new TransformationError(`${path} must be a string or a number`, info)
+				}
+				const intValue = typeof value === 'number' ? Math.trunc(value as number) : parseInt(value as string)
 				if (
-					isNaN(value) || !isFinite(value)
+					isNaN(intValue) || !isFinite(intValue)
 				) throw new TransformationError(`${path} must be an integer`, info)
 				if (
-					min !== undefined && value < min
+					min !== undefined && intValue < min
 				) throw new TransformationError(`${path} must be at least ${min}`, info)
 				if (
-					max !== undefined && value > max
+					max !== undefined && intValue > max
 				) throw new TransformationError(`${path} must be at most ${max}`, info)
-				return value
+				return intValue
 			},
-			options: {force, validateOnly: false}
+			options: {...options, validateOnly: false}
 		}
 	}
 } as ITransformPlugin

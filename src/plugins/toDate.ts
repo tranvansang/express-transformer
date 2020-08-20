@@ -1,24 +1,27 @@
 import TransformationError from '../TransformationError'
-import {ITransformer, ITransformPlugin} from '../interfaces'
+import {ITransformCallbackInfo, ITransformer, ITransformOptions, ITransformPlugin} from '../interfaces'
 
 declare module '../interfaces' {
 	interface ITransformer<T, V, Options> {
 		toDate(options?: {
 			resetTime?: boolean
-			force?: boolean
-		}): ITransformer<string | number, Date, Options>
+		} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, Date, Options>
 	}
 }
 
 export default {
 	name: 'toDate',
-	getConfig({force, resetTime}: {
+	getConfig({resetTime, ...options}: {
 		resetTime?: boolean
-		force?: boolean
-	} = {}) {
+	} & Omit<ITransformOptions, 'validateOnly'> = {}) {
 		return {
-			transform(value: string | number, info) {
-				const time = typeof value === 'string' ? Date.parse(value) : new Date(value).getTime()
+			transform<T, V, Option>(value: T, info: ITransformCallbackInfo<Option>) {
+				if (typeof value !== 'string' && typeof value !== 'number' && !(value instanceof Date)) {
+					throw new TransformationError(`${info.path} must be in date, string, or number format`, info)
+				}
+				const time = value instanceof Date
+					? value.getTime()
+					: typeof value === 'string' ? Date.parse(value as string) : new Date(value).getTime()
 				if (
 					isNaN(time) || !isFinite(time)
 				) throw new TransformationError(`${info.path} must be in date format`, info)
@@ -31,7 +34,7 @@ export default {
 				}
 				return date
 			},
-			options: {force, validateOnly: false}
+			options: {...options, validateOnly: false}
 		}
 	}
 } as ITransformPlugin
