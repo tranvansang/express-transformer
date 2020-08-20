@@ -11,7 +11,7 @@
   ],
   "private": false,
   "scripts": {
-    "clear": "rm -rf lib",
+    "clean": "rm -rf lib",
     "test": "yarn jest",
     "coverage": "yarn jest --coverage",
     "build": "yarn tsc"
@@ -40,6 +40,7 @@
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-typescript": "^7.10.4",
     "@babel/runtime": "^7.11.2",
+    "@types/express": "^4.17.7",
     "@types/jest": "^26.0.10",
     "@types/node": "^14.6.0",
     "@typescript-eslint/eslint-plugin": "^3.9.1",
@@ -57,7 +58,6 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@types/express": "^4.16.0",
     "middleware-async": "^1.2.6"
   }
 }
