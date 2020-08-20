@@ -249,7 +249,7 @@ Consult the [validator](https://www.npmjs.com/package/validator) package for mor
      
 It is recommended to make use of the exported `TransformationError` error when throwing an error.
 
-### How to extend the Typescrript typing.
+### How to extend the Typescript typing.
 
 The transformations chain's interface can be exported via namespace and global declaration like below.
 
