@@ -239,7 +239,7 @@ These plugins probably change the inputs in the paths. In other words, they have
     Support range checking with the `min`, `max` in the options.
 - `chain.trim()`: trim value if it exists and is in string format. This transformer never throws any error.
 
-## How to add a plugin
+## How to add a custom plugin
 
 You can add your own plugin via calling `addTransformerPlugin`. For example: `isUUID`, `isPostalCode`, `isCreditCard`, ...
 
@@ -256,9 +256,13 @@ Consult the [validator](https://www.npmjs.com/package/validator) package for mor
      
 It is recommended to make use of the exported `TransformationError` error when throwing an error.
 
+Check [plugins](https://github.com/tranvansang/express-transformer/tree/master/src/plugins) directory for sample code.
+If you think a plugin is useful and should be included in the initial plugin list, please fire and PR.
+Otherwise, you can publish your own plugin to a separated package and add it with `addTransformerPlugin`.
+
 ### How to extend the Typescript typing.
 
-The transformations chain's interface can be exported via namespace and global declaration like below.
+The transformations chain's interface can be exported via namespace and global declaration from anywhere in your project like below.
 
 ```typescript
 declare global {
