@@ -71,23 +71,39 @@ export const transformer = <T, V, Options>(
 		})
 		return middleware
 	}
-	middleware.message = (message, {force} = {}) => {
-		if (stack.length) stack[stack.length - 1].message = message
+	middleware.message = (message, {force, disableOverwriteWarning} = {}) => {
+		if (stack.length) {
+			if (stack[stack.length - 1].message) {
+				if (!disableOverwriteWarning) console.warn(
+					'You are specify the .message twice for a same transformation.'
+					+ ' Only the last .message is applied.'
+					+ ' To disable this warning, please set disableOverwriteWarning in the option.'
+				)
+			}
+			stack[stack.length - 1].message = message
+		}
 		if (force) for (const transform of stack) if (!transform.message) transform.message = message
 		return middleware
 	}
 	for (
-		const {name, getConfig} of plugins
-	) middleware[name] = <Params extends []>(...params: Params) => {
-		const {options, transform} = getConfig(...params)
-		return middleware
-			.transform(
-				(
-					value: T | T[],
-					info: ITransformCallbackInfo<Options>
-				) => transform(value, info) as Promise<T | V | void>,
-				options
-			)
+		const {overwriteRootMethods, name, getConfig} of plugins
+	) {
+		if (!overwriteRootMethods && (name === 'message' || name === 'transform')) {
+			throw new Error(`You are going to overwrite the root method ${name}.\
+This is disabled by default.\
+To force this overwrite, please set overwriteRootMethods option in the plugin object.`)
+		}
+		middleware[name] = <Params extends []>(...params: Params) => {
+			const {options, transform} = getConfig(...params)
+			return middleware
+				.transform(
+					(
+						value: T | T[],
+						info: ITransformCallbackInfo<Options>
+					) => transform(value, info) as Promise<T | V | void>,
+					options
+				)
+		}
 	}
 	return middleware
 }

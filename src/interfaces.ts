@@ -35,12 +35,16 @@ export type ITransformCallback<T, V, Options> = ITransformCallbackSingular<T, V,
 	| ITransformCallbackPlural<T, V, Options>
 export type IMessageCallback<T, Options> = string
 	| ((value: T | T[], options: ITransformCallbackInfo<Options>) => Promisable<string>)
+export type IMessageOptions = {
+	force?: boolean
+	disableOverwriteWarning?: boolean
+}
 
 export interface ITransformer<T, V, Options> extends RequestHandler {
 	transform(callback: ITransformCallback<T, V, Options>, options?: ITransformOptions): ITransformer<T, V, Options>
 	message(
 		callback: IMessageCallback<T, Options>,
-		options?: {force?: boolean}
+		options?: IMessageOptions
 	): ITransformer<T, V, Options>
 	[key: string]: (...pluginOptions: any[]) => any
 }
@@ -55,4 +59,5 @@ export type ITransformPlugin = {
 		): Promisable<T | T[] | V | V[] | void>
 		options?: ITransformOptions
 	}
+	overwriteRootMethods?: boolean
 }

@@ -39,13 +39,48 @@ export const recursiveHas = (obj: any, path: string) => {
 	return true
 }
 
+const doesValueExist = (
+	obj: any,
+	prefixes: string[],
+	[firstArray, ...arrays]: string[],
+	lastPath: string
+) => {
+	if (firstArray) {
+		prefixes = [...prefixes, firstArray]
+		const path = prefixes.join('.')
+		if (!recursiveHas(obj, path)) return false
+		const values = recursiveGet(obj, path)
+		if (!Array.isArray(values)) return false
+		for (let i = 0; i < values.length; i++) if (doesValueExist(
+			obj,
+			[...prefixes, String(i)],
+			arrays,
+			lastPath
+		)) return true
+		return false
+	}
+	if (/\[]$/.test(lastPath)) { // last selector is an array selector
+		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
+		const path = [...prefixes, lastPathBase].join('.')
+		if (!recursiveHas(obj, path)) return false
+		const values = recursiveGet(obj, path)
+		if (!Array.isArray(values)) return false
+		for (let i = 0; i < values.length; i++) if (doesValueExist(
+			obj,
+			[...prefixes, lastPathBase],
+			arrays,
+			String(i),
+		)) return true
+		return false
+	}
+	return recursiveHas(obj, [...prefixes, lastPath].join('.'))
+}
+
 /**
- * @param prefix Prefix added so far
+ * @param prefixes Prefix added so far
  * @param firstArray currently processing array prefix
  * @param arrays remaining array prefixes
- * @param path last path
- * @param callback
- * @param force
+ * @param lastPath last path
  * @returns {Promise<void>}
  */
 const subTransform = async <T, V, Options>(
@@ -53,9 +88,9 @@ const subTransform = async <T, V, Options>(
 	location: string,
 	message: IMessageCallback<T, Options> | undefined,
 	options: ITransformOptions,
-	prefix: string[],
+	prefixes: string[],
 	[firstArray, ...arrays]: string[],
-	path: string,
+	lastPath: string,
 	callback: ITransformCallbackSingular<T, V, Options>,
 	transformerOptions: Options & ITransformerOptions
 ) => {
@@ -73,35 +108,35 @@ const subTransform = async <T, V, Options>(
 		return values
 	}
 	if (firstArray) {
-		prefix = [...prefix, firstArray]
-		const values = getArrayOrAssignEmpty(prefix.join('.'))
+		const newPrefixes = [...prefixes, firstArray]
+		const values = getArrayOrAssignEmpty(newPrefixes.join('.'))
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			location,
 			message,
 			options,
-			[...prefix, String(i)],
+			[...newPrefixes, String(i)],
 			arrays,
-			path,
+			lastPath,
 			callback,
 			transformerOptions
 		)
-	} else if (/\[]$/.test(path)) { // last selector is an array selector
-		path = path.slice(0, path.length - 2)
-		const values = getArrayOrAssignEmpty([...prefix, path].join('.'))
+	} else if (/\[]$/.test(lastPath)) { // last selector is an array selector
+		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
+		const values = getArrayOrAssignEmpty([...prefixes, lastPathBase].join('.'))
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			location,
 			message,
 			options,
-			prefix,
+			[...prefixes, lastPathBase],
 			arrays,
-			[path, i].join('.'),
+			String(i),
 			callback,
 			transformerOptions
 		)
 	} else {
-		path = [...prefix, path].join('.')
+		const path = [...prefixes, lastPath].join('.')
 		if (force || recursiveHas(req, fullPath(path))) await callback(
 			recursiveGet(req, fullPath(path)),
 			{options: transformerOptions, path, req}
@@ -131,15 +166,19 @@ export const doTransform = async <T, V, Options>(
 	message: IMessageCallback<T, Options> | undefined,
 	transformerOptions: Options & ITransformerOptions
 ) => {
-	const {validateOnly} = options
+	const {validateOnly, force} = options
 	const fullPath = (p: string) => [location, p].join('.')
-	const makeSub = async (p: string, cb: ITransformCallbackSingular<T, V, Options>) => {
+	const makeSub = async (
+		p: string,
+		cb: ITransformCallbackSingular<T, V, Options>,
+		transformOptions: ITransformOptions
+) => {
 		const arraySplits = p.split('[].') // only split arrays in middle
 		await subTransform(
 			req,
 			location,
 			message,
-			options,
+			transformOptions,
 			[],
 			arraySplits.slice(0, arraySplits.length - 1),
 			arraySplits[arraySplits.length - 1],
@@ -159,9 +198,22 @@ export const doTransform = async <T, V, Options>(
 			} catch (e) {
 				await throwError(e, message, value, info)
 			}
-		}
+		},
+		options
 	)
 	else {
+		// only allow skip if there is no value exist
+		const transformOptions = !force && path.some(subPath => {
+			const arraySplits = subPath.split('[].') // only split arrays in middle
+			return doesValueExist(
+				req,
+				[location],
+				arraySplits.slice(0, arraySplits.length - 1),
+				arraySplits[arraySplits.length - 1]
+			)
+		})
+			? {...options, force: true}
+			: options
 		const makeSubLoop = async (index: number, values: T[], paths: string[]) => {
 			if (index === path.length) {
 				const info = {req, path: paths, options: transformerOptions}
@@ -178,9 +230,13 @@ export const doTransform = async <T, V, Options>(
 				} catch (e) {
 					await throwError(e, message, values, info)
 				}
-			} else await makeSub(path[index], async (value, {path: subPath}) => {
-				await makeSubLoop(index + 1, [...values, value], [...paths, subPath])
-			})
+			} else await makeSub(
+				path[index],
+				async (value, {path: subPath}) => {
+					await makeSubLoop(index + 1, [...values, value], [...paths, subPath])
+				},
+				transformOptions
+			)
 		}
 		await makeSubLoop(0, [], [])
 	}
