@@ -3,7 +3,7 @@ import {combineToAsync} from 'middleware-async'
 import {transformer} from '../transformer'
 import {Request, Response} from 'express'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	test('should trim', async () => {
 		const req = {body: {key: ' 12	'}}
 		await combineToAsync(

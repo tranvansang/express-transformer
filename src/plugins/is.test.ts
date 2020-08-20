@@ -1,29 +1,25 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import {combineToAsync} from 'middleware-async'
 import {Request, Response} from 'express'
+import {combineToAsync} from 'middleware-async'
 import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
-describe('Transform Plugins', () => {
-	test('isIn', async () => {
-		const req = {body: {key: '1'}}
+describe('Transform Plugin', () => {
+	test('is plugin', async () => {
+		const req = {body: {}}
 		await combineToAsync(
-			transformer('key').isIn(['1', '3']),
+			transformer('key1').is('bar'),
 		)(req as Request, undefined as unknown as Response)
-
-		req.body.key = '2'
 		await flipPromise(combineToAsync(
-			transformer('key').isIn(['1', '3']),
+			transformer('key1').is('bar', {force: true}),
 		)(req as Request, undefined as unknown as Response))
-
-		delete req.body.key
+		req.body.key1 = 'a'
 		await flipPromise(combineToAsync(
-			transformer('key').isIn(['1', '3'], {force: true}),
+			transformer('key1').is('bar'),
 		)(req as Request, undefined as unknown as Response))
-
-		delete req.body.key
+		req.body.key1 = 'bar'
 		await combineToAsync(
-			transformer('key').isIn(['1', '3', undefined], {force: true}),
+			transformer('key1').is('bar'),
 		)(req as Request, undefined as unknown as Response)
 	})
 })

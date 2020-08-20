@@ -20,6 +20,8 @@ import {
 	ITransformPlugin
 } from './interfaces'
 import {doTransform, recursiveGet, recursiveHas, recursiveSet} from './utils'
+import is from './plugins/is'
+import isArray from './plugins/isArray'
 
 export {TransformationError, recursiveGet, recursiveSet, recursiveHas}
 
@@ -35,6 +37,8 @@ addTransformerPlugin(toFloat)
 addTransformerPlugin(toInt)
 addTransformerPlugin(trim)
 addTransformerPlugin(defaultValue)
+addTransformerPlugin(is)
+addTransformerPlugin(isArray)
 
 type PluginName = 'defaultValue'
 

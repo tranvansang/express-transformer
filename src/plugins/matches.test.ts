@@ -4,7 +4,7 @@ import {Request, Response} from 'express'
 import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	test('matches', async () => {
 		const req = {body: {key: ''}}
 		req.body.key = '123abcd'

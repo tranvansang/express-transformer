@@ -4,7 +4,7 @@ import {Request, Response} from 'express'
 import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	test('should check to float', async () => {
 		const req: {body: {key?: number | string}} = {body: {key: '1.5'}}
 		await combineToAsync(

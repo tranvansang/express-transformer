@@ -4,7 +4,7 @@ import {Request, Response} from 'express'
 import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	test('should check exist', async () => {
 		await flipPromise(combineToAsync(
 			transformer('key').exists(),

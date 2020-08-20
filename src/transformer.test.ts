@@ -5,7 +5,7 @@ import {transformer} from './transformer'
 import TransformationError, {transformationErrorName} from './TransformationError'
 import {Request, Response} from 'express'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	let req: Request
 	beforeEach(() => {
 		req = {body: {}} as Request

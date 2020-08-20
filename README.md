@@ -189,6 +189,8 @@ In these plugin config, mostly, when the `force` option exist, it indicates the 
 These plugins only validate, does not change the inputs in the paths. In other words, they have `validateOnly` be `false`.
 - `chain.exists({acceptEmptyString = false} = {})`: invalidate if the input is `undefined`, `null`, `''` (empty string), or omitted.
     If `acceptEmptyString` is `true`, empty string is accepted as valid.
+- `chain.is(value, options?: {force?: boolean})`: check if the input is value.
+- `chain.isArray(options?: {force?: boolean})`: check if the input is an array.
 - `chain.isEmail(options)`: check if the input is a string and in email format.
 
     `options` is an optional object with the following properties

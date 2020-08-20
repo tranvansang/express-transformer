@@ -3,7 +3,7 @@ import {Request, Response} from 'express'
 import {combineToAsync} from 'middleware-async'
 import {transformer} from '../transformer'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	test('should set default', async () => {
 		const req = {body: {key: 'foo', key2: null, key3: ''}}
 		await combineToAsync(

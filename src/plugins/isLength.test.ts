@@ -4,7 +4,7 @@ import {Request, Response} from 'express'
 import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	test('isLength', async () => {
 		const req: {body: {key: string | number | number[]}} = {body: {key: ''}}
 		req.body.key = '4538136094603680'

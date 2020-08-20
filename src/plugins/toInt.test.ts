@@ -4,7 +4,7 @@ import {Request, Response} from 'express'
 import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 
-describe('Transform', () => {
+describe('Transform Plugins', () => {
 	test('should check to int', async () => {
 		const req: {body: {key: string | number}} = {body: {key: '1'}}
 		for (const [inp, out, opts] of [
