@@ -14,6 +14,11 @@ describe('Transform Plugins', () => {
 			transformer('key').toDate(),
 		)(req as Request, undefined as unknown as Response))
 
+		req.body.key = 1n
+		await combineToAsync(
+			transformer('key').toDate(),
+		)(req as Request, undefined as unknown as Response)
+
 		req.body.key = date.toISOString()
 		await combineToAsync(
 			transformer('key').toDate(),

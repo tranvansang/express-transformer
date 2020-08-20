@@ -21,10 +21,12 @@ export default {
 		return {
 			transform<T, V, Options>(value: T, info: ITransformCallbackInfo<Options>) {
 				const {path} = info
-				if (typeof value !== 'number' && typeof value !== 'string') {
+				if (typeof value !== 'bigint' && typeof value !== 'number' && typeof value !== 'string') {
 					throw new TransformationError(`${path} must be a string or a number`, info)
 				}
-				const intValue = typeof value === 'number' ? Math.trunc(value as number) : parseInt(value as string)
+				const intValue = typeof value === 'string'
+					? parseInt(value as string)
+					: Math.trunc(typeof value === 'number' ? value as number : Number(value))
 				if (
 					isNaN(intValue) || !isFinite(intValue)
 				) throw new TransformationError(`${path} must be an integer`, info)

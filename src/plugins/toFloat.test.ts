@@ -12,6 +12,12 @@ describe('Transform Plugins', () => {
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(1.5)
 
+		req.body.key = 12n
+		await combineToAsync(
+			transformer('key').toFloat(),
+		)(req as Request, undefined as unknown as Response)
+		expect(req.body.key).toBe(12)
+
 		req.body.key = 12.3
 		await combineToAsync(
 			transformer('key').toFloat(),

@@ -9,6 +9,7 @@ describe('Transform Plugins', () => {
 		const req: {body: {key: string | number}} = {body: {key: '1'}}
 		for (const [inp, out, opts] of [
 			['1', 1],
+			[1n, 1],
 			[12, 12],
 			['12', 12],
 			[12.02, 12],

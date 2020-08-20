@@ -18,12 +18,19 @@ export default {
 	} & Omit<ITransformOptions, 'validateOnly'> = {}) {
 		return {
 			transform<T, V, Option>(value: T, info: ITransformCallbackInfo<Option>) {
-				if (typeof value !== 'string' && typeof value !== 'number' && !(value instanceof Date)) {
-					throw new TransformationError(`${info.path} must be in date, string, or number format`, info)
-				}
+				if (
+					typeof value !== 'bigint'
+					&& typeof value !== 'string'
+					&& typeof value !== 'number'
+					&& !(value instanceof Date)
+				) throw new TransformationError(`${info.path} must be in date, string, or number format`, info)
 				const time = value instanceof Date
 					? value.getTime()
-					: typeof value === 'string' ? Date.parse(value as string) : new Date(value).getTime()
+					: typeof value === 'string'
+						? Date.parse(value as string)
+						: typeof value === 'number'
+							? new Date(value as number).getTime()
+							: new Date(Number(value)).getTime()
 				if (
 					isNaN(time) || !isFinite(time)
 				) throw new TransformationError(`${info.path} must be in date format`, info)

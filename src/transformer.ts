@@ -29,7 +29,7 @@ const plugins = [] as ITransformPlugin[]
 export const addTransformerPlugin = (plugin: ITransformPlugin) => {
 	const {overwriteRootMethods, name} = plugin
 	if (!name) throw new Error('Plugin name is required')
-	if (!overwriteRootMethods && (name === 'message' || name === 'transform')) {
+	if (!overwriteRootMethods && ['message', 'transform'].includes(name)) {
 		throw new Error(`You are going to overwrite the root method ${name}.\
 This is disabled by default.\
 To force this overwrite, please set overwriteRootMethods option in the plugin object.`)

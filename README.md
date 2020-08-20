@@ -227,7 +227,7 @@ These plugins probably change the inputs in the paths. In other words, they have
 
 - `chain.defaultValue(defaultValue)`: change the input to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or omitted.
 - `chain.toDate(options?: {resetTime?: boolean, force?: boolean})`: convert the input to a `Date` object.
-    Throw an error if the input is not a number, not a string, not a Date object.
+    Throw an error if the input is not a number, not a string, not a BigInt, not a Date object.
     Otherwise, check if the input can be converted to a valid Date object.
     
     When `resetTime` is `true`, reset `hour`, `minute`, `second`, and `milisecond` to zero.
@@ -259,6 +259,9 @@ It is recommended to make use of the exported `TransformationError` error when t
 Check [plugins](https://github.com/tranvansang/express-transformer/tree/master/src/plugins) directory for sample code.
 If you think a plugin is useful and should be included in the initial plugin list, please fire and PR.
 Otherwise, you can publish your own plugin to a separated package and add it with `addTransformerPlugin`.
+
+When writing a plugin, please keep in your mind that the input value can be anything.
+It is extremely recommended that you should check the input value type via `typeof` or `instanceof` in the plugin, if you are going to publish it.
 
 ### How to extend the Typescript typing.
 
