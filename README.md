@@ -164,7 +164,12 @@ Associated Typescript typing extend is also available.
 
             *Note 1*: when `force` is `false`, and `path` is an array of string, the following rules are applied (and overwriting the default behavior).
             - If **all of** value specified by `path` do not exist, skip the transformation (respecting the value of `force`).
-            - If **at least one** value specified by `path` exists, `force` is forced to be `true`. And the `info` param in the transformation `callback` will have the forced value.
+            - If **at least one** value specified by `path` exists, `force` is forced to be `true`.
+             And the `info` param in the transformation `callback` will have the forced value.
+            
+            *Note 2*: when `path` is an array of string, regardless the value of `force`,
+            if there is *any of* path at which there is no data (zero element or no data provided),
+            the transformation will be skip. (zero times of any number is zero).
     - Returned value: the chain itself
 - `chain.message(callback, option)`: overwrite the error message of the one or more previous transformations in the chain.
     - Parameters:

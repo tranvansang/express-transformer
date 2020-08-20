@@ -8,7 +8,19 @@ describe('Transform Plugins', () => {
 	test('to date', async () => {
 		const req = {body: {key: '1'}}
 		let date = new Date()
+
+		req.body.key = {}
+		await flipPromise(combineToAsync(
+			transformer('key').toDate(),
+		)(req as Request, undefined as unknown as Response))
+
 		req.body.key = date.toISOString()
+		await combineToAsync(
+			transformer('key').toDate(),
+		)(req as Request, undefined as unknown as Response)
+		expect(req.body.key).toEqual(date)
+
+		req.body.key = date.getTime()
 		await combineToAsync(
 			transformer('key').toDate(),
 		)(req as Request, undefined as unknown as Response)

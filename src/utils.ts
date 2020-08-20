@@ -65,6 +65,8 @@ const doesValueExist = (
 		if (!recursiveHas(obj, path)) return false
 		const values = recursiveGet(obj, path)
 		if (!Array.isArray(values)) return false
+		// because this is last element, the next check can be replaced with (to have 100% coverage)
+		// values.length && doesValueExist(..., String(0), ...)
 		for (let i = 0; i < values.length; i++) if (doesValueExist(
 			obj,
 			[...prefixes, lastPathBase],

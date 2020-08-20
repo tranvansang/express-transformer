@@ -289,5 +289,12 @@ describe('Transformer library', () => {
 		await flipPromise(combineToAsync(
 			transformer(['key[].sub[]', 'key2']).transform(() => Promise.reject(1)),
 		)(req as Request, undefined as unknown as Response))
+
+		req.body.key = undefined
+		req.body.key2 = undefined
+		// because there is no value at the key pass. the transformer is never called
+		await combineToAsync(
+			transformer(['key[].sub[]', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response)
 	})
 })

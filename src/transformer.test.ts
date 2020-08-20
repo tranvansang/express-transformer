@@ -216,6 +216,7 @@ describe('transformer plugin', () => {
 		await flipPromise((async () => addTransformerPlugin({
 			name: 'transform'
 		}))())
+		await flipPromise((async () => addTransformerPlugin({}))())
 		addTransformerPlugin({ name: 'message', overwriteRootMethods: true })
 		addTransformerPlugin({ name: 'transform', overwriteRootMethods: true })
 	})

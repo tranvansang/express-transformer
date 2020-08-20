@@ -15,5 +15,10 @@ describe('Transform Plugins', () => {
 		await flipPromise(combineToAsync(
 			transformer('key').isEmail(),
 		)(req as Request, undefined as unknown as Response))
+
+		req.body.key = 1
+		await flipPromise(combineToAsync(
+			transformer('key').isEmail(),
+		)(req as Request, undefined as unknown as Response))
 	})
 })
