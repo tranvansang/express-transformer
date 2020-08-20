@@ -32,7 +32,7 @@ export const addTransformerPlugin = (plugin: ITransformPlugin) => {
 	if (!overwriteRootMethods && ['message', 'transform'].includes(name)) {
 		throw new Error(`You are going to overwrite the root method ${name}.\
 This is disabled by default.\
-To force this overwrite, please set overwriteRootMethods option in the plugin object.`)
+To force enabling this overwrite, please set the overwriteRootMethods option in the plugin object.`)
 	}
 	plugins.push(plugin)
 }

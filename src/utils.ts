@@ -19,8 +19,7 @@ export const recursiveSet = <T, V>(obj: T, path: string, value: V) => path
 		else acc[cur] = Object.prototype.hasOwnProperty.call(acc, cur) ? acc[cur] : {}
 		return acc[cur]
 	},
-	obj || {}
-	)
+	obj || {})
 export const recursiveGet = <T, V>(obj: T, path: string, defaultValue?: V) => path
 	.split('.')
 	.reduce((
@@ -28,8 +27,7 @@ export const recursiveGet = <T, V>(obj: T, path: string, defaultValue?: V) => pa
 	) => acc instanceof Object && Object.prototype.hasOwnProperty.call(acc, cur)
 		? acc[cur]
 		: index === pathArray.length - 1 ? defaultValue : undefined,
-	obj
-	)
+	obj)
 export const recursiveHas = (obj: any, path: string) => {
 	for (const key of path.split('.')) if (
 		obj instanceof Object && Object.prototype.hasOwnProperty.call(obj, key)
@@ -80,10 +78,9 @@ const doesValueExist = (
 
 /**
  * @param prefixes Prefix added so far
- * @param firstArray currently processing array prefix
- * @param arrays remaining array prefixes
+ * @param firstArray currently being processed array prefix
+ * @param arrays the remaining array prefixes
  * @param lastPath last path
- * @returns {Promise<void>}
  */
 const subTransform = async <T, V, Options>(
 	req: Request,
@@ -174,7 +171,7 @@ export const doTransform = async <T, V, Options>(
 		p: string,
 		cb: ITransformCallbackSingular<T, V, Options>,
 		transformOptions: ITransformOptions
-) => {
+	) => {
 		const arraySplits = p.split('[].') // only split arrays in middle
 		await subTransform(
 			req,
