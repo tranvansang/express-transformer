@@ -102,7 +102,7 @@ The library exports following methods and objects
 - `recursiveHas`
 
 Typically, you only need to use the `transformer()` method in most of the cases.
-This method returns a transformations chain whcih is used to validate/transform input data.
+This method returns a transformations chain which is used to validate/transform input data.
 The transformations chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)``).
 
 A transformation/validation can be appended to a transformations chain by calling `chain.<method>`.
@@ -136,7 +136,8 @@ Associated Typescript typing extend is also available.
 
 - `chain.transform(callback, options)`: append a custom transformation/validation to the chain.
     - Parameters:
-        - `(required) callback: (value, info) => any`: the callback of the transformation/validation, which should accept the following parameters.
+        - `(required) callback: (value, info) => any | Promise<any>`: the callback of the transformation/validation.
+        The callback can be an async or a normal function, which should accept the following parameters.
             - `value`: value or array of values
                 - If the `path` parameter in `transformer(path, transformerOptions)` is a string, `value` will be the value of the current input.
                 - If the `path` parameter in `transformer(path, transformerOptions)` is an array of string, `value` will be array of the values of the list of current inputs.
@@ -168,6 +169,7 @@ Associated Typescript typing extend is also available.
 - `chain.message(callback, option)`: overwrite the error message of the one or more previous transformations in the chain.
     - Parameters:
         - `(required) callback: Function | string`: the string indicating the message or the function which accepts the same parameters as of `chain.transform()`'s `callback` (i.e., `value` and `info`).
+        Similarly, `callback` can be async or a normal function.
         - `(optional) option: Object`: an object specifying the behavior of the overwriting message, which includes the following properties.
             - `(optional) force: boolean (default: false)`:
                 - if `force` is `true`: overwrite the error message of all transformations in the chain, which does not have error message overwritten, from begin until when this message is called.
@@ -219,7 +221,7 @@ These plugins probably change the inputs in the paths. In other words, they have
 - `chain.defaultValue(defaultValue)`: change the input to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or not provided.
 - `chain.toDate(options?: {resetTime?: boolean, force?: boolean})`: convert the input to a `Date` object.
     Throw an error if the input is not a number, not a string, not a Date object.
-    Othewise, check if the input can be converted to a valid Date object.
+    Otherwise, check if the input can be converted to a valid Date object.
     
     When `resetTime` is `true`, reset `hour`, `minute`, `second`, and `milisecond` to zero.
 - `chain.toFloat(options?: {min?: number, max?: number, force?: boolean})`: convert the input to a number.
@@ -231,11 +233,51 @@ These plugins probably change the inputs in the paths. In other words, they have
 - `chain.trim()`: trim value if it exists and is in string format.
 
 ## How to add a plugin
-- For example: `isUUID`, `isPostalCode`, `isCreditCard`, ...
+
+You can add your own plugin via calling `addTransformerPlugin`. For example: `isUUID`, `isPostalCode`, `isCreditCard`, ...
+
+Consult the [validator](https://www.npmjs.com/package/validator) package for more validators.
+
+`addTransformerPlugin` accepts only one object presenting the plugin configuration, which should include the following properties.
+
+- `(rquired) name: string`: the name of the plugin. Like: `isPostalCode`.
+- `(required) getConfig: Function`: a function accepting any parameters which are the parameters provided to the plugin call (for e.g., `chain.isPostalCode(...params)`).
+     . This function should return an object including the following properties.
+    - `(required) transform: Function`: a function which accepts the same parameters as of `chain.transform`.
+    - `(optional) options: Object`: the options object which will be passed to `.transform()`.
+     It is highly recommended to set `validateOnly` option here to explicitly indicate that your plugin is a validator or a transformer.
+     
+ It is recommended to make use of the exported `TransformationError` error when throwing an error.
 
 ## Utility functions
 
+Coupled with the universal-path string format, there are 3 utility functions which are used internally to manipulate the context object.
+
+`import {recursiveGet, recursiveHas, recursiveSet} from 'express-transformer`
+
+These 3 methods are designed to **just work**, and **never** through any error with an arbitrary `context` parameter.
+
+All `path` parameters are in universal-path string format.
+
+These methods use `Object.hasOwnProperty` to check if a key exists in an object.
+Therefore, if the key is defined with an `undefined` value, it is considered as existing.
+
+- `recursiveGet(context, path, defaultValue)`: get the value at `path`, return `defaultValue` if not exist.
+- `recursiveSet(context, path, value)`: set the `value` at `path`.
+At a point in the traversal path, if the value is not eligible for writing the value, it will reset the value at that path to be `{}`.
+For example, calling on `{foo: 0}`, with `path = 'foo.bar.baar'`, `value = 1`, will make the context object be `{foo: {bar: {baar: 1}}` (`0` is removed).
+- `recursiveHas(context, path)`: check if there is a value at `path`.
+
 ## Error class
+
+`import {TransformationError} from 'express-transformer'`
+
+- If a transformation has an associated message, the error message is wrapped in an `TransformationError` object instance.
+Otherwise, the error thrown by the callback in `.transform(callback)` is thrown.
+- All default plugins use and throw only `TransformationError` error.
+- The error's detailed information can be accessed by `error.info`, which is the `info` object passed to the `.transform()`'s `callback`.
+
+- API: `constructor(message: string, info: ITransformCallbackInfo)`
 
 # Annotations explanation
 

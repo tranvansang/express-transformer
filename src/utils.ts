@@ -21,13 +21,13 @@ export const recursiveSet = <T, V>(obj: T, path: string, value: V) => path
 	},
 	obj || {}
 	)
-export const recursiveGet = <T, V>(obj: T, path: string, value?: V) => path
+export const recursiveGet = <T, V>(obj: T, path: string, defaultValue?: V) => path
 	.split('.')
 	.reduce((
 		acc: any, cur, index, pathArray
 	) => acc instanceof Object && Object.prototype.hasOwnProperty.call(acc, cur)
 		? acc[cur]
-		: index === pathArray.length - 1 ? value : undefined,
+		: index === pathArray.length - 1 ? defaultValue : undefined,
 	obj
 	)
 export const recursiveHas = (obj: any, path: string) => {
