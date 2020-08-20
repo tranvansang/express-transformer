@@ -1,6 +1,12 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {Request, RequestHandler} from 'express'
 
+// declare global {
+// 	namespace ExpressTransformer {
+// 		export type ITransformer<T, V, Options> = RequestHandler
+// 	}
+// }
+
 export type ITransformOptions = {
 	force?: boolean
 	validateOnly?: boolean

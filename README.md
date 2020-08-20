@@ -249,7 +249,9 @@ Consult the [validator](https://www.npmjs.com/package/validator) package for mor
      
 It is recommended to make use of the exported `TransformationError` error when throwing an error.
 
-To extend 
+### How to extend the Typescrript typing.
+
+TODO: need helps.
 
 ## Utility functions
 

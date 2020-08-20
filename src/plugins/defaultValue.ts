@@ -1,8 +1,10 @@
-import {ITransformer, ITransformPlugin} from '../interfaces'
+import {ITransformPlugin} from '../interfaces'
 
-declare module '../interfaces' {
-	interface ITransformer<T, V, Options> {
-		defaultValue(defaultValue: T): ITransformer<T, T | V, Options>
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			defaultValue(defaultValue: T): ITransformer<T, T | V, Options>
+		}
 	}
 }
 
