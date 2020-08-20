@@ -16,7 +16,7 @@ describe('Transformer library', () => {
 	test('should transform value', async () => {
 		const req = {body: {key: 1}}
 		await combineToAsync(
-			transformer<number, number>('key').transform(key => key + 1),
+			transformer('key').transform(key => key + 1),
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(2)
 	})
@@ -59,9 +59,9 @@ describe('Transformer library', () => {
 	test('should chain transformer', async () => {
 		const req = {body: {key: 1}}
 		await combineToAsync(
-			transformer<number, number>('key')
-				.transform(key => key + 1)
-				.transform(key => key + 1),
+			transformer<number, number, unknown>('key')
+				.transform((key: number) => key + 1)
+				.transform((key: number) => key + 1),
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(3)
 	})
@@ -70,7 +70,7 @@ describe('Transformer library', () => {
 		const check = jest.fn()
 		const req = {body: {key: 1}}
 		await flipPromise(combineToAsync(
-			transformer<number, number>('key')
+			transformer('key')
 				.transform(() => {
 					throw new Error('err')
 				})
@@ -173,7 +173,7 @@ describe('Transformer library', () => {
 		test('should process with array last', async () => {
 			const req = {body: {key: [1]}}
 			await combineToAsync(
-				transformer<number, number>('key[]').transform(x => x + 1),
+				transformer('key[]').transform(x => x + 1),
 			)(req as Request, undefined as unknown as Response)
 			expect(req.body.key[0]).toBe(2)
 		})
@@ -210,9 +210,9 @@ describe('Transformer library', () => {
 				}
 			}
 			await combineToAsync(
-				transformer<number, number>('long.path.around.arrayWrapper[].long.path.around.myArray[].key1')
+				transformer('long.path.around.arrayWrapper[].long.path.around.myArray[].key1')
 					.transform(x => x + 1),
-				transformer<number, number>('long.path.around.arrayWrapper[].long.path.around.myArray[].key2')
+				transformer('long.path.around.arrayWrapper[].long.path.around.myArray[].key2')
 					.transform(x => x * 2),
 			)(req as Request, undefined as unknown as Response)
 			expect(req).toEqual({

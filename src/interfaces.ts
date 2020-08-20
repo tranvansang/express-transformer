@@ -31,8 +31,10 @@ export type ITransformCallbackSingular<T, V, Options> = (
 export type ITransformCallbackPlural<T, V, Options> = (
 	value: T[], options: ITransformCallbackInfoPlural<Options>
 ) => Promisable<V[] | T[] | void>
-export type ITransformCallback<T, V, Options> = ITransformCallbackSingular<T, V, Options> | ITransformCallbackPlural<T, V, Options>
-export type IMessageCallback<T, Options> = string | ((value: T | T[], options: ITransformCallbackInfo<Options>) => Promisable<string>)
+export type ITransformCallback<T, V, Options> = ITransformCallbackSingular<T, V, Options>
+	| ITransformCallbackPlural<T, V, Options>
+export type IMessageCallback<T, Options> = string
+	| ((value: T | T[], options: ITransformCallbackInfo<Options>) => Promisable<string>)
 
 export interface ITransformer<T, V, Options> extends RequestHandler {
 	transform(callback: ITransformCallback<T, V, Options>, options?: ITransformOptions): ITransformer<T, V, Options>
