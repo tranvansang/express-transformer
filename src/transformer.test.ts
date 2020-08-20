@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import flipPromise from 'flip-promise'
 import {combineToAsync} from 'middleware-async'
-import {transformer} from './transformer'
+import {addTransformerPlugin, transformer} from './transformer'
 import TransformationError, {transformationErrorName} from './TransformationError'
 import {Request, Response} from 'express'
 
@@ -182,5 +182,41 @@ describe('Transform Plugins', () => {
 				for (const k3 of [8, 9, 10])
 					params.push([[k1, k2, k3], expect.anything()])
 		expect(check.mock.calls).toEqual(params)
+	})
+
+	test('print warning when specify two messages', async () => {
+		console.warn = jest.fn()
+		await combineToAsync(
+			transformer(['k1[].a1[].a2', 'k2[]', 'k3.c3[]'])
+				.message('1')
+				.transform(jest.fn())
+				.message('1')
+				.message('1'),
+		)(req as Request, undefined as unknown as Response)
+		expect(console.warn.mock.calls.length).toBe(1)
+
+		console.warn = jest.fn()
+		await combineToAsync(
+			transformer(['k1[].a1[].a2', 'k2[]', 'k3.c3[]'])
+				.message('1')
+				.transform(jest.fn())
+				.message('1')
+				.message('1', {disableOverwriteWarning: true}),
+		)(req as Request, undefined as unknown as Response)
+		expect(console.warn.mock.calls.length).toBe(0)
+	})
+})
+
+describe('transformer plugin', () => {
+	test('addTransformerPlugin', async () => {
+		addTransformerPlugin({ name: 'newPlugin' })
+		await flipPromise((async () => addTransformerPlugin({
+			name: 'message'
+		}))())
+		await flipPromise((async () => addTransformerPlugin({
+			name: 'transform'
+		}))())
+		addTransformerPlugin({ name: 'message', overwriteRootMethods: true })
+		addTransformerPlugin({ name: 'transform', overwriteRootMethods: true })
 	})
 })

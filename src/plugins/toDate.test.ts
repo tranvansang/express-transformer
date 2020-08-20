@@ -25,6 +25,22 @@ describe('Transform Plugins', () => {
 		date.setSeconds(0)
 		expect(req.body.key).toEqual(date)
 
+		date = new Date()
+		req.body.key = date
+		await combineToAsync(
+			transformer('key').toDate({resetTime: true}),
+		)(req as Request, undefined as unknown as Response)
+		date.setMinutes(0)
+		date.setHours(0)
+		date.setMilliseconds(0)
+		date.setSeconds(0)
+		expect(req.body.key).toEqual(date)
+
+		req.body.key = 'a'
+		await flipPromise(combineToAsync(
+			transformer('key').toDate({resetTime: true}),
+		)(req as Request, undefined as unknown as Response))
+
 		delete req.body.key
 		await flipPromise(combineToAsync(
 			transformer('key').toDate({resetTime: true, force: true}),

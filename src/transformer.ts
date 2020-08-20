@@ -26,7 +26,17 @@ import isArray from './plugins/isArray'
 export {TransformationError, recursiveGet, recursiveSet, recursiveHas}
 
 const plugins = [] as ITransformPlugin[]
-export const addTransformerPlugin = (plugin: ITransformPlugin) => void plugins.push(plugin)
+export const addTransformerPlugin = (plugin: ITransformPlugin) => {
+	const {overwriteRootMethods, name} = plugin
+	if (!name) throw new Error('Plugin name is required')
+	if (!overwriteRootMethods && (name === 'message' || name === 'transform')) {
+		throw new Error(`You are going to overwrite the root method ${name}.\
+This is disabled by default.\
+To force this overwrite, please set overwriteRootMethods option in the plugin object.`)
+	}
+	plugins.push(plugin)
+}
+
 addTransformerPlugin(exists)
 addTransformerPlugin(isIn)
 addTransformerPlugin(isEmail)
@@ -50,7 +60,7 @@ export const transformer = <T, V, Options>(
 ) => {
 	if (!transformerOptions) transformerOptions = {} as Options
 	if (!transformerOptions.location) transformerOptions.location = 'body'
-	const { location = 'body' } = transformerOptions
+	const { location } = transformerOptions
 	const stack: Array<{
 		transform: ITransformCallback<T, V, Options>
 		message?: IMessageCallback<T, Options>
@@ -93,24 +103,17 @@ export const transformer = <T, V, Options>(
 		return middleware
 	}
 	for (
-		const {overwriteRootMethods, name, getConfig} of plugins
-	) {
-		if (!overwriteRootMethods && (name === 'message' || name === 'transform')) {
-			throw new Error(`You are going to overwrite the root method ${name}.\
-This is disabled by default.\
-To force this overwrite, please set overwriteRootMethods option in the plugin object.`)
-		}
-		middleware[name as PluginName] = <Params extends []>(...params: Params) => {
-			const {options, transform} = getConfig(...params)
-			return middleware
-				.transform(
-					(
-						value: T | T[],
-						info: ITransformCallbackInfo<Options>
-					) => transform(value, info) as Promise<T | V | void>,
-					options
-				)
-		}
+		const {name, getConfig} of plugins
+	) middleware[name as PluginName] = <Params extends []>(...params: Params) => {
+		const {options, transform} = getConfig(...params)
+		return middleware
+			.transform(
+				(
+					value: T | T[],
+					info: ITransformCallbackInfo<Options>
+				) => transform(value, info) as Promise<T | V | void>,
+				options
+			)
 	}
 	return middleware
 }
