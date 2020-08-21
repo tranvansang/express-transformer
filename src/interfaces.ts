@@ -24,6 +24,9 @@ export type ITransformOptions = {
 
 export type ITransformerOptions = {
 	location?: string
+	rawPath?: boolean
+	rawLocation?: boolean
+	disableArrayNotation?: boolean
 }
 
 export interface ITransformCallbackInfoSingular<Options> {

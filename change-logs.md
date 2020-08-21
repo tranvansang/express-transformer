@@ -1,5 +1,9 @@
 # Change logs
 
+## Version 1.1.0
+- Breaking changes: change `recursiveGet`, `recursiveHas`, `recursiveSet` to accept array strings. (Old: accept `path` as a string).
+- Add new transformer options: `rawPath`, `rawLocation`, `disableArrayNotation`.
+
 ## Version 1.0.0
 - Always throw error if a transformation fails
 - **Support array of arrays**

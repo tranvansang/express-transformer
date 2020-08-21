@@ -58,9 +58,9 @@ export const transformer = <T, V, Options>(
 	path: string | string[],
 	transformerOptions?: Options & ITransformerOptions
 ) => {
-	if (!transformerOptions) transformerOptions = {} as Options
-	if (!transformerOptions.location) transformerOptions.location = 'body'
-	const { location } = transformerOptions
+	const nonNullTransformerOptions = transformerOptions || {} as Options & ITransformerOptions
+	if (!nonNullTransformerOptions.location) nonNullTransformerOptions.location = 'body'
+	const { location } = nonNullTransformerOptions
 	const stack: Array<{
 		transform: ITransformCallback<T, V, Options>
 		message?: IMessageCallback<T, Options>
@@ -69,14 +69,14 @@ export const transformer = <T, V, Options>(
 	const middleware = asyncMiddleware(async (req, res, next) => {
 		for (
 			const {transform, options, message} of stack
-		) await doTransform<T, V, Options>(
+		) await doTransform(
 			req,
 			location,
 			path,
 			transform,
 			options,
 			message,
-			transformerOptions!
+			nonNullTransformerOptions
 		)
 		next()
 	}) as ITransformer<T, V, Options>

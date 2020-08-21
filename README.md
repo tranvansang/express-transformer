@@ -288,16 +288,18 @@ Coupled with the universal-path string format, there are 3 utility functions whi
 
 These 3 methods are designed to **just work**, and **never** through any error with an arbitrary `context` parameter.
 
-All `path` parameters are in universal-path string format.
+All `pathSplits` parameters are an array of strings indicating the traversal path to a location in the context object.
 
 These methods use `Object.hasOwnProperty` to check if a key exists in an object.
 Therefore, if the key is defined with an `undefined` value, it is considered as existing.
 
-- `recursiveGet(context, path, defaultValue)`: get the value at `path`, return `defaultValue` if not exist.
-- `recursiveSet(context, path, value)`: set the `value` at `path`.
+- `recursiveGet(context, pathSplits, defaultValue)`: get the value at `pathSplits`, return `defaultValue` if not exist.
+- `recursiveSet(context, pathSplits, value)`: set the `value` at `pathSplits`.
 At a point in the traversal path, if the value is not eligible for writing the value, it will reset the value at that path to be `{}`.
-For example, calling on `{foo: 0}`, with `path = 'foo.bar.baar'`, `value = 1`, will make the context object be `{foo: {bar: {baar: 1}}` (`0` is removed).
-- `recursiveHas(context, path)`: check if there is a value at `path`.
+For example, calling on `{foo: 0}`, with `pathSplits = '['foo', 'bar', 'baar']'`, `value = 1`, will make the context object be `{foo: {bar: {baar: 1}}` (`0` is removed).
+- `recursiveHas(context, pathSplits)`: check if there is a value at `pathSplits`.
+
+Example: to create a `pathSplits`, you should just call `path.split('.')`.
 
 ## Error class
 
@@ -349,6 +351,9 @@ Assume that you want to make an API to change user password. There are following
 the library will pair them one by one, and pass their values in a list and call the `callback`.
 The library also replaces the returned values in the corresponding locations, if `validateOnly` is `false`.
 Accordingly, when `validateOnly` is `false` and `path` is an array, the `callback` is required to return an array.
+
+## Others
+- From version 1.1.0, `transformer()` support these options: `rawPath`, `rawLocation`, `disableArrayNotation`.
  
 # QA
 

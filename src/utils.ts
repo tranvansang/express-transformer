@@ -11,8 +11,7 @@ import TransformationError from './TransformationError'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {Request} from 'express'
 
-export const recursiveSet = <T, V>(obj: T, path: string, value: V) => path
-	.split('.')
+export const recursiveSet = <T, V>(obj: T, pathSplits: string[], value: V) => pathSplits
 	.reduce((acc: any, cur: string, index, pathArray) => {
 		if (!(acc instanceof Object)) return undefined
 		if (index === pathArray.length - 1) acc[cur] = value
@@ -20,60 +19,63 @@ export const recursiveSet = <T, V>(obj: T, path: string, value: V) => path
 		return acc[cur]
 	},
 	obj || {})
-export const recursiveGet = <T, V>(obj: T, path: string, defaultValue?: V) => path
-	.split('.')
+export const recursiveGet = <T, V>(obj: T, pathSplits: string[], defaultValue?: V) => pathSplits
 	.reduce((
 		acc: any, cur, index, pathArray
 	) => acc instanceof Object && Object.prototype.hasOwnProperty.call(acc, cur)
 		? acc[cur]
 		: index === pathArray.length - 1 ? defaultValue : undefined,
 	obj)
-export const recursiveHas = (obj: any, path: string) => {
-	for (const key of path.split('.')) if (
+export const recursiveHas = (obj: any, pathSplits: string[]) => {
+	for (const key of pathSplits) if (
 		obj instanceof Object && Object.prototype.hasOwnProperty.call(obj, key)
-	) {
-		obj = obj[key]
-	} else return false
+	) obj = obj[key]
+	else return false
 	return true
 }
 
-const doesValueExist = (
+const splitPath = (raw: boolean, path: string) => raw ? [path] : path.split('.')
+
+const doesValueExist = <Options>(
 	obj: any,
 	prefixes: string[],
 	[firstArray, ...arrays]: string[],
-	lastPath: string
+	lastPath: string,
+	transformerOptions: Options & ITransformerOptions
 ) => {
+	const {rawPath} = transformerOptions
 	if (firstArray) {
-		prefixes = [...prefixes, firstArray]
-		const path = prefixes.join('.')
-		if (!recursiveHas(obj, path)) return false
-		const values = recursiveGet(obj, path)
+		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
+		if (!recursiveHas(obj, newPrefixes)) return false
+		const values = recursiveGet(obj, newPrefixes)
 		if (!Array.isArray(values)) return false
 		for (let i = 0; i < values.length; i++) if (doesValueExist(
 			obj,
-			[...prefixes, String(i)],
+			[...newPrefixes, String(i)],
 			arrays,
-			lastPath
+			lastPath,
+			transformerOptions
 		)) return true
 		return false
 	}
-	if (/\[]$/.test(lastPath)) { // last selector is an array selector
+	if (!transformerOptions.rawPath && /\[]$/.test(lastPath)) { // last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
-		const path = [...prefixes, lastPathBase].join('.')
-		if (!recursiveHas(obj, path)) return false
-		const values = recursiveGet(obj, path)
+		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, lastPathBase)]
+		if (!recursiveHas(obj, newPrefixes)) return false
+		const values = recursiveGet(obj, newPrefixes)
 		if (!Array.isArray(values)) return false
 		// because this is last element, the next check can be replaced with (to have 100% coverage)
 		// values.length && doesValueExist(..., String(0), ...)
 		for (let i = 0; i < values.length; i++) if (doesValueExist(
 			obj,
-			[...prefixes, lastPathBase],
+			[...prefixes, ...splitPath(!!rawPath, lastPathBase)],
 			arrays,
 			String(i),
+			transformerOptions
 		)) return true
 		return false
 	}
-	return recursiveHas(obj, [...prefixes, lastPath].join('.'))
+	return recursiveHas(obj, [...prefixes, lastPath])
 }
 
 /**
@@ -84,7 +86,7 @@ const doesValueExist = (
  */
 const subTransform = async <T, V, Options>(
 	req: Request,
-	location: string,
+	locationSplits: string[],
 	message: IMessageCallback<T, Options> | undefined,
 	options: ITransformOptions,
 	prefixes: string[],
@@ -94,24 +96,25 @@ const subTransform = async <T, V, Options>(
 	transformerOptions: Options & ITransformerOptions
 ) => {
 	const {force} = options
-	const fullPath = (s: string) => [location, s].join('.')
-	const getArrayOrAssignEmpty = (p: string) => {
+	const {rawPath, disableArrayNotation} = transformerOptions
+	const getArrayOrAssignEmpty = (subPathSplits: string[]) => {
+		const fullSplits = [...locationSplits, ...subPathSplits]
 		//force only effective when value does not exist
-		if (!recursiveHas(req, fullPath(p)) && !force) return []
-		let values = recursiveGet(req, fullPath(p))
+		if (!recursiveHas(req, fullSplits) && !force) return []
+		let values = recursiveGet(req, fullSplits)
 		//always reset existing value regardless force and validateOnly's values
 		if (!Array.isArray(values)) {
 			values = []
-			recursiveSet(req, fullPath(p), [])
+			recursiveSet(req, fullSplits, [])
 		}
 		return values
 	}
 	if (firstArray) {
-		const newPrefixes = [...prefixes, firstArray]
-		const values = getArrayOrAssignEmpty(newPrefixes.join('.'))
+		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
+		const values = getArrayOrAssignEmpty(newPrefixes)
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
-			location,
+			locationSplits,
 			message,
 			options,
 			[...newPrefixes, String(i)],
@@ -120,25 +123,27 @@ const subTransform = async <T, V, Options>(
 			callback,
 			transformerOptions
 		)
-	} else if (/\[]$/.test(lastPath)) { // last selector is an array selector
+	} else if (!disableArrayNotation && /\[]$/.test(lastPath)) { // last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
-		const values = getArrayOrAssignEmpty([...prefixes, lastPathBase].join('.'))
+		const lastPathBaseSplits = splitPath(!!rawPath, lastPathBase)
+		const values = getArrayOrAssignEmpty([...prefixes, ...lastPathBaseSplits])
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
-			location,
+			locationSplits,
 			message,
 			options,
-			[...prefixes, lastPathBase],
+			[...prefixes, ...lastPathBaseSplits],
 			arrays,
 			String(i),
 			callback,
 			transformerOptions
 		)
 	} else {
-		const path = [...prefixes, lastPath].join('.')
-		if (force || recursiveHas(req, fullPath(path))) await callback(
-			recursiveGet(req, fullPath(path)),
-			{options: transformerOptions, path, req}
+		const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
+		const fullSplits = [...locationSplits, ...newSplits]
+		if (force || recursiveHas(req, fullSplits)) await callback(
+			recursiveGet(req, fullSplits),
+			{options: transformerOptions, path: newSplits.join('.'), req}
 		)
 	}
 }
@@ -166,21 +171,22 @@ export const doTransform = async <T, V, Options>(
 	transformerOptions: Options & ITransformerOptions
 ) => {
 	const {validateOnly, force} = options
-	const fullPath = (p: string) => [location, p].join('.')
+	const {disableArrayNotation, rawPath, rawLocation} = transformerOptions
+	const locationSplits = splitPath(!!rawLocation, location)
 	const makeSub = async (
-		p: string,
+		subPath: string,
 		cb: ITransformCallbackSingular<T, V, Options>,
 		transformOptions: ITransformOptions
 	) => {
-		const arraySplits = p.split('[].') // only split arrays in middle
+		const subPathArrays = disableArrayNotation ? [subPath] : subPath.split('[].') // only split arrays in middle
 		await subTransform(
 			req,
-			location,
+			locationSplits,
 			message,
 			transformOptions,
 			[],
-			arraySplits.slice(0, arraySplits.length - 1),
-			arraySplits[arraySplits.length - 1],
+			subPathArrays.slice(0, subPathArrays.length - 1),
+			subPathArrays[subPathArrays.length - 1],
 			cb,
 			transformerOptions
 		)
@@ -193,7 +199,7 @@ export const doTransform = async <T, V, Options>(
 					value,
 					info
 				)
-				if (!validateOnly) recursiveSet(req, fullPath(info.path), sanitized)
+				if (!validateOnly) recursiveSet(req, [...locationSplits, ...splitPath(!!rawPath, info.path)], sanitized)
 			} catch (e) {
 				await throwError(e, message, value, info)
 			}
@@ -203,12 +209,13 @@ export const doTransform = async <T, V, Options>(
 	else {
 		// only allow skip if there is no value exist
 		const transformOptions = !force && path.some(subPath => {
-			const arraySplits = subPath.split('[].') // only split arrays in middle
+			const subPathArrays = disableArrayNotation ? [subPath] : subPath.split('[].') // only split arrays in middle
 			return doesValueExist(
 				req,
-				[location],
-				arraySplits.slice(0, arraySplits.length - 1),
-				arraySplits[arraySplits.length - 1]
+				locationSplits,
+				subPathArrays.slice(0, subPathArrays.length - 1),
+				subPathArrays[subPathArrays.length - 1],
+				transformerOptions
 			)
 		})
 			? {...options, force: true}
@@ -221,9 +228,9 @@ export const doTransform = async <T, V, Options>(
 						values,
 						info
 					)
-					if (!validateOnly) paths.forEach((p, i) => recursiveSet(
+					if (!validateOnly) paths.forEach((subPath, i) => recursiveSet(
 						req,
-						fullPath(p),
+						[...locationSplits, ...splitPath(!!rawPath, subPath)],
 						(sanitized as V[])?.[i]
 					))
 				} catch (e) {
