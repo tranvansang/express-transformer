@@ -118,6 +118,7 @@ describe('Transformer library', () => {
 		expect(check.mock.calls).toEqual([[1, {
 			options: {location: 'body'},
 			path: 'key',
+			pathSplits: ['key'],
 			req
 		}]])
 	})
@@ -130,6 +131,7 @@ describe('Transformer library', () => {
 		expect(check.mock.calls).toEqual([[1, {
 			options: {location: 'body', foo: 'bar'},
 			path: 'key',
+			pathSplits: ['key'],
 			req
 		}]])
 	})

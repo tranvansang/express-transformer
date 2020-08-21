@@ -11,22 +11,22 @@ import TransformationError from './TransformationError'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {Request} from 'express'
 
-export const recursiveSet = <T, V>(obj: T, pathSplits: string[], value: V) => pathSplits
-	.reduce((acc: any, cur: string, index, pathArray) => {
+export const recursiveSet = <T, V>(obj: T, pathSplits: Array<string | number>, value: V) => pathSplits
+	.reduce((acc: any, cur: string | number, index, pathArray) => {
 		if (!(acc instanceof Object)) return undefined
 		if (index === pathArray.length - 1) acc[cur] = value
 		else acc[cur] = Object.prototype.hasOwnProperty.call(acc, cur) ? acc[cur] : {}
 		return acc[cur]
 	},
 	obj || {})
-export const recursiveGet = <T, V>(obj: T, pathSplits: string[], defaultValue?: V) => pathSplits
+export const recursiveGet = <T, V>(obj: T, pathSplits: Array<string | number>, defaultValue?: V) => pathSplits
 	.reduce((
 		acc: any, cur, index, pathArray
 	) => acc instanceof Object && Object.prototype.hasOwnProperty.call(acc, cur)
 		? acc[cur]
 		: index === pathArray.length - 1 ? defaultValue : undefined,
 	obj)
-export const recursiveHas = (obj: any, pathSplits: string[]) => {
+export const recursiveHas = (obj: any, pathSplits: Array<string | number>) => {
 	for (const key of pathSplits) if (
 		obj instanceof Object && Object.prototype.hasOwnProperty.call(obj, key)
 	) obj = obj[key]
@@ -34,13 +34,23 @@ export const recursiveHas = (obj: any, pathSplits: string[]) => {
 	return true
 }
 
-const splitPath = (raw: boolean, path: string) => raw ? [path] : path.split('.')
+const splitPath = <T extends string | number>(raw: boolean, path: T) => typeof path === 'number' || raw
+	? [path]
+	: (path as string).split('.')
+
+const joinSplits = (splits: Array<string | number>) => splits.map(
+	(
+		subPath,
+		index,
+		arr
+	) => `${typeof subPath === 'string' && index ? '.' : ''}${typeof subPath === 'number' ? `[${subPath}]` : subPath}`
+).join('')
 
 const doesValueExist = <Options>(
 	obj: any,
-	prefixes: string[],
+	prefixes: Array<string | number>,
 	[firstArray, ...arrays]: string[],
-	lastPath: string,
+	lastPath: string | number,
 	transformerOptions: Options & ITransformerOptions
 ) => {
 	const {rawPath} = transformerOptions
@@ -51,14 +61,15 @@ const doesValueExist = <Options>(
 		if (!Array.isArray(values)) return false
 		for (let i = 0; i < values.length; i++) if (doesValueExist(
 			obj,
-			[...newPrefixes, String(i)],
+			[...newPrefixes, i],
 			arrays,
 			lastPath,
 			transformerOptions
 		)) return true
 		return false
 	}
-	if (!transformerOptions.rawPath && /\[]$/.test(lastPath)) { // last selector is an array selector
+	if (!transformerOptions.rawPath && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
+		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, lastPathBase)]
 		if (!recursiveHas(obj, newPrefixes)) return false
@@ -70,7 +81,7 @@ const doesValueExist = <Options>(
 			obj,
 			[...prefixes, ...splitPath(!!rawPath, lastPathBase)],
 			arrays,
-			String(i),
+			i,
 			transformerOptions
 		)) return true
 		return false
@@ -89,15 +100,15 @@ const subTransform = async <T, V, Options>(
 	locationSplits: string[],
 	message: IMessageCallback<T, Options> | undefined,
 	options: ITransformOptions,
-	prefixes: string[],
+	prefixes: Array<string | number>,
 	[firstArray, ...arrays]: string[],
-	lastPath: string,
+	lastPath: string | number,
 	callback: ITransformCallbackSingular<T, V, Options>,
 	transformerOptions: Options & ITransformerOptions
 ) => {
 	const {force} = options
 	const {rawPath, disableArrayNotation} = transformerOptions
-	const getArrayOrAssignEmpty = (subPathSplits: string[]) => {
+	const getArrayOrAssignEmpty = (subPathSplits: Array<string | number>) => {
 		const fullSplits = [...locationSplits, ...subPathSplits]
 		//force only effective when value does not exist
 		if (!recursiveHas(req, fullSplits) && !force) return []
@@ -117,13 +128,14 @@ const subTransform = async <T, V, Options>(
 			locationSplits,
 			message,
 			options,
-			[...newPrefixes, String(i)],
+			[...newPrefixes, i],
 			arrays,
 			lastPath,
 			callback,
 			transformerOptions
 		)
-	} else if (!disableArrayNotation && /\[]$/.test(lastPath)) { // last selector is an array selector
+	} else if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
+		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
 		const lastPathBaseSplits = splitPath(!!rawPath, lastPathBase)
 		const values = getArrayOrAssignEmpty([...prefixes, ...lastPathBaseSplits])
@@ -134,7 +146,7 @@ const subTransform = async <T, V, Options>(
 			options,
 			[...prefixes, ...lastPathBaseSplits],
 			arrays,
-			String(i),
+			i,
 			callback,
 			transformerOptions
 		)
@@ -143,7 +155,11 @@ const subTransform = async <T, V, Options>(
 		const fullSplits = [...locationSplits, ...newSplits]
 		if (force || recursiveHas(req, fullSplits)) await callback(
 			recursiveGet(req, fullSplits),
-			{options: transformerOptions, path: newSplits.join('.'), req}
+			{
+				options: transformerOptions,
+				path: joinSplits(newSplits),
+				pathSplits: newSplits,
+				req}
 		)
 	}
 }
@@ -195,11 +211,15 @@ export const doTransform = async <T, V, Options>(
 		path,
 		async (value, info) => {
 			try {
-				const sanitized = await (callback as ITransformCallbackSingular<T, V, Options>)(
+				const transformedValue = await (callback as ITransformCallbackSingular<T, V, Options>)(
 					value,
 					info
 				)
-				if (!validateOnly) recursiveSet(req, [...locationSplits, ...splitPath(!!rawPath, info.path)], sanitized)
+				if (!validateOnly) recursiveSet(
+					req,
+					[...locationSplits, ...info.pathSplits],
+					transformedValue
+				)
 			} catch (e) {
 				await throwError(e, message, value, info)
 			}
@@ -220,30 +240,45 @@ export const doTransform = async <T, V, Options>(
 		})
 			? {...options, force: true}
 			: options
-		const makeSubLoop = async (index: number, values: T[], paths: string[]) => {
+		const makeSubLoop = async (
+			index: number,
+			values: T[],
+			paths: string[],
+			pathSplitsAll: Array<Array<string | number>>
+		) => {
 			if (index === path.length) {
-				const info = {req, path: paths, options: transformerOptions}
+				const info = {
+					req,
+					path: paths,
+					options: transformerOptions,
+					pathSplits: pathSplitsAll
+				}
 				try {
-					const sanitized = await (callback as ITransformCallbackPlural<T, V, Options>)(
+					const transformedValues = await (callback as ITransformCallbackPlural<T, V, Options>)(
 						values,
 						info
 					)
 					if (!validateOnly) paths.forEach((subPath, i) => recursiveSet(
 						req,
 						[...locationSplits, ...splitPath(!!rawPath, subPath)],
-						(sanitized as V[])?.[i]
+						(transformedValues as V[])?.[i]
 					))
 				} catch (e) {
 					await throwError(e, message, values, info)
 				}
 			} else await makeSub(
 				path[index],
-				async (value, {path: subPath}) => {
-					await makeSubLoop(index + 1, [...values, value], [...paths, subPath])
+				async (value, {path: subPath, pathSplits}) => {
+					await makeSubLoop(
+						index + 1,
+						[...values, value],
+						[...paths, subPath],
+						[...pathSplitsAll, pathSplits]
+					)
 				},
 				transformOptions
 			)
 		}
-		await makeSubLoop(0, [], [])
+		await makeSubLoop(0, [], [], [])
 	}
 }

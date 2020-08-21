@@ -33,10 +33,12 @@ export interface ITransformCallbackInfoSingular<Options> {
 	options: Options & ITransformerOptions
 	path: string
 	req: Request
+	pathSplits: Array<string | number>
 }
 export interface ITransformCallbackInfoPlural<Options> {
 	options: Options & ITransformerOptions
 	path: string[]
+	pathSplits: Array<Array<string | number>>
 	req: Request
 }
 export type ITransformCallbackInfo<Options> = ITransformCallbackInfoSingular<Options>

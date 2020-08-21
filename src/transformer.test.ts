@@ -149,12 +149,22 @@ describe('Transform Plugins', () => {
 		)(req as Request, undefined as unknown as Response)
 		expect(check.mock.calls).toEqual([
 			[[1,2,4], {
-				path: ['k1.0.a1.0.a2', 'k2.0', 'k3.c3.0'],
+				path: ['k1[0].a1[0].a2', 'k2[0]', 'k3.c3[0]'],
+				pathSplits: [
+					['k1', 0, 'a1', 0, 'a2'],
+					['k2', 0],
+					['k3', 'c3', 0]
+				],
 				req,
 				options: {location: 'body'}
 			}],
 			[[1,3,4], {
-				path: ['k1.0.a1.0.a2', 'k2.1', 'k3.c3.0'],
+				path: ['k1[0].a1[0].a2', 'k2[1]', 'k3.c3[0]'],
+				pathSplits: [
+					['k1', 0, 'a1', 0, 'a2'],
+					['k2', 1],
+					['k3', 'c3', 0]
+				],
 				req,
 				options: {location: 'body'}
 			}]

@@ -1,5 +1,9 @@
 # Change logs
 
+## Version 1.2.0
+- Support `pathSplits` value in the info parameter to the transform callback.
+- Change the format of `path` value in the info parameter to when indicating array elements.
+
 ## Version 1.1.0
 - Breaking changes: change `recursiveGet`, `recursiveHas`, `recursiveSet` to accept array strings. (Old: accept `path` as a string).
 - Add new transformer options: `rawPath`, `rawLocation`, `disableArrayNotation`.

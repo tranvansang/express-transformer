@@ -126,6 +126,9 @@ For example: `chain.exists().isEmail().transform(emailToUser).message('Email not
         Sample values: `'email'`, `'foo[]'`, `['foo', 'bar']`, `['foo[]', 'foo[].bar.baar[]', 'fooo']`.
     - `(optional) transformerOptions: Object`: an object with the following properties.
         - `(optional) location: string (default: 'body')`: a *universal-path* formatted string, which specifies where to find the input value from the `req` object.
+        - `(optional) rawLocation: boolean (default: false)`: treat the `location` value as a single key (i.e., do not expand to a deeper level).
+        - `(optional) rawPath: boolean (default: false)`: treat path the exact key without expanding.
+        - `(optional) disableArrayNotation: boolean (default: false)`: disable array iteration (i.e., consider the array notation as part of the key name).
 - Returned value: a connect-like middleware which inherits all methods from transformations chain's prototype.
 
 ## Transformation chain
@@ -143,6 +146,8 @@ Associated Typescript typing extend is also available.
                 - If the `path` parameter in `transformer(path, transformerOptions)` is an array of string, `value` will be array of the values of the list of current inputs.
             - `info: Object`: an object which includes the following properties.
                 - `path`: path to the current input or array of paths to the current list of inputs.
+                - `pathSplits`: an array which contains string (object key) or number (array index) values used to determine the traversal path.
+                    When the `path` parameter is an array, this value will be an array of array.
                 - `req`: the request `req` object from the connect-like middleware.
                 - `options: Object`: the `transformerOptions` object passed in `.transform(callback, transformerOptions)` with default fields (i.e., the `location` field) filled.
                 
@@ -173,8 +178,11 @@ Associated Typescript typing extend is also available.
     - Returned value: the chain itself
 - `chain.message(callback, option)`: overwrite the error message of the one or more previous transformations in the chain.
     - Parameters:
-        - `(required) callback: Function | string`: the string indicating the message or the function which accepts the same parameters as of `chain.transform()`'s `callback` (i.e., `value` and `info`).
-        Similarly, `callback` can be async or a normal function.
+        - `(required) callback: Function | string`: the string indicating the message,
+        or the function which accepts the same parameters as of `chain.transform()`'s `callback` (i.e., `value` and `info`)
+        and returns the string message or a promise which resolves the string message.
+        
+        When being accessed, if the callback throws and error or return a projected promise, the transformations chain will throw that error while processing.
         - `(optional) option: Object`: an object specifying the behavior of the overwriting message, which includes the following properties.
             - `(optional) force: boolean (default: false)`:
                 - if `force` is `true`: overwrite the error message of all transformations in the chain, which does not have error message overwritten, from begin until when this message is called.
@@ -187,7 +195,7 @@ Associated Typescript typing extend is also available.
 
 Initially, the library adds these chain plugins (by calling `addTransformerPlugin` internally).
 
-In these plugin config, mostly, when the `force` option exist, it indicates the `force` config in the transformation.
+In these plugins' config, when the `force` option exists, it indicates the `force` config in the transformation.
 
 ### Validators:
 
@@ -352,9 +360,6 @@ the library will pair them one by one, and pass their values in a list and call 
 The library also replaces the returned values in the corresponding locations, if `validateOnly` is `false`.
 Accordingly, when `validateOnly` is `false` and `path` is an array, the `callback` is required to return an array.
 
-## Others
-- From version 1.1.0, `transformer()` support these options: `rawPath`, `rawLocation`, `disableArrayNotation`.
- 
 # QA
 
 Q1. How do I customize the error handler?
