@@ -7,7 +7,9 @@ import allPlugins from '.'
 declare global {
 	namespace ExpressTransformer {
 		interface ITransformer<T, V, Options> {
-			use(plugins: Array<[ITransformPlugin | keyof ITransformer<T, V, Options>, ...any[]]>): ITransformer<T, V, Options>
+			use(
+				plugins: Array<[ITransformPlugin | keyof ITransformer<T, V, Options>, ...any[]]>
+			): ITransformer<T, V, Options>
 		}
 	}
 }
