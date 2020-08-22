@@ -312,10 +312,10 @@ Associated Typescript typing extend is also available.
         
         When being accessed, if the callback throws and error or return a projected promise, the transformation chain will throw that error while processing.
         - `(optional) option: Object`: an object specifying the behavior of the overwriting message, which includes the following properties.
-            - `(optional) force: boolean (default: false)`:
-                - if `force` is `true`: overwrite the error message of all transformations in the chain, which does not have error message overwritten, from begin until when this message is called.
+            - `(optional) global: boolean (default: false)`:
+                - if `global` is `true`: overwrite the error message of all transformations in the chain, which does not have error message overwritten, from begin until when this message is called.
                 
-                Note: the error message of the most recent transformation will be overwritten even if it exists, regardless of the value of `force`.
+                Note: the error message of the most recent transformation will be overwritten even if it exists, regardless of the value of `global`.
                 If two consecutive messages are provided, the latter is preferred (with a configuration `console.warn`'s message).
     - Returned value: the chain itself
 

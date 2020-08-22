@@ -113,7 +113,7 @@ export const transformer = <T, V, Options>(
 	}) as ITransformer<T, V, Options>
 	middleware.message = (
 		message,
-		{force, disableOverwriteWarning} = {}
+		{global, disableOverwriteWarning} = {}
 	) => {
 		if (stack.length) {
 			if (stack[stack.length - 1].message) {
@@ -126,7 +126,7 @@ export const transformer = <T, V, Options>(
 			}
 			stack[stack.length - 1].message = message
 		}
-		if (force) for (const transformation of stack) if (!transformation.message) transformation.message = message
+		if (global) for (const transformation of stack) if (!transformation.message) transformation.message = message
 		return middleware
 	}
 	for (

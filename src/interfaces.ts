@@ -55,7 +55,7 @@ export type ITransformCallback<T, V, Options> = ITransformCallbackSingular<T, V,
 export type IMessageCallback<T, Options> = string
 	| ((value: T | T[], options: ITransformCallbackInfo<Options>) => Promisable<string>)
 export type IMessageOptions = {
-	force?: boolean
+	global?: boolean
 	disableOverwriteWarning?: boolean
 }
 

@@ -4,6 +4,7 @@
 - Add `isType` plugin.
 - Convert `transform` to plugin.
 - Add `use` plugin.
+- Change `force` option in message to `global`.
 
 ## Version 1.2.0
 - Support `pathSplits` value in the info parameter to the transform callback.
