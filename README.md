@@ -58,11 +58,11 @@ More complicated, but obviously common case.
 ```javascript
 app.use('/signup',
 	transformer('email')
-		.exists()
+		.exists() //.exists() is required because if the input is omitted, the transformers will not be triggered
         .message('Please provide email')
-		.isLength({min: 8}) //note that .exists() is required because if value is omitted, transformer will not be triggered
+		.isLength({min: 8})
         .message('Email is too short')
-		.transform(async email => { // transformer can be async function
+		.transform(async email => { // transformer function can be async
 			const existingUser = await User.findByEmail(email).exec()
 			if (existingUser) throw new Error('Email already existed')
 		}, {validateOnly: true}),
@@ -83,11 +83,14 @@ app.use('/get-user/:id',
 	transformer('email', {location: 'params'})
 		.exists()
         .message('Please provide id')
-		.transform(async id => { // transformer can be async function
+		.transform(async id => {
 			const user = await User.findById(id).exec()
 			if (user) throw new Error('In correct id')
-            return user //req.params.id will become this object
-		}),
+            return user //req.params.id will become the `user` object
+		})
+        .message(async id => { // the message function can be async
+            return `${id} is not a valid user id`
+        }),
 	(req, res) => {res.status(200).json(req.params.id.toJSON())}
 )
 ```
