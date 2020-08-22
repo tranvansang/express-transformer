@@ -28,10 +28,9 @@ describe('Transform Plugins', () => {
 	})
 
 	test('should accept ignore message and get TransformationError', async () => {
-		const err = new TransformationError('an error')
 		const error = await flipPromise(combineToAsync(
-			transformer('key').transform(() => Promise.reject(err), {force: true}).message('hi'),
-		)({} as Request, undefined as unknown as Response)) as TransformationError
+			transformer('key').transform(() => Promise.reject(1), {force: true}).message('hi'),
+		)({} as Request, undefined as unknown as Response))
 		expect(error.message).toBe('hi')
 		expect(error.name).toBe(transformationErrorName)
 	})

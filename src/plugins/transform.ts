@@ -28,7 +28,7 @@ export default {
 					callbackOptions as ITransformCallbackInfoSingular<Options>
 				)
 			},
-			config: options
+			options
 		}
 	}
 } as ITransformPlugin

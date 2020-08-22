@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {combineToAsync} from 'middleware-async'
-import {transformer} from './transformer'
+import {transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 import {Request, Response} from 'express'
 
