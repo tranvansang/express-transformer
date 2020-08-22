@@ -18,6 +18,21 @@ describe('Transform Plugin', () => {
 				[isType, 'string']
 			]),
 		)(req as Request, undefined as unknown as Response)
+		await combineToAsync(
+			transformer('key').use([
+				['exists'],
+				[isLength, {min: 1}],
+				['isType', 'string'],
+			]),
+		)(req as Request, undefined as unknown as Response)
+		await flipPromise((async () => combineToAsync(
+			transformer('key').use([
+				['exists'],
+				[isLength, {min: 1}],
+				['isType', 'string'],
+				['a', 'string'],
+			]),
+		)(req as Request, undefined as unknown as Response))())
 		req.body.key = ''
 		await combineToAsync(
 			transformer('key').use([

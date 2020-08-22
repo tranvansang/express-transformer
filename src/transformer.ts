@@ -17,7 +17,8 @@ import {
 	ITransformer,
 	ITransformerOptions,
 	ITransformOptions,
-	ITransformPlugin, ITransformPluginConfig
+	ITransformPlugin,
+	ITransformPluginConfig
 } from './interfaces'
 import {doTransform, recursiveGet, recursiveHas, recursiveSet} from './utils'
 import is from './plugins/is'
@@ -25,6 +26,7 @@ import isArray from './plugins/isArray'
 import isType from './plugins/isType'
 import transform from './plugins/transform'
 import use from './plugins/use'
+import plugins from './plugins'
 
 export {
 	TransformationError,
@@ -48,7 +50,6 @@ export {
 	use
 }
 
-const plugins = [] as ITransformPlugin[]
 export const addTransformerPlugin = (plugin: ITransformPlugin) => {
 	const {name} = plugin
 	if (!name) throw new Error('Plugin name is required')
