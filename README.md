@@ -271,7 +271,7 @@ app.post(
 All default plugins are exported and available to be used by this way (or you can use their names instead).
 
 ```
-import {
+const {
 	transform,
 	exists,
 	isIn,
@@ -287,7 +287,7 @@ import {
 	isArray,
 	isType,
 	use
-} from 'express-transformer'
+} = require('express-transformer')
 ```
 
 Note: `.message`is not a plugin.
@@ -307,11 +307,11 @@ app.post('/update',
 )
 ```
 
-- How to use `.message` in this way.
+- How to use the `.message` in this a combination?
 
 Unfortunately, `.message` is not yet a plugin.
-Because it requires internally access to overwrite the configuration of the previous transformations in the chain.
-Recklessly changing the internal to make this available is not neccessary now and would reduce the flexibility of the library for future development.
+Because it requires internal access to overwrite the configuration of the previous transformations in the chain.
+Recklessly changing the internal to make this available is not neccessary for now and it would reduce the flexibility of the library in future development.
 
 Workaround.
 
