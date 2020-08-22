@@ -228,9 +228,6 @@ Plugins with extendable Typescript typing can be configured to add new methods p
 The library exports following methods and objects
 - `transformer` (also exported as `default`)
 - `addTransformerPlugin`
-- `recursiveGet`
-- `recursiveSet`
-- `recursiveHas`
 
 Typically, you only need to use the `transformer()` method in most of the cases.
 This method returns a transformation chain which is used to validate/transform input data.
@@ -402,6 +399,8 @@ Otherwise, you can publish your own plugin to a separated package and add it wit
 
 When writing a plugin, please keep in your mind that the input value can be anything.
 It is extremely recommended that you should check the input value type via `typeof` or `instanceof` in the plugin, if you are going to publish it.
+
+Side note: you can even overwrite the default method `.message()` and `.transform()`.
 
 ### How to extend the Typescript typing.
 

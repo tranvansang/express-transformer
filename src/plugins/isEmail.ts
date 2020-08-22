@@ -1,5 +1,6 @@
 import TransformationError from '../TransformationError'
 import isEmailCore, {IIsEmailOptions} from './isEmailCore'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {ITransformCallbackInfo, ITransformOptions, ITransformPlugin} from '../interfaces'
 
 declare global {

@@ -1,3 +1,4 @@
+/* eslint-disable */
 //cloned from validator
 const isByteLength = (str: string, {min = 0, max}: {min?: number, max: number}) => {
 	const len = encodeURI(str).split(/%..|./).length - 1

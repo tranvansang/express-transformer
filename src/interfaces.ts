@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+// eslint-disable-next-line import/no-extraneous-dependencies,@typescript-eslint/no-unused-vars
 import {Request, RequestHandler} from 'express'
 
 declare global {
@@ -12,7 +12,9 @@ declare global {
 				callback: IMessageCallback<T, Options>,
 				options?: IMessageOptions
 			): ITransformer<T, V, Options>
-			// [key: string]: (...pluginOptions: any[]) => any
+			use(
+				...plugins: Array<ITransformPlugin[]> | ITransformPlugin[]
+			): ITransformer<T, V, Options>
 		}
 	}
 }
