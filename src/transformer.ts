@@ -24,17 +24,30 @@ import is from './plugins/is'
 import isArray from './plugins/isArray'
 import isType from './plugins/isType'
 
-export {TransformationError, recursiveGet, recursiveSet, recursiveHas}
+export {
+	TransformationError,
+	recursiveGet,
+	recursiveSet,
+	recursiveHas,
+	exists,
+	isIn,
+	isEmail,
+	isLength,
+	matches,
+	toDate,
+	toFloat,
+	toInt,
+	trim,
+	defaultValue,
+	is,
+	isArray,
+	isType
+}
 
 const plugins = [] as ITransformPlugin[]
 export const addTransformerPlugin = (plugin: ITransformPlugin) => {
-	const {overwriteRootMethods, name} = plugin
+	const {name} = plugin
 	if (!name) throw new Error('Plugin name is required')
-	if (!overwriteRootMethods && ['message', 'transform'].includes(name)) {
-		throw new Error(`You are going to overwrite the root method ${name}.\
-This is disabled by default.\
-To force enabling this overwrite, please set the overwriteRootMethods option in the plugin object.`)
-	}
 	plugins.push(plugin)
 }
 
@@ -82,14 +95,17 @@ export const transformer = <T, V, Options>(
 		)
 		next()
 	}) as ITransformer<T, V, Options>
-	middleware.transform = (callback, options) => {
+	const transformFunction: ITransformer<T, V, Options>['transform'] = (callback, options) => {
 		stack.push({
 			options,
 			transform: callback
 		})
 		return middleware
 	}
-	middleware.message = (message, {force, disableOverwriteWarning} = {}) => {
+	const messageFunction: ITransformer<T, V, Options>['message'] = (
+		message,
+		{force, disableOverwriteWarning} = {}
+	) => {
 		if (stack.length) {
 			if (stack[stack.length - 1].message) {
 				// eslint-disable-next-line no-console
@@ -104,18 +120,19 @@ export const transformer = <T, V, Options>(
 		if (force) for (const transform of stack) if (!transform.message) transform.message = message
 		return middleware
 	}
+	middleware.transform = transformFunction
+	middleware.message = messageFunction
 	for (
 		const {name, getConfig} of plugins
 	) middleware[name as PluginName] = <Params extends []>(...params: Params) => {
 		const {options, transform} = getConfig(...params)
-		return middleware
-			.transform(
-				(
-					value: T | T[],
-					info: ITransformCallbackInfo<Options>
-				) => transform(value, info) as Promise<T | V | void>,
-				options
-			)
+		return transformFunction(
+			(
+				value: T | T[],
+				info: ITransformCallbackInfo<Options>
+			) => transform(value, info) as Promise<T | V | void>,
+			options
+		)
 	}
 	return middleware
 }

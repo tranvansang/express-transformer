@@ -74,5 +74,4 @@ export type ITransformPlugin = {
 		): Promisable<T | T[] | V | V[] | void>
 		options?: ITransformOptions
 	}
-	overwriteRootMethods?: boolean
 }

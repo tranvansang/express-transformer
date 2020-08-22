@@ -220,16 +220,7 @@ describe('Transform Plugins', () => {
 describe('transformer plugin', () => {
 	test('addTransformerPlugin', async () => {
 		addTransformerPlugin({ name: 'newPlugin' })
-		await flipPromise((async () => addTransformerPlugin({
-			name: 'message'
-		}))())
-		await flipPromise((async () => addTransformerPlugin({
-			name: 'transform'
-		}))())
 		await flipPromise((async () => addTransformerPlugin({}))())
-		// disable these 2 tests because they break other tests
-		// addTransformerPlugin({ name: 'message', overwriteRootMethods: true })
-		// addTransformerPlugin({ name: 'transform', overwriteRootMethods: true })
 	})
 })
 
