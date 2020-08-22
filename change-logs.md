@@ -1,6 +1,6 @@
 # Change logs
 
-## Next
+## Version 1.3.0
 - Add `isType` plugin.
 - Convert `transform` to plugin.
 - Add `use` plugin.
