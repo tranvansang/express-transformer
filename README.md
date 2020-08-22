@@ -112,7 +112,7 @@ transformer(['me.favorites[]', 'posts[].meta.comments[].likes[]', 'credits'])
 And more ready-to-use validators/transformers, namedly:
 
 - `.exists()`
-- `.is()`
+- `.is(value)`
 - `.isArray()`
 - `.isEmail()`
 - `.isIn(list)`
