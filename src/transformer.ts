@@ -17,13 +17,14 @@ import {
 	ITransformer,
 	ITransformerOptions,
 	ITransformOptions,
-	ITransformPlugin
+	ITransformPlugin, ITransformPluginConfig
 } from './interfaces'
 import {doTransform, recursiveGet, recursiveHas, recursiveSet} from './utils'
 import is from './plugins/is'
 import isArray from './plugins/isArray'
 import isType from './plugins/isType'
 import transform from './plugins/transform'
+import use from './plugins/use'
 
 export {
 	TransformationError,
@@ -43,7 +44,8 @@ export {
 	defaultValue,
 	is,
 	isArray,
-	isType
+	isType,
+	use
 }
 
 const plugins = [] as ITransformPlugin[]
@@ -54,6 +56,7 @@ export const addTransformerPlugin = (plugin: ITransformPlugin) => {
 }
 
 addTransformerPlugin(transform)
+addTransformerPlugin(use)
 addTransformerPlugin(exists)
 addTransformerPlugin(isIn)
 addTransformerPlugin(isEmail)
@@ -84,6 +87,16 @@ export const transformer = <T, V, Options>(
 		message?: IMessageCallback<T, Options>
 		options?: ITransformOptions
 	}> = []
+	const addPluginConfig = (config: ITransformPluginConfig) => {
+		const {options, transform: cb} = config
+		stack.push({
+			callback: (
+				value: T | T[],
+				info: ITransformCallbackInfo<Options>
+			) => cb(value, info) as Promise<T | V | void>,
+			options
+		})
+	}
 	const middleware = asyncMiddleware(async (req, res, next) => {
 		for (
 			const {callback, options, message} of stack
@@ -119,14 +132,9 @@ export const transformer = <T, V, Options>(
 	for (
 		const {name, getConfig} of plugins
 	) middleware[name as PluginName] = <Params extends []>(...params: Params) => {
-		const {options, transform: cb} = getConfig(...params)
-		stack.push({
-			callback: (
-				value: T | T[],
-				info: ITransformCallbackInfo<Options>
-			) => cb(value, info) as Promise<T | V | void>,
-			options
-		})
+		const configs = getConfig(...params)
+		if (Array.isArray(configs)) configs.map(addPluginConfig)
+		else addPluginConfig(configs)
 		return middleware
 	}
 	return middleware

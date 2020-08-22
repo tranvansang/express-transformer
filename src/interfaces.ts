@@ -1,6 +1,9 @@
 // eslint-disable-next-line import/no-extraneous-dependencies,@typescript-eslint/no-unused-vars
 import {Request, RequestHandler} from 'express'
 
+type IRequestHandler = RequestHandler | IRequestHandlerArray
+type IRequestHandlerArray = ReadonlyArray<IRequestHandler>
+
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> extends RequestHandler {
@@ -59,14 +62,16 @@ export type IMessageOptions = {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ITransformer<T, V, Options> extends ExpressTransformer.ITransformer<T, V, Options> {}
 
+type MaybeArray<T> = T | Array<T>
+export type ITransformPluginConfig = {
+	transform<T, V, Options>(
+		value: T | T[], callbackOptions: ITransformCallbackInfo<Options>
+	): Promisable<T | T[] | V | V[] | void>
+	options?: ITransformOptions
+}
 export type ITransformPlugin = {
 	name: string
 	getConfig: <Params extends []>(
 		...params: Params
-	) => {
-		transform<T, V, Options>(
-			value: T | T[], callbackOptions: ITransformCallbackInfo<Options>
-		): Promisable<T | T[] | V | V[] | void>
-		options?: ITransformOptions
-	}
+	) => MaybeArray<ITransformPluginConfig>
 }
