@@ -10,8 +10,8 @@ be more confident to implement your business logic without worrying about the da
 
 - Ensure a value exist.
 ```javascript
-import express from 'express'
-import {transformer} from 'express-transformer'
+const express = require('express')
+const {transformer} = require('express-transformer')
 
 const app = express()
 app.use('/login',
@@ -25,8 +25,8 @@ app.listen(3000)
 
 - Check passwords be the same.
 ```javascript
-import express from 'express'
-import {transformer} from 'express-transformer'
+const express = require('express')
+const {transformer} = require('express-transformer')
 
 const app = express()
 app.use('/signup',
@@ -292,7 +292,7 @@ declare global {
 
 Coupled with the universal-path string format, there are 3 utility functions which are used internally to manipulate the context object.
 
-`import {recursiveGet, recursiveHas, recursiveSet} from 'express-transformer`
+`const {recursiveGet, recursiveHas, recursiveSet} = require('express-transformer`)
 
 These 3 methods are designed to **just work**, and **never** through any error with an arbitrary `context` parameter.
 
@@ -311,7 +311,7 @@ Example: to create a `pathSplits`, you should just call `path.split('.')`.
 
 ## Error class
 
-`import {TransformationError} from 'express-transformer'`
+`const {TransformationError} = require('express-transformer')`
 
 - If a transformation has an associated message, the error message is wrapped in an `TransformationError` object instance.
 Otherwise, the error thrown by the callback in `.transform(callback)` is thrown.
