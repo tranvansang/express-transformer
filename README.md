@@ -332,22 +332,42 @@ app.post('/update', combineChains('first', [
 ]))
 ```
 
-And more ready-to-use validators/transformers, namedly:
+- **This library is built with a strict requirement in mind,
+it should work in almost any condition with almost any malformed input data**
 
-- `.exists()`
-- `.is(value)`
-- `.isArray()`
-- `.isEmail()`
-- `.isIn(list)`
-- `.isLength()` (check string length or array's length)
-- `.isType(type)`
-- `.matches(regex)`
-- `.defaultValue(value)`
-- `.toDate()`
-- `.toFloat()`
-- `.toInt()`
-- `.trim()`
-- `.use()` (combine multiple transformations)
+*If you find this is not correct, please fire a bug issue.*
+
+Once the input data passes all transformations/validations, you can freely use the value specified by path at any depth level.
+
+For example, with `transformer('review.stars').exists().toInt()`, in all handlers following after,
+you can freely use `req.body.review.stars` without worrying about what the input was initially.
+
+For instance, if the input was `req = {body: {review: 'foo'}}`, calling `req.body.review.stars` without checking will
+throw an error, and may break your app.
+However, the transformation automatically detects the pattern you require and changes the value for you.
+
+- Another malformed input data pattern.
+
+Consider the input with the data `req = {body: {reviews: {0: {stars: 7}}}}`, and the transformer `transformer('reviews[].stars').exists()`, 
+Without the transformer, there will be no error when accessing `req.body.reviews[0].stars`.
+
+However, because array notation is specified after `reviews` key, the input is reset to an empty array, and becomes `{reviews: []}`.
+
+- And more ready-to-use validators/transformers, namedly:
+    - `.exists()`
+    - `.is(value)`
+    - `.isArray()`
+    - `.isEmail()`
+    - `.isIn(list)`
+    - `.isLength()` (check string length or array's length)
+    - `.isType(type)`
+    - `.matches(regex)`
+    - `.defaultValue(value)`
+    - `.toDate()`
+    - `.toFloat()`
+    - `.toInt()`
+    - `.trim()`
+    - `.use()` (combine multiple transformations)
 
 Plugins with extendable Typescript typing can be configured to add new methods permanently.
 
