@@ -17,7 +17,7 @@ export default {
 		resetTime?: boolean
 	} & Omit<ITransformOptions, 'validateOnly'> = {}) {
 		return {
-			transform<T, V, Option>(value: T, info: ITransformCallbackInfo<Option>) {
+			transform<T, V, Options>(value: T, info: ITransformCallbackInfo<Options>) {
 				if (
 					typeof value !== 'bigint'
 					&& typeof value !== 'string'

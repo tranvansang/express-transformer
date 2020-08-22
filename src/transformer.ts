@@ -23,12 +23,14 @@ import {doTransform, recursiveGet, recursiveHas, recursiveSet} from './utils'
 import is from './plugins/is'
 import isArray from './plugins/isArray'
 import isType from './plugins/isType'
+import transform from './plugins/transform'
 
 export {
 	TransformationError,
 	recursiveGet,
 	recursiveSet,
 	recursiveHas,
+	transform,
 	exists,
 	isIn,
 	isEmail,
@@ -51,6 +53,7 @@ export const addTransformerPlugin = (plugin: ITransformPlugin) => {
 	plugins.push(plugin)
 }
 
+addTransformerPlugin(transform)
 addTransformerPlugin(exists)
 addTransformerPlugin(isIn)
 addTransformerPlugin(isEmail)
@@ -77,32 +80,25 @@ export const transformer = <T, V, Options>(
 	if (!nonNullTransformerOptions.location) nonNullTransformerOptions.location = 'body'
 	const { location } = nonNullTransformerOptions
 	const stack: Array<{
-		transform: ITransformCallback<T, V, Options>
+		callback: ITransformCallback<T, V, Options>
 		message?: IMessageCallback<T, Options>
 		options?: ITransformOptions
 	}> = []
 	const middleware = asyncMiddleware(async (req, res, next) => {
 		for (
-			const {transform, options, message} of stack
+			const {callback, options, message} of stack
 		) await doTransform(
 			req,
 			location,
 			path,
-			transform,
+			callback,
 			options,
 			message,
 			nonNullTransformerOptions
 		)
 		next()
 	}) as ITransformer<T, V, Options>
-	const transformFunction: ITransformer<T, V, Options>['transform'] = (callback, options) => {
-		stack.push({
-			options,
-			transform: callback
-		})
-		return middleware
-	}
-	const messageFunction: ITransformer<T, V, Options>['message'] = (
+	middleware.message = (
 		message,
 		{force, disableOverwriteWarning} = {}
 	) => {
@@ -117,22 +113,21 @@ export const transformer = <T, V, Options>(
 			}
 			stack[stack.length - 1].message = message
 		}
-		if (force) for (const transform of stack) if (!transform.message) transform.message = message
+		if (force) for (const transformation of stack) if (!transformation.message) transformation.message = message
 		return middleware
 	}
-	middleware.transform = transformFunction
-	middleware.message = messageFunction
 	for (
 		const {name, getConfig} of plugins
 	) middleware[name as PluginName] = <Params extends []>(...params: Params) => {
-		const {options, transform} = getConfig(...params)
-		return transformFunction(
-			(
+		const {options, transform: cb} = getConfig(...params)
+		stack.push({
+			callback: (
 				value: T | T[],
 				info: ITransformCallbackInfo<Options>
-			) => transform(value, info) as Promise<T | V | void>,
+			) => cb(value, info) as Promise<T | V | void>,
 			options
-		)
+		})
+		return middleware
 	}
 	return middleware
 }

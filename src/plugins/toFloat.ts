@@ -19,7 +19,7 @@ export default {
 		max?: number
 	} & Omit<ITransformOptions, 'validateOnly'> = {}) {
 		return {
-			transform<T, V, Option>(value: T, info: ITransformCallbackInfo<Option>) {
+			transform<T, V, Options>(value: T, info: ITransformCallbackInfo<Options>) {
 				const {path} = info
 				if (typeof value !== 'bigint' && typeof value !== 'number' && typeof value !== 'string') {
 					throw new TransformationError(`${path} must be a string or a number`, info)

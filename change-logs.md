@@ -2,6 +2,7 @@
 
 ## Next
 - Add `isType` plugin.
+- `transform` itself becomes a plugin.
 
 ## Version 1.2.0
 - Support `pathSplits` value in the info parameter to the transform callback.

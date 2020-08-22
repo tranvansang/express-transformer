@@ -4,16 +4,9 @@ import {Request, RequestHandler} from 'express'
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> extends RequestHandler {
-			transform(
-				callback: ITransformCallback<T, V, Options>,
-				options?: ITransformOptions
-			): ITransformer<T, V, Options>
 			message(
 				callback: IMessageCallback<T, Options>,
 				options?: IMessageOptions
-			): ITransformer<T, V, Options>
-			use(
-				...plugins: Array<ITransformPlugin[]> | ITransformPlugin[]
 			): ITransformer<T, V, Options>
 		}
 	}

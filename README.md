@@ -400,7 +400,7 @@ Otherwise, you can publish your own plugin to a separated package and add it wit
 When writing a plugin, please keep in your mind that the input value can be anything.
 It is extremely recommended that you should check the input value type via `typeof` or `instanceof` in the plugin, if you are going to publish it.
 
-Side note: you can even overwrite the default method `.message()` and `.transform()`.
+Side note: even if you overwrite methods (like `.message()` and `.transform()`), the core function is still protected and unaffected.
 
 ### How to extend the Typescript typing.
 

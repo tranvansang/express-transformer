@@ -17,7 +17,7 @@ export default {
 	name: 'isEmail',
 	getConfig(options: IIsEmailOptions & {force?: boolean} = {}) {
 		return {
-			transform<T, V, Option>(value: T, info: ITransformCallbackInfo<Option>) {
+			transform<T, V, Options>(value: T, info: ITransformCallbackInfo<Options>) {
 				if (typeof value !== 'string') throw new TransformationError(`${info.path} must be a string`, info)
 				if (!isEmailCore(value, options)) throw new TransformationError(`${info.path} has invalid value`, info)
 			},
