@@ -3,6 +3,25 @@
 
 Connect-like middleware to validate/transform data.
 
+# Table of contents
+
+- [Usage samples](#usage-samples)
+- [Usage](#usage)
+- [API References](#api-references)
+    - [Create a transformation chain](#create-a-transformation-chain)
+    - [Transformation chain](#transformation-chain)
+    - [Plugin](#plugins)
+        - [Validators](#validators)
+        - [Transformers](#transformers)
+    - [How to add a custom plugin](#how-to-add-a-custom-plugin)
+        - [How to extend the Typescript typing.](#how-to-extend-the-typescript-typing)
+    - [Utility functions](#utility-functions)
+    - [Error class](#error-class)
+- [Annotations explanation](#annotations-explanation)
+    - [Universal path format](#universal-path-format)
+    - [Array of arrays iteration](#array-of-arrays-iteration)
+- [QA](#qa)
+
 This library helps you easier to get along with writing express validation/transformation middlewares,
 be more confident to implement your business logic without worrying about the data's validity.
 
@@ -577,7 +596,7 @@ Giving a context object `obj`. The following `path` values make the library to l
 - If `path` contains `[]`, the library will iterate all value at the path right before the `[]`'s occurrences.
 - For example, if `path` is `foo[].bar.foo.baar[]`, the library will look at `obj.foo[0].bar.foo.baar[0]`, `obj.foo[1].bar.foo.baar[0]`, `obj.foo[2].bar.foo.baar[0]`, `obj.foo[0].bar.foo.baar[1]`.
 
-## Array of arrays validation
+## Array of arrays iteration
 
 This library is very useful if you want to validate/transform every element in an array, or every pair of elements between many arrays.
 
@@ -601,7 +620,7 @@ Assume that you want to make an API to change user password. There are following
 
 `transformer(['password', 'passwordConfirm']).transform(callback)` is designed to do that for you.
 
-- The most useful path of the array of arrays validation, is that if there are multiple elements in the `path` object (which is an array of `string`) have the array notation (`[]`),
+- The most useful path of the array of arrays iteration, is that if there are multiple elements in the `path` object (which is an array of `string`) have the array notation (`[]`),
 the library will pair them one by one, and pass their values in a list and call the `callback`.
 The library also replaces the returned values in the corresponding locations, if `validateOnly` is `false`.
 Accordingly, when `validateOnly` is `false` and `path` is an array, the `callback` is required to return an array.
