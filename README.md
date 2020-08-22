@@ -136,23 +136,23 @@ The library exports following methods and objects
 - `recursiveHas`
 
 Typically, you only need to use the `transformer()` method in most of the cases.
-This method returns a transformations chain which is used to validate/transform input data.
-The transformations chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)``).
+This method returns a transformation chain which is used to validate/transform input data.
+The transformation chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)``).
 
-A transformation/validation can be appended to a transformations chain by calling `chain.<method>`.
-Basically, the library only defines two methods in a transformations chain, namely `.message()` and `.transform()`.
+A transformation/validation can be appended to a transformation chain by calling `chain.<method>`.
+Basically, the library only defines two methods in a transformation chain, namely `.message()` and `.transform()`.
 
 `addTransformerPlugin` is used to add custom methods as transformers/validators.
 Initially, the library adds various plugins for uses, in advance. Such as: `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
 Check the Plugins section below for more information.
 
-All methods from any transformations chain, including the methods defined by plugins and the default basic methods (`.message()`, `.transform()`), always return the chain itself.
+All methods from any transformation chain, including the methods defined by plugins and the default basic methods (`.message()`, `.transform()`), always return the chain itself.
 It is possible and recommended adding transformations to the chain by **chain**ing method calls.
 For example: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
 
 # API references
 
-## Create a transformations chain
+## Create a transformation chain
 `transformer: (path, transformerOptions) => chain`
 - Parameters:
     - `(required) path: string | string[]`: a *universal-path* formatted string or an array of *universal-path* formatted string.
@@ -163,7 +163,7 @@ For example: `chain.exists().isEmail().transform(emailToUser).message('Email not
         - `(optional) rawLocation: boolean (default: false)`: treat the `location` value as a single key (i.e., do not expand to a deeper level).
         - `(optional) rawPath: boolean (default: false)`: treat path the exact key without expanding.
         - `(optional) disableArrayNotation: boolean (default: false)`: disable array iteration (i.e., consider the array notation as part of the key name).
-- Returned value: a connect-like middleware which inherits all methods from transformations chain's prototype.
+- Returned value: a connect-like middleware which inherits all methods from transformation chain's prototype.
 
 ## Transformation chain
 A transformation chain has the following methods.
@@ -216,7 +216,7 @@ Associated Typescript typing extend is also available.
         or the function which accepts the same parameters as of `chain.transform()`'s `callback` (i.e., `value` and `info`)
         and returns the string message or a promise which resolves the string message.
         
-        When being accessed, if the callback throws and error or return a projected promise, the transformations chain will throw that error while processing.
+        When being accessed, if the callback throws and error or return a projected promise, the transformation chain will throw that error while processing.
         - `(optional) option: Object`: an object specifying the behavior of the overwriting message, which includes the following properties.
             - `(optional) force: boolean (default: false)`:
                 - if `force` is `true`: overwrite the error message of all transformations in the chain, which does not have error message overwritten, from begin until when this message is called.
@@ -307,7 +307,7 @@ It is extremely recommended that you should check the input value type via `type
 
 ### How to extend the Typescript typing.
 
-The transformations chain's interface can be exported via namespace and global declaration from anywhere in your project like below.
+The transformation chain's interface can be exported via namespace and global declaration from anywhere in your project like below.
 
 ```typescript
 declare global {
