@@ -14,11 +14,11 @@ const express = require('express')
 const {transformer} = require('express-transformer')
 
 const app = express()
-app.use('/login',
+app.post('/login',
 	transformer('username').exists(),
 	transformer('password').exists(),
 	(req, res, next) => {
-	//req.body.age and req.body.password must exist, for sure
+        //req.body.age and req.body.password must exist, for sure
 	})
 app.listen(3000)
 ```
@@ -29,22 +29,22 @@ const express = require('express')
 const {transformer} = require('express-transformer')
 
 const app = express()
-app.use('/signup',
+app.post('/signup',
 	transformer('username').exists(),
 	transformer('password').exists(),
 	transformer(['password', 'passwordConfirm']).transform(([password, passwordConfirm]) => {
         if (password !== passwordConfirm) throw new Error('Passwords do not match')
     }, {validateOnly: true}),
 	(req, res, next) => {
-	//req.body.age and req.body.password exist
-    //and, req.body.password === req.body.passwordConfirm
+        //req.body.age and req.body.password exist
+        //and, req.body.password === req.body.passwordConfirm
 	})
 app.listen(3000)
 ```
 
-- Convert 1-base `page` parameter in query to a 0-base number.
+- Convert the 1-base `page` parameter in query to a 0-base number.
 ```javascript
-app.use('/article',
+app.get('/article',
 	transformer('page', {location: 'query'})
 		.defaultValue(1)
 		.toInt({min: 1})
@@ -53,10 +53,10 @@ app.use('/article',
 	})
 ```
 
-- Check password length, validate email.
+- Check password length and validate email format.
 More complicated, but obviously common case.
 ```javascript
-app.use('/signup',
+app.post('/signup',
 	transformer('email')
 		.exists() //.exists() is required because if the input is omitted, the transformers will not be triggered
         .message('Please provide email')
@@ -72,14 +72,14 @@ app.use('/signup',
 		.isLength({min: 8})
 		.transform(([password, passwordConfirm]) => {
 			if (password !== passwordConfirm) throw new Error('Passwords do not match')
-		}),
+        }, {validateOnly: true}),
 	(req, res, next) => {}
 )
 ```
 
 - Convert an id to a user object.
 ```javascript
-app.use('/get-user/:id',
+app.get('/get-user/:id',
 	transformer('email', {location: 'params'})
 		.exists()
         .message('Please provide id')
@@ -100,13 +100,109 @@ app.use('/get-user/:id',
 transformer('user.messages[].stars[]').toInt({min: 0, max: 5})
 ```
 
-- Array of array iteration
+- Array of arrays iteration
 ```javascript
 transformer(['me.favorites[]', 'posts[].meta.comments[].likes[]', 'credits'])
   .transform(([favorite, like, credits]) => {
     // perform the check here
-    // because validateOnly is true, the returned value is ignored
+    // when validateOnly is true, the returned value will be ignored
   }, {validateOnly: true})
+```
+
+- Conditional transformation/validation
+```javascript
+app.post(
+    '/order/:id',
+    (req, res, next) => {
+        // if rejected is true, must provide reason
+        if (req.body.rejected) transformer('reason').exists()(req, res, next)
+        else next()
+    }
+)
+```
+
+- Conditioning with multiple transformation/validation
+```javascript
+const {combineMiddlewares} = require('middleware-async')
+
+app.post(
+    '/order/:id',
+    transformer('action').exists().isIn(['review',  'return']),
+    (req, res, next) => combineMiddlewares(
+        req.body.action === 'review'
+            ? [
+                transformer('stars').exists(),
+                transformer('id').transform(idToOrder),
+                transformer('comment')
+                    .exists()
+                    .message((_, {req}) => `Plesae provide comment on your review on the order of "${req.params.id.product.name}", created at ${req.params.id.createdAt.toLocaleString()}`)
+            ]
+            : transformer('reason').exists()
+    )(req, res, next)
+)
+```
+
+- Add your own custom method via plugin.
+```javascript
+const {addTransformerPlugin} = require('express-transformer')
+
+addTransformerPlugin({
+    name: 'isPostalCode',
+    getConfig() {
+        return {
+            transform(value, info) {
+                if (typeof value !== 'string') throw new Error(`{info.path} must be a string`)
+                if (!/^\d{3}-\d{4}$/.test(value)) throw new Error(`${info.path} is a valid postal code`)
+            },
+            options: {
+                validateOnly: true
+            }
+        }
+    }
+})
+
+app.post(
+    '/change-address',
+     transformer('postalCode').exists().isPostalCode()
+)
+```
+
+Extend the Typescript typing.
+
+```typescript
+declare global {
+	namespace ExpressTransformer {
+		export interface ITransformer<T, V, Options> {
+			isPostalCode(): ITransformer<T, string, Options>
+		}
+	}
+}
+```
+
+- Add your own custom method via plugin for batch operation, with options.
+```javascript
+const {addTransformerPlugin, TransformationError} = require('express-transformer')
+
+addTransformerPlugin({
+    name: 'allExist',
+    getConfig(options) {
+        return {
+            transform(values, info) {
+                if (values.some(value => value === null || value === undefined || (!options.acceptEmptyString && value === ''))) {
+                    throw new TransformationError(`All paths (${info.path.join(', ')}) must be provided`, info)
+                }
+            },
+            options: {
+                validateOnly: true
+            }
+        }
+    }
+})
+
+app.post(
+    '/signup',
+     transformer(['username', 'password', 'first', 'last']).allExist({acceptEmptyString: false})
+)
 ```
 
 And more ready-to-use validators/transformers, namedly:
