@@ -80,9 +80,9 @@ export const transformer = <T, V, Options>(
 	path: string | string[],
 	transformerOptions?: Options & ITransformerOptions
 ) => {
-	const nonNullTransformerOptions = transformerOptions || {} as Options & ITransformerOptions
-	if (!nonNullTransformerOptions.location) nonNullTransformerOptions.location = 'body'
-	const { location } = nonNullTransformerOptions
+	transformerOptions ||= {} as Options & ITransformerOptions
+	transformerOptions.location ||= 'body'
+	const { location } = transformerOptions
 	const stack: Array<{
 		callback: ITransformCallback<T, V, Options>
 		message?: IMessageCallback<T, Options>
@@ -108,7 +108,7 @@ export const transformer = <T, V, Options>(
 			callback,
 			options,
 			message,
-			nonNullTransformerOptions
+			transformerOptions!
 		)
 		next()
 	}) as ITransformer<T, V, Options>

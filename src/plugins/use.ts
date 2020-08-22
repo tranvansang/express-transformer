@@ -8,7 +8,7 @@ declare global {
 	namespace ExpressTransformer {
 		interface ITransformer<T, V, Options> {
 			use(
-				plugins: Array<[ITransformPlugin | keyof ITransformer<T, V, Options>, ...any[]]>
+				plugins: Array<[plugin: ITransformPlugin | keyof ITransformer<T, V, Options>, ...options: any[]]>
 			): ITransformer<T, V, Options>
 		}
 	}
@@ -16,7 +16,9 @@ declare global {
 
 export default {
 	name: 'use',
-	getConfig<T, V, Options>(plugins: Array<[ITransformPlugin | keyof ITransformer<T, V, Options>, ...any[]]>) {
+	getConfig<T, V, Options>(
+		plugins: Array<[plugin: ITransformPlugin | keyof ITransformer<T, V, Options>, ...options: any[]]>
+	) {
 		return plugins.map(([plugin, ...params]) => {
 			if (typeof plugin === 'string') {
 				for (
