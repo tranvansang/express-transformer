@@ -1,5 +1,8 @@
 # Change logs
 
+## Next
+- Add `isType` plugin.
+
 ## Version 1.2.0
 - Support `pathSplits` value in the info parameter to the transform callback.
 - Change the format of `path` value in the info parameter to when indicating array elements.

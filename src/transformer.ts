@@ -22,6 +22,7 @@ import {
 import {doTransform, recursiveGet, recursiveHas, recursiveSet} from './utils'
 import is from './plugins/is'
 import isArray from './plugins/isArray'
+import isType from './plugins/isType'
 
 export {TransformationError, recursiveGet, recursiveSet, recursiveHas}
 
@@ -49,6 +50,7 @@ addTransformerPlugin(trim)
 addTransformerPlugin(defaultValue)
 addTransformerPlugin(is)
 addTransformerPlugin(isArray)
+addTransformerPlugin(isType)
 
 type PluginName = 'defaultValue'
 

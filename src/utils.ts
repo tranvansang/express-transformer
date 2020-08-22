@@ -42,7 +42,6 @@ const joinSplits = (splits: Array<string | number>) => splits.map(
 	(
 		subPath,
 		index,
-		arr
 	) => `${typeof subPath === 'string' && index ? '.' : ''}${typeof subPath === 'number' ? `[${subPath}]` : subPath}`
 ).join('')
 

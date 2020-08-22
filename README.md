@@ -213,6 +213,7 @@ And more ready-to-use validators/transformers, namedly:
 - `.isEmail()`
 - `.isIn(list)`
 - `.isLength()` (check string length or array's length)
+- `.isType(type)`
 - `.matches(regex)`
 - `.defaultValue(value)`
 - `.toDate()`
@@ -357,6 +358,7 @@ These plugins only validate, does not change the inputs in the paths. In other w
     The `options` object can be a number (in number or in string format), or an object of type `{min?: number, max?: number}`.
     If `options` is a number, the transformation fixes the input's length.
     Otherwise, it validates the length by `min`, `max`, if the option exists, accordingly.
+- `chain.isType(type, options?: {force?: boolean})`: check the result of `typeof` of the input value to be `type`.
 - `chain.matches(regex, options?: {force?: boolean})`: check if the input is a string and matches a regex.
 
 ### Transformers:
