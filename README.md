@@ -92,6 +92,37 @@ app.use('/get-user/:id',
 )
 ```
 
+- Array iteration
+```javascript
+transformer('user.messages[].stars[]').toInt({min: 0, max: 5})
+```
+
+- Array of array iteration
+```javascript
+transformer(['me.favorites[]', 'posts[].meta.comments[].likes[]', 'credits'])
+  .transform(([favorite, like, credits]) => {
+    // perform the check here
+    // because validateOnly is true, the returned value is ignored
+  }, {validateOnly: true})
+```
+
+And more ready-to-use validators/transformers, namedly:
+
+- `.exists()`
+- `.is()`
+- `.isArray()`
+- `.isEmail()`
+- `.isIn(list)`
+- `.isLength()` (check string length or array's length)
+- `.matches(regex)`
+- `.defaultValue(value)`
+- `.toDate()`
+- `.toFloat()`
+- `.toInt()`
+- `.trim()`
+
+Plugin with extendable Typescript typing available for adding new methods.
+
 # Usage
 
 The library exports following methods and objects
