@@ -22,12 +22,12 @@ Connect-like middleware to validate/transform data.
     - [Array of arrays iteration](#array-of-arrays-iteration)
 - [QA](#qa)
 
-This library helps you easier to get along with writing express validation/transformation middlewares,
+This library helps you more comfortable to get along with writing express validation/transformation middlewares,
 be more confident to implement your business logic without worrying about the data's validity.
 
 # Usage samples
 
-- Ensure a value exist.
+- Ensure a value exists.
 ```javascript
 const express = require('express')
 const {transformer} = require('express-transformer')
@@ -61,7 +61,7 @@ app.post('/signup',
 app.listen(3000)
 ```
 
-- Convert the 1-base `page` parameter in query to a 0-base number.
+- Convert the 1-base `page` parameter in the query to a 0-base number.
 ```javascript
 app.get('/article',
 	transformer('page', {location: 'query'})
@@ -72,8 +72,7 @@ app.get('/article',
 	})
 ```
 
-- Check password length and validate email format.
-More complicated, but obviously common case.
+- Check password length and validate email format, a more complicated, but obviously common case.
 ```javascript
 app.post('/signup',
 	transformer('email')
@@ -161,7 +160,7 @@ app.post(
 )
 ```
 
-- Add your own custom method via plugin.
+- Add your own custom method via plugins.
 ```javascript
 const {addTransformerPlugin} = require('express-transformer')
 
@@ -198,7 +197,7 @@ declare global {
 }
 ```
 
-- Add your own custom method via plugin for batch operation, with options.
+- Add your own custom method via plugins for batch operation, with options.
 ```javascript
 const {addTransformerPlugin, TransformationError} = require('express-transformer')
 
@@ -241,7 +240,7 @@ app.post(
 )
 ```
 
-- Combine mutilple transformations using plugin object.
+- Combine multiple transformations using a plugin object.
 
 ```javascript
 const isPostalCode = {
@@ -268,7 +267,7 @@ app.post(
 )
 ```
 
-All default plugins are exported and available to be used by this way (or you can use their names instead).
+All default plugins are exported and available to be used in this way (or you can use their names instead).
 
 ```
 const {
@@ -311,7 +310,7 @@ app.post('/update',
 
 Unfortunately, `.message` is not yet a plugin.
 Because it requires internal access to overwrite the configuration of the previous transformations in the chain.
-Recklessly changing the internal to make this available is not neccessary for now and it would reduce the flexibility of the library in future development.
+Recklessly changing the internal to make this available is unnecessary for now, and it would reduce the library's flexibility in future development.
 
 Workaround.
 
@@ -353,7 +352,7 @@ Without the transformer, there will be no error when accessing `req.body.reviews
 
 However, because array notation is specified after `reviews` key, the input is reset to an empty array, and becomes `{reviews: []}`.
 
-- And more ready-to-use validators/transformers, namedly:
+- And more ready-to-use validators/transformers, namely:
     - `.exists()`
     - `.is(value)`
     - `.isArray()`
@@ -373,12 +372,12 @@ Plugins with extendable Typescript typing can be configured to add new methods p
 
 # Usage
 
-The library exports following methods and objects
+The library exports the following methods and objects
 - `transformer` (also exported as `default`)
 - `addTransformerPlugin`
 
 Typically, you only need to use the `transformer()` method in most of the cases.
-This method returns a transformation chain which is used to validate/transform input data.
+This method returns a transformation chain that is used to validate/transform input data.
 The transformation chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)``).
 
 A transformation/validation can be appended to a transformation chain by calling `chain.<method>`.
@@ -390,7 +389,7 @@ Such as: `.transform`, `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
 Check the Plugins section below for more information.
 
 All methods from any transformation chain, including the methods defined by plugins and the internally implemented method (`.message()`), always return the chain itself.
-It is possible and highly recommended adding transformations to the chain by **chain**ing method calls.
+It is possible and highly recommended to add transformations to the chain by **chain**ing method calls.
 For example: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
 
 # API references
@@ -404,15 +403,15 @@ For example: `chain.exists().isEmail().transform(emailToUser).message('Email not
     - `(optional) transformerOptions: Object`: an object with the following properties.
         - `(optional) location: string (default: 'body')`: a *universal-path* formatted string, which specifies where to find the input value from the `req` object.
         - `(optional) rawLocation: boolean (default: false)`: treat the `location` value as a single key (i.e., do not expand to a deeper level).
-        - `(optional) rawPath: boolean (default: false)`: treat path the exact key without expanding.
+        - `(optional) rawPath: boolean (default: false)`: treat path the exact key without the expansion.
         - `(optional) disableArrayNotation: boolean (default: false)`: disable array iteration (i.e., consider the array notation as part of the key name).
-- Returned value: a connect-like middleware which inherits all methods from transformation chain's prototype.
+- Returned value: a connect-like middleware that inherits all methods from the transformation chain's prototype.
 
 ## Transformation chain
 A transformation chain has the following methods.
 
 You can add your own method via `addTransformerPlugin`.
-Associated Typescript typing extend is also available.
+The Typescript typing is also available to be extended.
 
 - `chain.transform(callback, options)`: append a custom transformation/validation to the chain.
     - Parameters:
@@ -420,10 +419,10 @@ Associated Typescript typing extend is also available.
         The callback can be an async or a normal function, which should accept the following parameters.
             - `value`: value or array of values
                 - If the `path` parameter in `transformer(path, transformerOptions)` is a string, `value` will be the value of the current input.
-                - If the `path` parameter in `transformer(path, transformerOptions)` is an array of string, `value` will be array of the values of the list of current inputs.
+                - If the `path` parameter in `transformer(path, transformerOptions)` is an array of string, `value` will be the array of the values of the list of current inputs.
             - `info: Object`: an object which includes the following properties.
-                - `path`: path to the current input or array of paths to the current list of inputs.
-                - `pathSplits`: an array which contains string (object key) or number (array index) values used to determine the traversal path.
+                - `path`: the path to the current input or the array of paths to the current list of inputs.
+                - `pathSplits`: an array that contains a string (object key) or number (array index) values used to determine the traversal path.
                     When the `path` parameter is an array, this value will be an array of array.
                 - `req`: the request `req` object from the connect-like middleware.
                 - `options: Object`: the `transformerOptions` object passed in `.transform(callback, transformerOptions)` with default fields (i.e., the `location` field) filled.
@@ -432,7 +431,7 @@ Associated Typescript typing extend is also available.
                     Which means, for e.g., if `transformerOptions` is `undefined`, `options` will be `{location: 'body'}`.
                     If `transformerOptions` is `{foo: 'bar'}`, `options` will be `{location: 'body', foo: 'bar'}`.
                     If `transformerOptions` is `{foo: 'bar', location: 'params'}`, `options` will be `{location: 'params', foo: 'bar'}`.
-        - `(optional)options: Object`: an optional option object with the following properties.
+        - `(optional)options: Object`: an optional options object with the following properties.
             - `(optional) force: boolean (default: false)`: when the input value is omitted, the transformation will be skipped.
             
                 Note 1: the library uses `Object.hasOwnProperty()` to determine whether a value at path exists, which means even if you specify `undefined` at the path, the transformation is **not** skipped.
@@ -445,13 +444,13 @@ Associated Typescript typing extend is also available.
             - `(optional) validateOnly: boolean (default: false)`: keep the value unchanged after the transformation. In other words, this config specifies whether the transformation is a transformer (check and change the value) or a validator (only check).
 
             *Note 1*: when `force` is `false`, and `path` is an array of string, the following rules are applied (and overwriting the default behavior).
-            - If **all of** value specified by `path` do not exist, skip the transformation (respecting the value of `force`).
-            - If **at least one** value specified by `path` exists, `force` is forced to be `true`.
+            - If **all of** the values specified by `path` do not exist, skip the transformation (respecting the value of `force`).
+            - If **at least one** the values specified by `path` exists, `force` is forced to be `true`.
              And the `info` param in the transformation `callback` will have the forced value.
             
-            *Note 2*: when `path` is an array of string, regardless the value of `force`,
+            *Note 2*: when `path` is an array of string, regardless of the value of `force`,
             if there is *any of* path at which there is no data (zero element or no data provided),
-            the transformation will be skip. (zero times of any number is zero).
+            the transformation will be skipped. (zero times of any number is zero).
     - Returned value: the chain itself
 - `chain.message(callback, option)`: overwrite the error message of the one or more previous transformations in the chain.
     - Parameters:
@@ -459,10 +458,10 @@ Associated Typescript typing extend is also available.
         or the function which accepts the same parameters as of `chain.transform()`'s `callback` (i.e., `value` and `info`)
         and returns the string message or a promise which resolves the string message.
         
-        When being accessed, if the callback throws and error or return a projected promise, the transformation chain will throw that error while processing.
+        When being accessed, if the callback throws an error or returns a projected promise, the transformation chain will throw that error while processing.
         - `(optional) option: Object`: an object specifying the behavior of the overwriting message, which includes the following properties.
             - `(optional) global: boolean (default: false)`:
-                - if `global` is `true`: overwrite the error message of all transformations in the chain, which does not have error message overwritten, from begin until when this message is called.
+                - if `global` is `true`: overwrite the error message of all transformations in the chain, which does not have an error message overwritten, from the beginning until when this message is called.
                 
                 Note: the error message of the most recent transformation will be overwritten even if it exists, regardless of the value of `global`.
                 If two consecutive messages are provided, the latter is preferred (with a configuration `console.warn`'s message).
@@ -476,7 +475,7 @@ In these plugins' config, when the `force` option exists, it indicates the `forc
 
 ### Validators:
 
-These plugins only validate, does not change the inputs in the paths. In other words, they have `validateOnly` be `false`.
+These plugins only validate, do not change the inputs in the paths. In other words, they have `validateOnly` be `false`.
 - `chain.exists({acceptEmptyString = false} = {})`: invalidate if the input is `undefined`, `null`, `''` (empty string), or omitted.
     If `acceptEmptyString` is `true`, empty string is accepted as valid.
 - `chain.is(value, options?: {force?: boolean})`: check if the input is value.
@@ -497,7 +496,7 @@ These plugins only validate, does not change the inputs in the paths. In other w
 	Please consult the [validator](https://www.npmjs.com/package/validator) package for more details.
 - `chain.isIn(values, options?: {force?: boolean})`: check if the input is in the provided `values` list.
 - `chain.isLength(options, transformOptions?: {force?: boolean})`: check the input's length.
-    If the input is an array, check for number of its elements.
+    If the input is an array, check for the number of its elements.
     Else If the input is a string, check for its length.
     Otherwise, throw an error.
     
@@ -516,7 +515,7 @@ These plugins probably change the inputs in the paths. In other words, they have
     Throw an error if the input is not a number, not a string, not a BigInt, not a Date object.
     Otherwise, check if the input can be converted to a valid Date object.
     
-    When `resetTime` is `true`, reset `hour`, `minute`, `second`, and `milisecond` to zero.
+    When `resetTime` is `true`, reset `hour`, `minute`, `second`, and `millisecond` to zero.
 - `chain.toFloat(options?: {min?: number, max?: number, force?: boolean})`: convert the input to a number.
     Throw an error if the input is a valid number or cannot be parsed to a number.
     Support range checking with the `min`, `max` in the options.
@@ -532,7 +531,7 @@ These plugins probably change the inputs in the paths. In other words, they have
 
 ## How to add a custom plugin
 
-You can add your own plugin via calling `addTransformerPlugin`. For example: `isUUID`, `isPostalCode`, `isCreditCard`, ...
+You can add your own plugin via calling `addTransformerPlugin`. For example: `isUUID`, `isPostalCode`, `isCreditCard`, `toUpeerCase`, ...
 
 Consult the [validator](https://www.npmjs.com/package/validator) package for more validators.
 
@@ -549,16 +548,16 @@ It is recommended to make use of the exported `TransformationError` error when t
 
 Check [plugins](https://github.com/tranvansang/express-transformer/tree/master/src/plugins) directory for sample code.
 If you think a plugin is useful and should be included in the initial plugin list, please fire and PR.
-Otherwise, you can publish your own plugin to a separated package and add it with `addTransformerPlugin`.
+Otherwise, you can publish your own plugin to a separate package and add it with `addTransformerPlugin`.
 
-When writing a plugin, please keep in your mind that the input value can be anything.
+When writing a plugin, please keep in mind that the input value can be anything.
 It is extremely recommended that you should check the input value type via `typeof` or `instanceof` in the plugin, if you are going to publish it.
 
 Side note: even if you overwrite methods (like `.message()` and `.transform()`), the core function is still protected and unaffected.
 
 ### How to extend the Typescript typing.
 
-The transformation chain's interface can be exported via namespace and global declaration from anywhere in your project like below.
+The transformation chain's interface can be exported via namespace and a global declaration from anywhere in your project like below.
 
 ```typescript
 declare global {
@@ -575,7 +574,7 @@ declare global {
 
 ## Utility functions
 
-Coupled with the universal-path string format, there are 3 utility functions which are used internally to manipulate the context object.
+Coupled with the universal-path string format, there are 3 utility functions that are used internally to manipulate the context object.
 
 `const {recursiveGet, recursiveHas, recursiveSet} = require('express-transformer`)
 
@@ -592,13 +591,13 @@ At a point in the traversal path, if the value is not eligible for writing the v
 For example, calling on `{foo: 0}`, with `pathSplits = '['foo', 'bar', 'baar']'`, `value = 1`, will make the context object be `{foo: {bar: {baar: 1}}` (`0` is removed).
 - `recursiveHas(context, pathSplits)`: check if there is a value at `pathSplits`.
 
-Example: to create a `pathSplits`, you should just call `path.split('.')`.
+Example: To create a `pathSplits`, you should just call `path.split('.')`.
 
 ## Error class
 
 `const {TransformationError} = require('express-transformer')`
 
-- If a transformation has an associated message, the error message is wrapped in an `TransformationError` object instance.
+- If a transformation has an associated message, the error message is wrapped in a `TransformationError` object instance.
 Otherwise, the error thrown by the callback in `.transform(callback)` is thrown.
 - All default plugins use and throw only `TransformationError` error.
 - The error's detailed information can be accessed by `error.info`, which is the `info` object passed to the `.transform()`'s `callback`.
@@ -610,7 +609,7 @@ Otherwise, the error thrown by the callback in `.transform(callback)` is thrown.
 ## Universal path format
 A versatile string which support accessing value at any deep level and array iteration.
 
-Giving a context object `obj`. The following `path` values make the library to looks at the appropriate location in the context object.
+Giving a context object `obj`. The following `path` values make the library to look at the appropriate location in the context object.
 
 - For example, if `path` is `'foo.bar'`, the library will look at `obj.foo.bar`.
 - If `path` contains `[]`, the library will iterate all value at the path right before the `[]`'s occurrences.
@@ -618,7 +617,7 @@ Giving a context object `obj`. The following `path` values make the library to l
 
 ## Array of arrays iteration
 
-This library is very useful if you want to validate/transform every element in an array, or every pair of elements between many arrays.
+This library is handly if you want to validate/transform every element in an array, or every pair of elements between many arrays.
 
 To indicate an array iteration, use the `[]` notation in the `path` value.
 
@@ -633,10 +632,10 @@ Let's see by examples:
 - If `path` is an array. Things become more complicated.
 
 Base on the common sense, we **decided** to manually force the validation (ignoring the value of `force` when needed), to avoid several use cases.
-Assume that you want to make an API to change user password. There are following requirements which the API should satisfy.
+Assume that you want to make an API to change user password. There are the following requirements which the API should satisfy.
 
-- If `password` and `passwordConfirm` are omitted, skip changing the password (, and may change other provided values).
-- If `password` or `passwordConfirm` are provided, check if they equal with some condition (length, ...etc) before process the changing.
+- If `password` and `passwordConfirm` are omitted, skip changing the password  and may change other provided values).
+- If `password` or `passwordConfirm` are provided, check if they equal with some condition (length, ...etc) before process the change.
 
 `transformer(['password', 'passwordConfirm']).transform(callback)` is designed to do that for you.
 
