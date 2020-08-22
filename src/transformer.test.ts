@@ -67,7 +67,7 @@ describe('Transform Plugins', () => {
 			transformer('key')
 				.transform(val => val)
 				.exists()
-				.message('hi', {force: true}),
+				.message('hi', {global: true}),
 		)({body: {}} as Request, undefined as unknown as Response)) as TransformationError
 		expect(err.message).toBe('hi')
 		expect(err.name).toBe(transformationErrorName)
