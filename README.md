@@ -124,7 +124,7 @@ And more ready-to-use validators/transformers, namedly:
 - `.toInt()`
 - `.trim()`
 
-Plugin with extendable Typescript typing available for adding new methods.
+Plugins with extendable Typescript typing can be configured to add new methods permanently.
 
 # Usage
 
