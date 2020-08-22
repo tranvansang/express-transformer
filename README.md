@@ -205,6 +205,114 @@ app.post(
 )
 ```
 
+- Combine multiple transformations by plugin name.
+```javascript
+app.post(
+    '/update',
+    transformer('first').use([
+        ['exists'],
+        ['isType', 'string'],
+        ['isLength', {max: 50}],
+    ]),
+    transformer('postalCode').use([
+        ['exists'],
+        ['isType', 'string'],
+        [postalCode]
+    ]),
+)
+```
+
+- Combine mutilple transformations using plugin object.
+
+```javascript
+const isPostalCode = {
+    name: 'isPostalCode',
+    getConfig() {
+        return {
+            transform(value, info) {
+                if (typeof value !== 'string') throw new Error(`{info.path} must be a string`)
+                if (!/^\d{3}-\d{4}$/.test(value)) throw new Error(`${info.path} is a valid postal code`)
+            },
+            options: {
+                validateOnly: true
+            }
+        }
+    }
+}
+app.post(
+    '/update',
+    transformer('postalCode').use([
+        ['exists'],
+        ['isType', 'string'],
+        [isPostalCode],
+    ])
+)
+```
+
+All default plugins are exported and available to be used by this way (or you can use their names instead).
+
+```
+import {
+	transform,
+	exists,
+	isIn,
+	isEmail,
+	isLength,
+	matches,
+	toDate,
+	toFloat,
+	toInt,
+	trim,
+	defaultValue,
+	is,
+	isArray,
+	isType,
+	use
+} from 'express-transformer'
+```
+
+Note: `.message`is not a plugin.
+
+You can save the configuration to reuse.
+
+```
+const requiredString = len => [
+    ['exists'],
+    ['isType', 'string'],
+    ['isLength', {max: len}],
+]
+app.post('/update',
+    transformer('first').use(requiredString(50)),
+    transformer('last').use(requiredString(50)),
+    transformer('introduction').use(requiredString(256)),
+)
+```
+
+- How to use `.message` in this way.
+
+Unfortunately, `.message` is not yet a plugin.
+Because it requires internally access to overwrite the configuration of the previous transformations in the chain.
+Recklessly changing the internal to make this available is not neccessary now and would reduce the flexibility of the library for future development.
+
+Workaround.
+
+```javascript
+const combineChains = (path, chains) => chains.reduce(
+    (acc, [name, ...params]) => acc[name](...params),
+    transformer(path)
+)
+
+app.post('/update', combineChains('first', [
+    ['exists'],
+    ['message', 'Please enter your first name'],
+    ['isType', 'string'],
+    ['message', 'first must be a string element'],
+    ['isLength', {max: len}],
+    ['message', 'first is too long'],
+    ['transform', value => value.toUpperCase()]
+]))
+```
+
 And more ready-to-use validators/transformers, namedly:
 
 - `.exists()`
@@ -220,6 +328,7 @@ And more ready-to-use validators/transformers, namedly:
 - `.toFloat()`
 - `.toInt()`
 - `.trim()`
+- `.use()` (combine multiple transformations)
 
 Plugins with extendable Typescript typing can be configured to add new methods permanently.
 
@@ -234,14 +343,15 @@ This method returns a transformation chain which is used to validate/transform i
 The transformation chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)``).
 
 A transformation/validation can be appended to a transformation chain by calling `chain.<method>`.
-Basically, the library only defines two methods in a transformation chain, namely `.message()` and `.transform()`.
+Actually, the library only defines only one method in the transformation chain's prototype, namely `.message()`.
+All other methods are added using `addTransformerPlugin`.
 
-`addTransformerPlugin` is used to add custom methods as transformers/validators.
-Initially, the library adds various plugins for uses, in advance. Such as: `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
+Initially, the library adds various plugins for uses, in advance.
+Such as: `.transform`, `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
 Check the Plugins section below for more information.
 
-All methods from any transformation chain, including the methods defined by plugins and the default basic methods (`.message()`, `.transform()`), always return the chain itself.
-It is possible and recommended adding transformations to the chain by **chain**ing method calls.
+All methods from any transformation chain, including the methods defined by plugins and the internally implemented method (`.message()`), always return the chain itself.
+It is possible and highly recommended adding transformations to the chain by **chain**ing method calls.
 For example: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
 
 # API references
@@ -262,7 +372,7 @@ For example: `chain.exists().isEmail().transform(emailToUser).message('Email not
 ## Transformation chain
 A transformation chain has the following methods.
 
-This methods list can be extended via `addTransformerPlugin`.
+You can add your own method via `addTransformerPlugin`.
 Associated Typescript typing extend is also available.
 
 - `chain.transform(callback, options)`: append a custom transformation/validation to the chain.
@@ -375,6 +485,11 @@ These plugins probably change the inputs in the paths. In other words, they have
     Throw an error if the input is a valid number or cannot be parsed to an integer number.
     Support range checking with the `min`, `max` in the options.
 - `chain.trim()`: trim value if it exists and is in string format. This transformer never throws any error.
+- `chain.use(pluginConfigs: Array<[ITransformPlugin | string, ...any[]]>)`: combine multiple plugins.
+   Parameters: `(required) pluginConfigs: array`: an array whose elements must have the following specification.
+        - The first element is the plugin object or the name of an existing plugin (`'isType'`, `'transform'`, `'isLength'`, etc.).
+        Note: `'message'` is not a plugin.
+        - The rest of the array contains the options which will be passed to the plugins.
 
 ## How to add a custom plugin
 

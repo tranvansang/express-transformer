@@ -19,7 +19,9 @@ export default {
 	getConfig<T, V, Options>(plugins: Array<[ITransformPlugin | keyof ITransformer<T, V, Options>, ...any[]]>) {
 		return plugins.map(([plugin, ...params]) => {
 			if (typeof plugin === 'string') {
-				for (const plg of allPlugins) if (plg.name === plugin) return plg.getConfig<any>(...params)
+				for (
+					const plg of allPlugins.slice().reverse()
+				) if (plg.name === plugin) return plg.getConfig<any>(...params)
 				throw new Error(`Plugin ${plugin} does not exist`)
 			}
 			return plugin.getConfig<any>(...params)

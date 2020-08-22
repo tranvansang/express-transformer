@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {Request, Response} from 'express'
 import {combineToAsync} from 'middleware-async'
-import {transformer} from '../transformer'
+import {addTransformerPlugin, transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 import exists from './exists'
 import isLength from './isLength'
@@ -44,5 +44,36 @@ describe('Transform Plugin', () => {
 				[exists, {acceptEmptyString: false}],
 			]),
 		)(req as Request, undefined as unknown as Response))
+
+		//check iteration order
+		req.body.key = 2
+		const name = 'a random plugin name'
+		addTransformerPlugin({
+			name,
+			getConfig(){
+				return {
+					transform(value){
+						return value + 1
+					}
+				}
+			}
+		})
+		addTransformerPlugin({
+			name,
+			getConfig(){
+				return {
+					transform(value){
+						return value - 1
+					}
+				}
+			}
+		})
+		await combineToAsync(
+			transformer('key').use([
+				[name],
+				['isType', 'number'],
+			]),
+		)(req as Request, undefined as unknown as Response)
+		expect(req.body.key).toBe(1)
 	})
 })

@@ -113,7 +113,7 @@ export const transformer = <T, V, Options>(
 		next()
 	}) as ITransformer<T, V, Options>
 	middleware.message = (
-		message,
+		callback,
 		{global, disableOverwriteWarning} = {}
 	) => {
 		if (stack.length) {
@@ -125,9 +125,9 @@ export const transformer = <T, V, Options>(
 					+ ' To disable this warning, please set disableOverwriteWarning in the option.'
 				)
 			}
-			stack[stack.length - 1].message = message
+			stack[stack.length - 1].message = callback
 		}
-		if (global) for (const transformation of stack) if (!transformation.message) transformation.message = message
+		if (global) for (const transformation of stack) if (!transformation.message) transformation.message = callback
 		return middleware
 	}
 	for (
