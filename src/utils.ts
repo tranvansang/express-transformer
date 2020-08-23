@@ -179,7 +179,7 @@ export const doTransform = async <T, V, Options>(
 	transformerOptions: Options & ITransformerOptions
 ) => {
 	const {validateOnly, force} = options
-	const {disableArrayNotation, rawPath, rawLocation} = transformerOptions
+	const {rawPath, rawLocation} = transformerOptions
 	const locationSplits = splitPath(!!rawLocation, location)
 	const makeSub = async (
 		subPath: string,
