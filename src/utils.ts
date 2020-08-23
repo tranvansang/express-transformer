@@ -63,6 +63,7 @@ const getArrayOrAssignEmpty = (
 }
 
 /**
+ * return true if the value does not exist, or the @callback tells to stop
  * @param prefixes Prefix added so far
  * @param firstArray currently being processed array prefix
  * @param arrays the remaining array prefixes
@@ -76,7 +77,7 @@ const iterateObjectSub = async <T, V, Options>(
 	lastPath: string | number,
 	transformerOptions: Options & ITransformerOptions,
 	options: ITransformOptions,
-	callback: ITransformCallbackSingular<T, boolean, Options>,
+	callback: ITransformCallbackSingular<T, boolean | undefined, Options>,
 	message?: IMessageCallback<T, Options> | undefined
 ) => {
 	const {force} = options
@@ -84,7 +85,7 @@ const iterateObjectSub = async <T, V, Options>(
 	if (firstArray) {
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
 		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
-		for (let i = 0; i < values.length; i++) if (!await iterateObjectSub(
+		for (let i = 0; i < values.length; i++) if (await iterateObjectSub(
 			req,
 			locationSplits,
 			[...newPrefixes, i],
@@ -94,10 +95,8 @@ const iterateObjectSub = async <T, V, Options>(
 			options,
 			callback,
 			message,
-		)) return false
-		return true
-	}
-	if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
+		)) return true
+	} else if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
 		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, lastPathBase)]
@@ -106,7 +105,7 @@ const iterateObjectSub = async <T, V, Options>(
 			[...locationSplits, ...newPrefixes],
 			!!force
 		)
-		for (let i = 0; i < values.length; i++) if (!await iterateObjectSub(
+		for (let i = 0; i < values.length; i++) if (await iterateObjectSub(
 			req,
 			locationSplits,
 			newPrefixes,
@@ -116,23 +115,24 @@ const iterateObjectSub = async <T, V, Options>(
 			options,
 			callback,
 			message,
-		)) return false
-		return true
+		)) return true
+	} else {
+		const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
+		const fullSplits = [...locationSplits, ...newSplits]
+		return force || recursiveHas(req, fullSplits)
+			? callback(
+				recursiveGet(req, fullSplits),
+				{
+					options: transformerOptions,
+					path: joinSplits(newSplits),
+					pathSplits: newSplits,
+					req
+				}
+			)
+			: true
 	}
-	const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
-	const fullSplits = [...locationSplits, ...newSplits]
-	return force || recursiveHas(req, fullSplits)
-		? await callback(
-			recursiveGet(req, fullSplits),
-			{
-				options: transformerOptions,
-				path: joinSplits(newSplits),
-				pathSplits: newSplits,
-				req}
-		)
-		: false
 }
-const iterateObject = async <T, V, Options>(
+const iterateObject = <T, V, Options>(
 	req: Request,
 	locationSplits: string[],
 	path: string,
@@ -143,7 +143,7 @@ const iterateObject = async <T, V, Options>(
 ) => {
 	const {disableArrayNotation} = transformerOptions
 	const pathArrays = disableArrayNotation ? [path] : path.split('[].') // only split arrays in middle
-	return await iterateObjectSub(
+	return iterateObjectSub(
 		req,
 		locationSplits,
 		[],
@@ -207,7 +207,6 @@ export const doTransform = async <T, V, Options>(
 					[...locationSplits, ...info.pathSplits],
 					transformedValue
 				)
-				return true
 			} catch (e) {
 				await throwError(e, message, value, info)
 			}
@@ -217,13 +216,13 @@ export const doTransform = async <T, V, Options>(
 	else {
 		let anyExist = false
 		for (const subPath of path) {
-			if (await iterateObject(
+			if (!await iterateObject(
 				req,
 				locationSplits,
 				subPath,
 				transformerOptions,
 				options,
-				() => true
+				() => void 0
 			)) anyExist = true
 		}
 		// only allow skip if there is no value exists
@@ -265,7 +264,6 @@ export const doTransform = async <T, V, Options>(
 						[...paths, subPath],
 						[...pathSplitsAll, pathSplits]
 					)
-					return true
 				},
 				transformOptions
 			)
