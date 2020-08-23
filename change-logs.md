@@ -1,5 +1,11 @@
 # Change logs
 
+## Version 3.3.3
+- Minor bug fix when array of paths is used.
+
+## Version 1.3.1
+- Make `use` plugin recursive.
+
 ## Version 1.3.0
 - Add `isType` plugin.
 - Convert `transform` to plugin.

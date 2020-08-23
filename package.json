@@ -15,7 +15,8 @@
     "test": "yarn jest",
     "lint": "yarn eslint $(find src -type f ! -name '*.test.ts' | tr '\\n' ' ')",
     "coverage": "yarn jest --coverage",
-    "build": "yarn tsc"
+    "build": "yarn tsc",
+    "prepublishOnly": "yarn build"
   },
   "keywords": [
     "express",

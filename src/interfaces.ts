@@ -62,7 +62,7 @@ export type IMessageOptions = {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ITransformer<T, V, Options> extends ExpressTransformer.ITransformer<T, V, Options> {}
 
-type MaybeArray<T> = T | Array<T>
+export type MaybeArray<T> = T | Array<T>
 export type ITransformPluginConfig = {
 	transform<T, V, Options>(
 		value: T | T[], callbackOptions: ITransformCallbackInfo<Options>

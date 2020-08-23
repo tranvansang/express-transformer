@@ -45,25 +45,44 @@ const joinSplits = (splits: Array<string | number>) => splits.map(
 	) => `${typeof subPath === 'string' && index ? '.' : ''}${typeof subPath === 'number' ? `[${subPath}]` : subPath}`
 ).join('')
 
-const doesValueExist = <Options>(
+const getArrayOrAssignEmpty = (
+	obj: any,
+	pathSplits: Array<string | number>,
+	force: boolean,
+) => {
+	//force only becomes effective when value does not exist
+	if (!recursiveHas(obj, pathSplits) && !force) return []
+	let values = recursiveGet(obj, pathSplits)
+	if (!Array.isArray(values)) {
+		// values has a malformed data type
+		// always reset it regardless of force and validateOnly
+		values = []
+		recursiveSet(obj, pathSplits, values)
+	}
+	return values
+}
+
+// mostly clone the implementation of subTransform
+// check and fix the data shape
+const validateDataShape = <Options>(
 	obj: any,
 	prefixes: Array<string | number>,
 	[firstArray, ...arrays]: string[],
 	lastPath: string | number,
-	transformerOptions: Options & ITransformerOptions
+	transformerOptions: Options & ITransformerOptions,
+	transformOptions: ITransformOptions
 ) => {
 	const {rawPath} = transformerOptions
 	if (firstArray) {
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
-		if (!recursiveHas(obj, newPrefixes)) return false
-		const values = recursiveGet(obj, newPrefixes)
-		if (!Array.isArray(values)) return false
-		for (let i = 0; i < values.length; i++) if (doesValueExist(
+		const values = getArrayOrAssignEmpty(obj, newPrefixes, !!transformOptions.force)
+		for (let i = 0; i < values.length; i++) if (validateDataShape(
 			obj,
 			[...newPrefixes, i],
 			arrays,
 			lastPath,
-			transformerOptions
+			transformerOptions,
+			transformOptions
 		)) return true
 		return false
 	}
@@ -71,17 +90,16 @@ const doesValueExist = <Options>(
 		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, lastPathBase)]
-		if (!recursiveHas(obj, newPrefixes)) return false
-		const values = recursiveGet(obj, newPrefixes)
-		if (!Array.isArray(values)) return false
-		// because this is last element, the next check can be replaced with (to have 100% coverage)
+		const values = getArrayOrAssignEmpty(obj, newPrefixes, !!transformOptions.force)
+		// to achieve a 100% coverage, change to the following
 		// values.length && doesValueExist(..., String(0), ...)
-		for (let i = 0; i < values.length; i++) if (doesValueExist(
+		for (let i = 0; i < values.length; i++) if (validateDataShape(
 			obj,
 			[...prefixes, ...splitPath(!!rawPath, lastPathBase)],
 			arrays,
 			i,
-			transformerOptions
+			transformerOptions,
+			transformOptions
 		)) return true
 		return false
 	}
@@ -107,21 +125,9 @@ const subTransform = async <T, V, Options>(
 ) => {
 	const {force} = options
 	const {rawPath, disableArrayNotation} = transformerOptions
-	const getArrayOrAssignEmpty = (subPathSplits: Array<string | number>) => {
-		const fullSplits = [...locationSplits, ...subPathSplits]
-		//force only effective when value does not exist
-		if (!recursiveHas(req, fullSplits) && !force) return []
-		let values = recursiveGet(req, fullSplits)
-		//always reset existing value regardless force and validateOnly's values
-		if (!Array.isArray(values)) {
-			values = []
-			recursiveSet(req, fullSplits, [])
-		}
-		return values
-	}
 	if (firstArray) {
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
-		const values = getArrayOrAssignEmpty(newPrefixes)
+		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			locationSplits,
@@ -137,7 +143,11 @@ const subTransform = async <T, V, Options>(
 		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
 		const lastPathBaseSplits = splitPath(!!rawPath, lastPathBase)
-		const values = getArrayOrAssignEmpty([...prefixes, ...lastPathBaseSplits])
+		const values = getArrayOrAssignEmpty(
+			req,
+			[...locationSplits, ...prefixes, ...lastPathBaseSplits],
+			!!force
+		)
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			locationSplits,
@@ -226,17 +236,19 @@ export const doTransform = async <T, V, Options>(
 		options
 	)
 	else {
-		// only allow skip if there is no value exist
-		const transformOptions = !force && path.some(subPath => {
+		// only allow skip if there is no value exists
+		const anyExist = path.map(subPath => {
 			const subPathArrays = disableArrayNotation ? [subPath] : subPath.split('[].') // only split arrays in middle
-			return doesValueExist(
+			return validateDataShape(
 				req,
 				locationSplits,
 				subPathArrays.slice(0, subPathArrays.length - 1),
 				subPathArrays[subPathArrays.length - 1],
-				transformerOptions
+				transformerOptions,
+				options
 			)
-		})
+		}).some(Boolean)
+		const transformOptions = !force && anyExist
 			? {...options, force: true}
 			: options
 		const makeSubLoop = async (

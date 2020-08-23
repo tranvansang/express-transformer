@@ -330,4 +330,127 @@ describe('raw key options', () => {
 		)(req, undefined as unknown as Response)
 		expect(fn.mock.calls).toEqual([[[4, 6], expect.anything()]])
 	})
+
+	test('array of array iteration with a false force', async () => {
+		const req = {
+			body: {
+				a: 1,
+				b: []
+			}
+		} as Request
+		// await combineToAsync(
+		// 	transformer(['a[]', 'b[]'])
+		// 		.transform(jest.fn(), {validateOnly: true, force: false})
+		// )(req, undefined as unknown as Response)
+		// expect(req.body).toEqual({a: [], b: []})
+		req.body = {a: [], b: 2}
+		await combineToAsync(
+			transformer(['a[]', 'b[]'])
+				.transform(jest.fn(), {validateOnly: true, force: false})
+		)(req, undefined as unknown as Response)
+		expect(req.body).toEqual({a: [], b: []})
+	})
+
+	test('array of array iteration with a true force', async () => {
+		const req = {
+			body: {
+				a: 1,
+				b: []
+			}
+		} as Request
+		await combineToAsync(
+			transformer(['a[]', 'b[]'])
+				.transform(jest.fn(), {validateOnly: true, force: true})
+		)(req, undefined as unknown as Response)
+		expect(req.body).toEqual({a: [], b: []})
+		req.body = {a: [], b: 2}
+		await combineToAsync(
+			transformer(['a[]', 'b[]'])
+				.transform(jest.fn(), {validateOnly: true, force: true})
+		)(req, undefined as unknown as Response)
+		expect(req.body).toEqual({a: [], b: []})
+
+		req.body = {a: []}
+		await combineToAsync(
+			transformer(['a[]', 'b[]'])
+				.transform(jest.fn(), {validateOnly: true, force: true})
+		)(req, undefined as unknown as Response)
+		expect(req.body).toEqual({a: [], b: []})
+		req.body = {b: []}
+		await combineToAsync(
+			transformer(['a[]', 'b[]'])
+				.transform(jest.fn(), {validateOnly: true, force: true})
+		)(req, undefined as unknown as Response)
+		expect(req.body).toEqual({a: [], b: []})
+	})
+
+	test('throw error in array transformer', async () => {
+		const req = {
+			body: {key: undefined}
+		}
+		await flipPromise(combineToAsync(
+			transformer(['key', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response))
+	})
+
+	test('force array if one element exists', async () => {
+		const req = {
+			body: {key: undefined}
+		}
+		await combineToAsync(
+			transformer(['key[].sub', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response)
+
+		req.body.key = [{}]
+		await combineToAsync(
+			transformer(['key[].sub', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response)
+
+		req.body.key = [{sub: undefined}]
+		await flipPromise(combineToAsync(
+			transformer(['key[].sub', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response))
+
+		req.body.key = [{sub: undefined}]
+		await combineToAsync(
+			transformer(['key[].sub[]', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response)
+
+		req.body.key = [{sub: []}]
+		await combineToAsync(
+			transformer(['key[].sub[]', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response)
+
+		req.body.key = [{sub: [undefined]}]
+		await flipPromise(combineToAsync(
+			transformer(['key[].sub[]', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response))
+
+		req.body.key = undefined
+		req.body.key2 = undefined
+		// because there is no value at the key pass. the transformer is never called
+		await combineToAsync(
+			transformer(['key[].sub[]', 'key2']).transform(() => Promise.reject(1)),
+		)(req as Request, undefined as unknown as Response)
+	})
+
+	test('force array', async () => {
+		const req = {body: {a: 1}}
+		await combineToAsync(
+			transformer('a[]').transform(() => void 0, {validateOnly: true, force: true}),
+		)(req as Request, undefined as unknown as Response)
+		expect(req.body.a).toEqual([])
+
+		req.body.products = [{foo: 'bar'}]
+		await combineToAsync(
+			transformer('products[].config.categories[]').transform(() => void 0, {validateOnly: true, force: true}),
+		)(req as Request, undefined as unknown as Response)
+		expect(req.body.products).toEqual([{config: {categories: []}, foo: 'bar'}])
+
+		req.body.products = [{foo: 'bar'}]
+		await combineToAsync(
+			transformer('products[].config.categories[]').transform(() => void 0, {validateOnly: true, force: false}),
+		)(req as Request, undefined as unknown as Response)
+		expect(req.body.products).toEqual([{foo: 'bar'}])
+	})
 })

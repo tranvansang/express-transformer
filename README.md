@@ -61,33 +61,33 @@ app.post('/signup',
 app.listen(3000)
 ```
 
-- Convert the 1-base `page` parameter in the query to a 0-base number.
+- Convert the 1-base `page` **string** parameter in the query to a 0-base **number**.
 ```javascript
 app.get('/article',
 	transformer('page', {location: 'query'})
 		.defaultValue(1)
 		.toInt({min: 1})
 		.transform(val => val - 1),
-	(req, res, next) => {
-	})
+	(req, res, next) => {}
+)
 ```
 
 - Check password length and validate email format, a more complicated, but obviously common case.
 ```javascript
 app.post('/signup',
 	transformer('email')
-		.exists() //.exists() is required because if the input is omitted, the transformers will not be triggered
+		.exists()
         .message('Please provide email')
-		.isLength({min: 8})
-        .message('Email is too short')
+        .isEmail()
+        .message('Unrecognized email')
 		.transform(async email => { // transformer function can be async
-			const existingUser = await User.findByEmail(email).exec()
-			if (existingUser) throw new Error('Email already existed')
+			if (await User.findByEmail(email).exec()) throw new Error('Email already existed')
 		}, {validateOnly: true}),
 	transformer(['password', 'passwordConfirm'], {validateOnly: true})
 		.exists()
 		.trim()
 		.isLength({min: 8})
+        .message('Password is too short')
 		.transform(([password, passwordConfirm]) => {
 			if (password !== passwordConfirm) throw new Error('Passwords do not match')
         }, {validateOnly: true}),
@@ -97,28 +97,39 @@ app.post('/signup',
 
 - Convert an id to a user object.
 ```javascript
-app.get('/get-user/:id',
-	transformer('email', {location: 'params'})
-		.exists()
-        .message('Please provide id')
+app.get('/user/:id',
+	transformer('id', {location: 'params'})
+        .matches(/^[a-f\d]{24}$/i)
+        .message('Invalid user id format')
 		.transform(async id => {
 			const user = await User.findById(id).exec()
-			if (user) throw new Error('In correct id')
+			if (user) throw new Error('Incorrect id')
             return user //req.params.id will become the `user` object
 		})
-        .message(async id => { // the message function can be async
+        .message(async id => { // the message function can also be async
             return `${id} is not a valid user id`
         }),
 	(req, res) => {res.status(200).json(req.params.id.toJSON())}
 )
 ```
 
-- Array iteration
+- Check token.
+```javascript
+app.get('/admin/update',
+	transformer('token')
+        .exists()
+        .is('secret-value')
+        .message('Invalid credential', {global: true}),
+	(req, res) => {}
+)
+```
+
+- Deep array iteration.
 ```javascript
 transformer('user.messages[].stars[]').toInt({min: 0, max: 5})
 ```
 
-- Array of arrays iteration
+- Array of arrays iteration.
 ```javascript
 transformer(['me.favorites[]', 'posts[].meta.comments[].likes[]', 'credits'])
   .transform(([favorite, like, credits]) => {
@@ -127,7 +138,43 @@ transformer(['me.favorites[]', 'posts[].meta.comments[].likes[]', 'credits'])
   }, {validateOnly: true})
 ```
 
-- Conditional transformation/validation
+- **Force the input data shape.**
+```javascript
+app.get('/products/set-categories',
+	transformer('products[].config.categories[]')
+        .transform(() => void 0, {validateOnly: true, force: true}),
+	(req, res) => {
+        // Setting force = true ensures that the following for-loop will
+        // NEVER throw any error with ANY (malformed) input data.
+        for (const {config: {categories}} of req.body.products) {
+            for (const category of categories) {
+            	console.log(category)
+            }
+        }
+    }
+)
+```
+
+- Without `force`, the transformation chain only fixes if the input contains a malformed (non data) value.
+
+```javascript
+app.get('/products/set-categories',
+	transformer('products[].config.categories[]')
+        .transform(() => void 0, {validateOnly: true}),
+	(req, res) => {
+        // The following for-loop will NEVER throw any error with ANY (malformed) input data.
+        //req.body.products, if exists, will be ensured to be array type
+        for (const {config: {categories}} of req.body.products || []) {
+            // categories, if exists, will be unsured to be array type
+            for (const category of categories || []) {
+            	console.log(category)
+            }
+        }
+    }
+)
+```
+
+- Conditional transformation/validation.
 ```javascript
 app.post(
     '/order/:id',
@@ -139,7 +186,7 @@ app.post(
 )
 ```
 
-- Conditioning with multiple transformation/validation
+- Conditioning with multiple transformations.
 ```javascript
 const {combineMiddlewares} = require('middleware-async')
 
@@ -169,7 +216,7 @@ addTransformerPlugin({
     getConfig() {
         return {
             transform(value, info) {
-                if (typeof value !== 'string') throw new Error(`{info.path} must be a string`)
+                if (typeof value !== 'string') throw new Error(`${info.path} must be a string`)
                 if (!/^\d{3}-\d{4}$/.test(value)) throw new Error(`${info.path} is a valid postal code`)
             },
             options: {
@@ -185,7 +232,7 @@ app.post(
 )
 ```
 
-Extend the Typescript typing.
+- Extend the Typescript typing for plugin.
 
 ```typescript
 declare global {
@@ -197,7 +244,8 @@ declare global {
 }
 ```
 
-- Add your own custom method via plugins for batch operation, with options.
+- Another more comprehensive plugin example, for batch operation, with options.
+
 ```javascript
 const {addTransformerPlugin, TransformationError} = require('express-transformer')
 
@@ -211,6 +259,7 @@ addTransformerPlugin({
                 }
             },
             options: {
+                force: true,
                 validateOnly: true
             }
         }
@@ -223,7 +272,7 @@ app.post(
 )
 ```
 
-- Combine multiple transformations by plugin name.
+- Combine multiple transformations by plugins' names.
 ```javascript
 app.post(
     '/update',
@@ -240,9 +289,11 @@ app.post(
 )
 ```
 
-- Combine multiple transformations using a plugin object.
+- Combine multiple transformations using the plugin objects.
 
 ```javascript
+const {isType} = requrie('express-transformer')
+
 const isPostalCode = {
     name: 'isPostalCode',
     getConfig() {
@@ -261,13 +312,14 @@ app.post(
     '/update',
     transformer('postalCode').use([
         ['exists'],
-        ['isType', 'string'],
+        [isType, 'string'],
         [isPostalCode],
+        ['transform', async (postalCode, {req}) => {req.address = await postalToAddress(postalCode)}, {validateOnly: true}],
     ])
 )
 ```
 
-All default plugins are exported and available to be used in this way (or you can use their names instead).
+All default plugins are exported and available to be used in this way (or you can use their names, either).
 
 ```
 const {
@@ -289,11 +341,20 @@ const {
 } = require('express-transformer')
 ```
 
-Note: `.message`is not a plugin.
+Note: *`.message`is not a plugin*.
 
-You can save the configuration to reuse.
+- Interestingly, `.use` is itself a plugin.
 
+```javascript
+transformer('page', {location: 'param'}).use([
+    ['defaultValue', 1]
+    ['use', [['toInt', {min: 1}], ['transform', page => page - 1]]]
+])
 ```
+
+- By this way, you can save the configuration to reuse.
+
+```javascript
 const requiredString = len => [
     ['exists'],
     ['isType', 'string'],
@@ -310,29 +371,31 @@ app.post('/update',
 
 Unfortunately, `.message` is not yet a plugin.
 Because it requires internal access to overwrite the configuration of the previous transformations in the chain.
-Recklessly changing the internal to make this available is unnecessary for now, and it would reduce the library's flexibility in future development.
+Recklessly changing the internal to make this available is unnecessary for now,
+and it would reduce the library's flexibility in the future development.
 
-Workaround.
+This is a workaround.
 
 ```javascript
-const combineChains = (path, chains) => chains.reduce(
+const chainTransformations = (path, chains) => chains.reduce(
     (acc, [name, ...params]) => acc[name](...params),
     transformer(path)
 )
 
-app.post('/update', combineChains('first', [
-    ['exists'],
+app.post('/update', chainTransformations('firstName', [
+    ['exists', {acceptEmptyString: false}],
     ['message', 'Please enter your first name'],
     ['isType', 'string'],
-    ['message', 'first must be a string element'],
+    ['message', 'First name must be a string'],
     ['isLength', {max: len}],
-    ['message', 'first is too long'],
+    ['message', 'First name is too long'],
     ['transform', value => value.toUpperCase()]
 ]))
 ```
 
 - **This library is built with a strict requirement in mind,
 it should work in almost any condition with almost any malformed input data**
+It also ensures you the data format (when `force` is true, or array of paths is used with at least one element exists).
 
 *If you find this is not correct, please fire a bug issue.*
 
@@ -369,6 +432,10 @@ However, because array notation is specified after `reviews` key, the input is r
     - `.use()` (combine multiple transformations)
 
 Plugins with extendable Typescript typing can be configured to add new methods permanently.
+
+- What will happen if your path contains an array notation or the dot character, such as when you want to check `req.body['first.name'']`.
+No worry, `disabelArrayNotation` and `rawPath` options are there for you.
+Please check the API references section below.
 
 # Usage
 

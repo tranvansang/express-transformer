@@ -25,6 +25,8 @@ describe('Transform Plugin', () => {
 				['isType', 'string'],
 			]),
 		)(req as Request, undefined as unknown as Response)
+
+		//invalid plugin name
 		await flipPromise((async () => combineToAsync(
 			transformer('key').use([
 				['exists'],
@@ -75,5 +77,19 @@ describe('Transform Plugin', () => {
 			]),
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(1)
+	})
+
+	test('use of use', async () => {
+		const req = {body: {key: '1'}}
+		await combineToAsync(
+			transformer('key').use([
+				[exists],
+				['use', [
+					['toInt'],
+					['transform', v => v + 1]
+				]],
+			]),
+		)(req as Request, undefined as unknown as Response)
+		expect(req.body.key).toBe(2)
 	})
 })
