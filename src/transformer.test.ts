@@ -526,21 +526,55 @@ describe('raw key options', () => {
 	})
 	test('shape fixing regardless of force', async () => {
 		// typeof: 'string', 'number', 'boolean', 'function', 'bigint', 'object'(null), 'undefined', 'symbol'
-		for (const val of ['1', '', 1, true, false, () => {}, 1n, null, {}, undefined, Symbol('foo')]) {
-			const req = {body: {key: val}} as Request
-			await combineToAsync(
-				transformer('key[]')
-					.transform(jest.fn(), {force: false, validateOnly: true})
-			)(req, undefined as unknown as Response)
-			expect(req.body.key).toEqual([])
-		}
-		for (const val of ['1', '', 1, true, false, 1n, null, undefined, Symbol('foo')]) {
-			const req = {body: {key: val}} as Request
-			await combineToAsync(
-				transformer('key.foo')
-					.transform(jest.fn(), {force: false, validateOnly: true})
-			)(req, undefined as unknown as Response)
-			expect(req.body.key).toEqual({})
-		}
+		for (const key of ['key[]', ['a', 'key[]']])
+			for (const val of ['1', '', 1, true, false, () => {}, 1n, null, {}, undefined, Symbol('foo')]) {
+				const req = {body: {key: val}} as Request
+				await combineToAsync(
+					transformer(key)
+						.transform(jest.fn(), {force: false, validateOnly: true})
+				)(req, undefined as unknown as Response)
+				expect(req.body.key).toEqual([])
+			}
+		for (const key of ['key.foo', ['a', 'key.foo']])
+			for (const val of ['1', '', 1, true, false, 1n, null, undefined, Symbol('foo')]) {
+				const req = {body: {key: val}} as Request
+				await combineToAsync(
+					transformer(key)
+						.transform(jest.fn(), {force: false, validateOnly: true})
+				)(req, undefined as unknown as Response)
+				expect(req.body.key).toEqual({})
+			}
+	})
+	test('force on array vs on single element', async () => {
+		const req = {body: {a: 1, b: []}} as Request
+		req.body.b.length = 2
+		const fn = jest.fn()
+		await combineToAsync(
+			transformer('b[]')
+				.transform(fn, {force: false})
+		)(req, undefined as unknown as Response)
+		expect(fn.mock.calls.length).toEqual(0)
+		await combineToAsync(
+			transformer('b[]')
+				.transform(fn, {force: true})
+		)(req, undefined as unknown as Response)
+		expect(fn.mock.calls.length).toEqual(2)
+		fn.mockClear()
+		req.body.b = []
+		req.body.b.length = 2
+		await combineToAsync(
+			transformer(['a', 'b[]'])
+				.transform(fn, {force: false})
+		)(req, undefined as unknown as Response)
+		expect(fn.mock.calls.length).toEqual(2)
+	})
+	test('zero time of a number is zero', async () => {
+		const req = {body: {a: [1, 2, 3], b: []}} as Request
+		const fn = jest.fn()
+		await combineToAsync(
+			transformer(['b[]', 'a[]'])
+				.transform(fn, {force: false})
+		)(req, undefined as unknown as Response)
+		expect(fn.mock.calls.length).toEqual(0)
 	})
 })

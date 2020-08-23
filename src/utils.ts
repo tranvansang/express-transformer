@@ -5,7 +5,7 @@ import {
 	ITransformCallbackPlural,
 	ITransformCallbackSingular,
 	ITransformerOptions,
-	ITransformOptions
+	ITransformOptions,
 } from './interfaces'
 import TransformationError from './TransformationError'
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -77,7 +77,7 @@ const getArrayOrAssignEmpty = (
 }
 
 /**
- * return true if the value does not exist, or the @callback tells to stop
+ * return number of callback calling
  * @param prefixes Prefix added so far
  * @param firstArray currently being processed array prefix
  * @param arrays the remaining array prefixes
@@ -91,15 +91,16 @@ const iterateObjectSub = async <T, V, Options>(
 	lastPath: string | number,
 	transformerOptions: Options & ITransformerOptions,
 	options: ITransformOptions,
-	callback: ITransformCallbackSingular<T, boolean | undefined, Options>,
+	callback: ITransformCallbackSingular<T, number, Options>,
 	message?: IMessageCallback<T, Options> | undefined
 ) => {
+	let count = 0
 	const {force} = options
 	const {rawPath, disableArrayNotation} = transformerOptions
 	if (firstArray) {
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
 		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
-		for (let i = 0; i < values.length; i++) if (await iterateObjectSub(
+		for (let i = 0; i < values.length; i++) count += await iterateObjectSub(
 			req,
 			locationSplits,
 			[...newPrefixes, i],
@@ -109,7 +110,7 @@ const iterateObjectSub = async <T, V, Options>(
 			options,
 			callback,
 			message,
-		)) return true
+		)
 	} else if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
 		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
@@ -119,7 +120,7 @@ const iterateObjectSub = async <T, V, Options>(
 			[...locationSplits, ...newPrefixes],
 			!!force
 		)
-		for (let i = 0; i < values.length; i++) if (await iterateObjectSub(
+		for (let i = 0; i < values.length; i++) count += await iterateObjectSub(
 			req,
 			locationSplits,
 			newPrefixes,
@@ -129,13 +130,14 @@ const iterateObjectSub = async <T, V, Options>(
 			options,
 			callback,
 			message,
-		)) return true
+		)
 	} else {
 		const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
 		const fullSplits = [...locationSplits, ...newSplits]
-		recursiveSet(req, fullSplits)
-		return force || recursiveHas(req, fullSplits)
-			? callback(
+		recursiveSet(req, fullSplits) // check and fix the data shape
+		if (force || recursiveHas(req, fullSplits)) {
+			count++
+			await callback(
 				recursiveGet(req, fullSplits),
 				{
 					options: transformerOptions,
@@ -144,8 +146,9 @@ const iterateObjectSub = async <T, V, Options>(
 					req
 				}
 			)
-			: true
+		}
 	}
+	return count
 }
 const iterateObject = <T, V, Options>(
 	req: Request,
@@ -153,7 +156,7 @@ const iterateObject = <T, V, Options>(
 	path: string,
 	transformerOptions: Options & ITransformerOptions,
 	options: ITransformOptions,
-	callback: ITransformCallbackSingular<T, boolean, Options>,
+	callback: ITransformCallbackSingular<T, number, Options>,
 	message?: IMessageCallback<T, Options> | undefined
 ) => {
 	const {disableArrayNotation} = transformerOptions
@@ -231,7 +234,7 @@ export const doTransform = async <T, V, Options>(
 	else {
 		let anyExist = false
 		for (const subPath of path) {
-			if (!await iterateObject(
+			if (await iterateObject(
 				req,
 				locationSplits,
 				subPath,

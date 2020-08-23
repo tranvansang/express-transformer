@@ -553,34 +553,24 @@ The Typescript typing is also available to be extended.
             
             - `(optional) force: boolean (default: false)`: unless `true`, when the input value **is omitted**, the transformation will be skipped.
             
-                *Note*: the library uses `Object.hasOwnProperty()` to determine whether a value at a path exists,
+                *Note 1*: the library uses `Object.hasOwnProperty()` to determine whether a value at a path exists,
                 which means even if the input data is specified with an `undefined` or `null` or any value, the transformation is **not** skipped regardless of `force`.
 
-                How does the library fix the data shape regarding the values of `force`?
-                At a point of a path traversal, when the access point is not a leaf node (for e.g., `foo.bar` in `foo.bar.baar`, `bar` in `bar[]`, `foo[0].bar` in `foo[].bar[]`).
+                *Note 2*: when `force` is `false`, and `path` is an array of strings, the following rules are applied  and overwriting the default behavior.
+                - If **all of** the values specified by any element in `path` do not exist, skip the transformation (respecting the value of `force`).
+                - If **at least one** the values specified by `path` exists, `force` is forced to be `true`.
+                 And the `info` param in the transformation `callback` will have the updated `force` value.
                 
-                - If the input value is omitted
-                - If the input value is presented
-                    - If the value is malformed ()
-            
-                - When `path` is a string.
-                    - When `force` is `true`.
-                    - When `force` is `false`.
-                - When `path` is an array of strings.
-                    - When `force` is `true`.
-                    - When `force` is `false`.
-            *Note*: here is 
-            For example: With `path = 'foo.bar[].fooo.baar[]'`, `context = {}`, `context` will be updated to be `{foo: {bar: []}}`.
-            With `path = 'foo.bar[].fooo.baar[]'`, `context = {foo: {bar: 0}}`, `context` will be updated to be `{foo: {bar: []}}` (because `Array.isArray(0)` is `false`, the library overwrites it with `[]`).
+                *Note 3*: when `path` is an array of strings,
+                if there is *any of* path's element which includes the array notation, and there is zero input data on that array,
+                the transformation will be skipped.
+                This is more obvious because zero times of any number is zero.
 
-            *Note 1*: when `force` is `false`, and `path` is an array of string, the following rules are applied (and overwriting the default behavior).
-            - If **all of** the values specified by `path` do not exist, skip the transformation (respecting the value of `force`).
-            - If **at least one** the values specified by `path` exists, `force` is forced to be `true`.
-             And the `info` param in the transformation `callback` will have the forced value.
-            
-            *Note 2*: when `path` is an array of string, regardless of the value of `force`,
-            if there is *any of* path at which there is no data (zero element or no data provided),
-            the transformation will be skipped. (zero times of any number is zero).
+                How does the library fix the data shape? (regardless the value of `force`)
+
+                At a point of a path traversal, when the access point is not a leaf node (for e.g., `foo.bar` in `foo.bar.baar`, `bar` in `bar[]`, `foo[0].bar` in `foo[].bar[]`).
+                If the current value is omitted or is presented but in a malformed format, regardless of `force`, the value is reset to `[]` or `{}` according to the requirement.
+
     - Returned value: the chain itself
 - `chain.message(callback, option)`: overwrite the error message of the one or more previous transformations in the chain.
     - Parameters:
