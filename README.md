@@ -163,9 +163,9 @@ app.get('/products/set-categories',
         .transform(() => void 0, {validateOnly: true}),
 	(req, res) => {
         // The following for-loop will NEVER throw any error with ANY (malformed) input data.
-        //req.body.products, if exists, will be ensured to be array type
+        //req.body.products, if exists, will be ensured to be in array type
         for (const {config: {categories}} of req.body.products || []) {
-            // categories, if exists, will be unsured to be array type
+            // categories, if exists, will be ensured to be in array type
             for (const category of categories || []) {
             	console.log(category)
             }
