@@ -6,7 +6,7 @@ Connect-like middleware to validate/transform data.
 # Table of contents
 
 - [Usage samples](#usage-samples)
-- [Usage](#usage)
+- [General Usage](#general-usage)
 - [API References](#api-references)
     - [Create a transformation chain](#create-a-transformation-chain)
     - [Transformation chain](#transformation-chain)
@@ -396,7 +396,7 @@ app.post('/update',
 )
 ```
 
-- How to use the `.message` in this a combination?
+- How to use the `.message` in this the configuration-like pattern?
 
 Unfortunately, `.message` is not yet a plugin.
 Because it requires internal access to overwrite the configuration of the previous transformations in the chain.
@@ -424,7 +424,7 @@ app.post('/update', chainTransformations('firstName', [
 
 - Access various information during the transformation.
 
-*Note: the comments in the code are for the general cases.*
+*Note: the comments in the code are for general cases.*
 
 ```javascript
 app.post(
@@ -436,14 +436,14 @@ app.post(
         .transform(async (
             postalCode, // value or array of value
             {
-                req, // the req
-                path, // string or array of string
-                pathSplits, // array of string or array of array of string
+                req, // the req object
+                path, // string or array of strings
+                pathSplits, // array of strings or array of array of strings
                 options: {
                     location, // string
-                    rawPath, // boolean
-                    rawLocation, // boolean
-                    disableArrayNotation // boolean
+                    rawPath, // (optional) boolean
+                    rawLocation, // (optional) boolean
+                    disableArrayNotation // (optional) boolean
                 }
             }
         ) => {
@@ -471,13 +471,14 @@ app.post(
 
 Plugins with extendable Typescript typing can be configured to add new methods permanently.
 
-- What will happen if your path contains an array notation or the dot character, such as when you want to check `req.body['first.name'']`.
-No worry, `disabelArrayNotation` and `rawPath` options are there for you.
+- What will happen if your path contains an array notation or the dot character, such as when you want to check `req.body['first.name'']`?
+
+No worry, the `disabelArrayNotation`, `rawPath`, and `rawLocation` options are there for you.
 Please check the API references section below.
 
-# Usage
+# General Usage
 
-The library exports the following methods and objects
+The library exports the following methods.
 - `transformer` (also exported as `default`)
 - `addTransformerPlugin`
 
@@ -676,27 +677,6 @@ declare global {
 	}
 }
 ```
-
-## Utility functions
-
-Coupled with the universal-path string format, there are 3 utility functions that are used internally to manipulate the context object.
-
-`const {recursiveGet, recursiveHas, recursiveSet} = require('express-transformer`)
-
-These 3 methods are designed to **just work**, and **never** through any error with an arbitrary `context` parameter.
-
-All `pathSplits` parameters are an array of strings indicating the traversal path to a location in the context object.
-
-These methods use `Object.hasOwnProperty` to check if a key exists in an object.
-Therefore, if the key is defined with an `undefined` value, it is considered as existing.
-
-- `recursiveGet(context, pathSplits, defaultValue)`: get the value at `pathSplits`, return `defaultValue` if not exist.
-- `recursiveSet(context, pathSplits, value)`: set the `value` at `pathSplits`.
-At a point in the traversal path, if the value is not eligible for writing the value, it will reset the value at that path to be `{}`.
-For example, calling on `{foo: 0}`, with `pathSplits = '['foo', 'bar', 'baar']'`, `value = 1`, will make the context object be `{foo: {bar: {baar: 1}}` (`0` is removed).
-- `recursiveHas(context, pathSplits)`: check if there is a value at `pathSplits`.
-
-Example: To create a `pathSplits`, you should just call `path.split('.')`.
 
 ## Error class
 
