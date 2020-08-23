@@ -62,61 +62,13 @@ const getArrayOrAssignEmpty = (
 	return values
 }
 
-// mostly clone the implementation of subTransform
-// check and fix the data shape
-const validateDataShape = <Options>(
-	req: Request,
-	locationSplits: string[],
-	prefixes: Array<string | number>,
-	[firstArray, ...arrays]: string[],
-	lastPath: string | number,
-	transformerOptions: Options & ITransformerOptions,
-	options: ITransformOptions
-) => {
-	const {force} = options
-	const {rawPath, disableArrayNotation} = transformerOptions
-	if (firstArray) {
-		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
-		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
-		for (let i = 0; i < values.length; i++) if (validateDataShape(
-			req,
-			locationSplits,
-			[...newPrefixes, i],
-			arrays,
-			lastPath,
-			transformerOptions,
-			options
-		)) return true
-		return false
-	}
-	if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
-		// last selector is an array selector
-		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
-		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, lastPathBase)]
-		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
-		// to achieve a 100% coverage, change to the following
-		// values.length && doesValueExist(..., String(0), ...)
-		for (let i = 0; i < values.length; i++) if (validateDataShape(
-			req,
-			locationSplits,
-			[...prefixes, ...splitPath(!!rawPath, lastPathBase)],
-			arrays,
-			i,
-			transformerOptions,
-			options
-		)) return true
-		return false
-	}
-	return recursiveHas(req, [...locationSplits, ...prefixes, lastPath])
-}
-
 /**
  * @param prefixes Prefix added so far
  * @param firstArray currently being processed array prefix
  * @param arrays the remaining array prefixes
  * @param lastPath last path
  */
-const subTransform = async <T, V, Options>(
+const iterateObject = async <T, V, Options>(
 	req: Request,
 	locationSplits: string[],
 	prefixes: Array<string | number>,
@@ -124,15 +76,15 @@ const subTransform = async <T, V, Options>(
 	lastPath: string | number,
 	transformerOptions: Options & ITransformerOptions,
 	options: ITransformOptions,
-	callback: ITransformCallbackSingular<T, V, Options>,
-	message: IMessageCallback<T, Options> | undefined
+	callback: ITransformCallbackSingular<T, boolean, Options>,
+	message?: IMessageCallback<T, Options> | undefined
 ) => {
 	const {force} = options
 	const {rawPath, disableArrayNotation} = transformerOptions
 	if (firstArray) {
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
 		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
-		for (let i = 0; i < values.length; i++) await subTransform(
+		for (let i = 0; i < values.length; i++) if (!await iterateObject(
 			req,
 			locationSplits,
 			[...newPrefixes, i],
@@ -142,31 +94,35 @@ const subTransform = async <T, V, Options>(
 			options,
 			callback,
 			message,
-		)
-	} else if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
+		)) return false
+		return true
+	}
+	if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
 		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
-		const lastPathBaseSplits = splitPath(!!rawPath, lastPathBase)
+		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, lastPathBase)]
 		const values = getArrayOrAssignEmpty(
 			req,
-			[...locationSplits, ...prefixes, ...lastPathBaseSplits],
+			[...locationSplits, ...newPrefixes],
 			!!force
 		)
-		for (let i = 0; i < values.length; i++) await subTransform(
+		for (let i = 0; i < values.length; i++) if (!await iterateObject(
 			req,
 			locationSplits,
-			[...prefixes, ...lastPathBaseSplits],
+			newPrefixes,
 			arrays,
 			i,
 			transformerOptions,
 			options,
 			callback,
 			message,
-		)
-	} else {
-		const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
-		const fullSplits = [...locationSplits, ...newSplits]
-		if (force || recursiveHas(req, fullSplits)) await callback(
+		)) return false
+		return true
+	}
+	const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
+	const fullSplits = [...locationSplits, ...newSplits]
+	return force || recursiveHas(req, fullSplits)
+		? await callback(
 			recursiveGet(req, fullSplits),
 			{
 				options: transformerOptions,
@@ -174,7 +130,7 @@ const subTransform = async <T, V, Options>(
 				pathSplits: newSplits,
 				req}
 		)
-	}
+		: false
 }
 
 const throwError = async <T, Options>(
@@ -204,11 +160,11 @@ export const doTransform = async <T, V, Options>(
 	const locationSplits = splitPath(!!rawLocation, location)
 	const makeSub = async (
 		subPath: string,
-		cb: ITransformCallbackSingular<T, V, Options>,
+		cb: ITransformCallbackSingular<T, boolean, Options>,
 		transformOptions: ITransformOptions
 	) => {
 		const subPathArrays = disableArrayNotation ? [subPath] : subPath.split('[].') // only split arrays in middle
-		await subTransform(
+		await iterateObject(
 			req,
 			locationSplits,
 			[],
@@ -233,6 +189,7 @@ export const doTransform = async <T, V, Options>(
 					[...locationSplits, ...info.pathSplits],
 					transformedValue
 				)
+				return true
 			} catch (e) {
 				await throwError(e, message, value, info)
 			}
@@ -240,19 +197,21 @@ export const doTransform = async <T, V, Options>(
 		options
 	)
 	else {
-		// only allow skip if there is no value exists
-		const anyExist = path.map(subPath => {
+		let anyExist = false
+		for (const subPath of path) {
 			const subPathArrays = disableArrayNotation ? [subPath] : subPath.split('[].') // only split arrays in middle
-			return validateDataShape(
+			if (await iterateObject(
 				req,
 				locationSplits,
 				[],
 				subPathArrays.slice(0, subPathArrays.length - 1),
 				subPathArrays[subPathArrays.length - 1],
 				transformerOptions,
-				options
-			)
-		}).some(Boolean)
+				options,
+				() => true
+			)) anyExist = true
+		}
+		// only allow skip if there is no value exists
 		const transformOptions = !force && anyExist
 			? {...options, force: true}
 			: options
@@ -291,6 +250,7 @@ export const doTransform = async <T, V, Options>(
 						[...paths, subPath],
 						[...pathSplitsAll, pathSplits]
 					)
+					return true
 				},
 				transformOptions
 			)
