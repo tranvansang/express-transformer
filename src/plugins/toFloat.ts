@@ -1,5 +1,6 @@
 import TransformationError from '../TransformationError'
 import {ITransformCallbackInfo, ITransformOptions, ITransformPlugin} from '../interfaces'
+import {isValidNumber} from '../utils'
 
 declare global {
 	namespace ExpressTransformer {
@@ -30,8 +31,8 @@ export default {
 						? Number(value)
 						: value as number
 				if (
-					isNaN(floatValue) || !isFinite(floatValue)
-				) throw new TransformationError(`${path} must be a number`, info)
+					!isValidNumber(floatValue)
+				) throw new TransformationError(`${path} must be a valid number`, info)
 				if (
 					min !== undefined && floatValue < min
 				) throw new TransformationError(`${path} must be at least ${min}`, info)

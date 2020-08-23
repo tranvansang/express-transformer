@@ -20,5 +20,16 @@ describe('Transform Plugins', () => {
 				key3: 'bar'
 			}
 		})
+		let req1 = {body: {key: ''}}
+		await combineToAsync(
+			transformer('key').defaultValue('bar', {ignoreEmptyString: true}),
+		)(req1 as Request, undefined as unknown as Response)
+		expect(req1.body.key).toBe('')
+
+		req1 = {body: {key: ''}}
+		await combineToAsync(
+			transformer('key').defaultValue('bar', {}),
+		)(req1 as Request, undefined as unknown as Response)
+		expect(req1.body.key).toBe('bar')
 	})
 })

@@ -11,6 +11,8 @@ import TransformationError from './TransformationError'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {Request} from 'express'
 
+export const isValidNumber = (value: number) => !isNaN(value) && isFinite(value)
+
 export const recursiveSet = <T, V>(...params: [
 	obj: T, pathSplits: Array<string | number>, ...value: [V] | []
 ]) => {

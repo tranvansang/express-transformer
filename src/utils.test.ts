@@ -42,6 +42,16 @@ describe('Recursive set', () => {
 		obj1 = {key: null}
 		recursiveSet(obj1, 'key.child'.split('.'), undefined)
 		expect(obj1).toEqual({key: {child: undefined}})
+
+		obj1 = {key: null}
+		recursiveSet(obj1, ['key', 'child', 1], undefined)
+		expect(obj1).toEqual({key: {child: [undefined, undefined]}})
+		obj1 = {key: {child: [undefined, null]}}
+		recursiveSet(obj1, ['key', 'child', 1], undefined)
+		expect(obj1).toEqual({key: {child: [undefined, undefined]}})
+		obj1 = {key: {child: {1: 'foo'}}}
+		recursiveSet(obj1, ['key', 'child', 1], undefined)
+		expect(obj1).toEqual({key: {child: [undefined, undefined]}})
 	})
 
 	test('optional value parameter', () => {

@@ -595,7 +595,7 @@ In these plugins' config, when the `force` option exists, it indicates the `forc
 
 ### Validators:
 
-These plugins only validate, do not change the inputs in the paths. In other words, they have `validateOnly` be `false`.
+These plugins only validate, do not change the inputs in the paths. In other words, they have a `true` `validateOnly`.
 - `chain.exists({acceptEmptyString = false} = {})`: invalidate if the input is `undefined`, `null`, `''` (empty string), or omitted.
     If `acceptEmptyString` is `true`, empty string is accepted as valid.
 - `chain.is(value, options?: {force?: boolean})`: check if the input is value.
@@ -617,37 +617,73 @@ These plugins only validate, do not change the inputs in the paths. In other wor
 - `chain.isIn(values, options?: {force?: boolean})`: check if the input is in the provided `values` list.
 - `chain.isLength(options, transformOptions?: {force?: boolean})`: check the input's length.
     If the input is an array, check for the number of its elements.
-    Else If the input is a string, check for its length.
+    Otherwise if the input is a string, check for its length.
     Otherwise, throw an error.
     
     The `options` object can be a number (in number or in string format), or an object of type `{min?: number, max?: number}`.
-    If `options` is a number, the transformation fixes the input's length.
+    If `options` is a number, the transformation checks if the input's length has a fixed length.
     Otherwise, it validates the length by `min`, `max`, if the option exists, accordingly.
 - `chain.isType(type, options?: {force?: boolean})`: check the result of `typeof` of the input value to be `type`.
 - `chain.matches(regex, options?: {force?: boolean})`: check if the input is a string and matches a regex.
 
 ### Transformers:
 
-These plugins probably change the inputs in the paths. In other words, they have `validateOnly` be `true`.
+These plugins probably change the inputs in the paths. In other words, they have a `false` `validateOnly`.
 
-- `chain.defaultValue(defaultValue)`: change the input to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string), or omitted.
+- `chain.defaultValue(defaultValue, options?: {ignoreEmptyString?: boolean})`: change the input to `defaultValue` if `value` is `undefined`, `null`, `''` (empty string, unless `ignoreEmptyString` is `true`), or omitted.
 - `chain.toDate(options?: {resetTime?: boolean, force?: boolean})`: convert the input to a `Date` object.
     Throw an error if the input is not a number, not a string, not a BigInt, not a Date object.
-    Otherwise, check if the input can be converted to a valid Date object.
+    Otherwise, convert the input to Date object using the input value, throw an error if impossible.
     
-    When `resetTime` is `true`, reset `hour`, `minute`, `second`, and `millisecond` to zero.
+    Parameter: `options` is an optional options object which can have the following properties. All are optional.
+    - `force`
+    - `resetTime?: boolean`: when `true`, reset `hour`, `minute`, `second`, and `millisecond` of the converted Date object to zero.
+    - `copy?: boolean`: when `true`, and the input value is a `Date` object, create a new `Date` object.
+    - `before?: Date | string | number | bigint`
+    - `after?: Date | string | number | bigint`
+    - `notBefore?: Date | string | number | bigint`
+    - `notAfter?: Date | string | number | bigint`
 - `chain.toFloat(options?: {min?: number, max?: number, force?: boolean})`: convert the input to a number.
-    Throw an error if the input is a valid number or cannot be parsed to a number.
+    Throw an error if the input is an invalid number (using `!isNaN()` and `isFinite`) or cannot be parsed to a number.
     Support range checking with the `min`, `max` in the options.
+    
+    Note: `bigint` value is converted to `number`. `NaN`, `Infinity`, and `-Infinity` are invalid values.
 - `chain.toInt(options?: {min, max, force})`: convert the input to an integer number.
-    Throw an error if the input is a valid number or cannot be parsed to an integer number.
+    Throw an error if the input is an invalid number (using `!isNaN()` and `isFinite`) or cannot be parsed to a number.
     Support range checking with the `min`, `max` in the options.
+    
+    Note: `bigint` value is converted to `number`. `NaN`, `Infinity`, and `-Infinity` are invalid values.
 - `chain.trim()`: trim value if it exists and is in string format. This transformer never throws any error.
-- `chain.use(pluginConfigs: Array<[ITransformPlugin | string, ...any[]]>)`: combine multiple plugins.
-   Parameters: `(required) pluginConfigs: array`: an array whose elements must have the following specification.
-        - The first element is the plugin object or the name of an existing plugin (`'isType'`, `'transform'`, `'isLength'`, etc.).
-        Note: `'message'` is not a plugin.
-        - The rest of the array contains the options which will be passed to the plugins.
+- `chain.use(pluginConfigs: Array<[ITransformPlugin | string, ...any[]]>)`: combine multiple plugins. Parameters:
+
+   `(required) pluginConfigs: array`: an array whose elements must have the following specification.
+    - The first element is the plugin object or the name of an existing plugin (`'isType'`, `'transform'`, `'isLength'`, etc.).
+    Note: `'message'` is not a plugin.
+    - The rest of the array contains the options which will be passed to the plugins.
+    
+    Note: `use` is itself a plugin.
+    
+    Note: All default plugins are exported and available to be used in this way (or you can use their names, either).
+    
+    ```javascript
+    const {
+        transform,
+        exists,
+        isIn,
+        isEmail,
+        isLength,
+        matches,
+        toDate,
+        toFloat,
+        toInt,
+        trim,
+        defaultValue,
+        is,
+        isArray,
+        isType,
+        use
+    } = require('express-transformer')
+    ```
 
 ## How to add a custom plugin
 
@@ -657,7 +693,7 @@ Consult the [validator](https://www.npmjs.com/package/validator) package for mor
 
 `addTransformerPlugin` accepts only one object presenting the plugin configuration, which should include the following properties.
 
-- `(rquired) name: string`: the name of the plugin. Like: `isPostalCode`.
+- `(rquired) name: string`: the name of the plugin, for example `'isPostalCode'`.
 - `(required) getConfig: Function`: a function accepting any parameters which are the parameters provided to the plugin call (for e.g., `chain.isPostalCode(...params)`).
      . This function should return an object including the following properties.
     - `(required) transform: Function`: a function which accepts the same parameters as of `chain.transform`.
@@ -698,7 +734,7 @@ declare global {
 
 - If a transformation has an associated message, the error message is wrapped in a `TransformationError` object instance.
 Otherwise, the error thrown by the callback in `.transform(callback)` is thrown.
-- All default plugins use and throw only `TransformationError` error.
+- All default plugins throw only `TransformationError` error in the transformation unless when the configuration object is invalid.
 - The error's detailed information can be accessed by `error.info`, which is the `info` object passed to the `.transform()`'s `callback`.
 
 - API: `constructor(message: string, info: ITransformCallbackInfo)`
