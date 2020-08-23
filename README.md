@@ -23,7 +23,7 @@ Connect-like middleware to validate/transform data.
 - [QA](#qa)
 
 This library helps you more comfortable to get along with writing express validation/transformation middlewares,
-be more confident to implement your business logic without worrying about the data's validity.
+be more confident to write your business logic without worrying about the data's validity.
 
 # Usage samples
 
