@@ -1,6 +1,6 @@
 {
   "name": "express-transformer",
-  "version": "3.3.9",
+  "version": "3.3.10",
   "description": "An express transformer, validator library",
   "main": "lib/transformer.js",
   "repository": "https://github.com/tranvansang/express-transformer",
@@ -16,7 +16,7 @@
     "lint": "yarn eslint $(find src -type f ! -name '*.test.ts' | tr '\\n' ' ')",
     "coverage": "yarn jest --coverage",
     "build": "yarn tsc",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn clean && yarn build"
   },
   "keywords": [
     "express",

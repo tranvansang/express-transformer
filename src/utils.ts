@@ -91,7 +91,7 @@ const iterateObjectSub = async <T, V, Options>(
 	lastPath: string | number,
 	transformerOptions: Options & ITransformerOptions,
 	options: ITransformOptions,
-	callback: ITransformCallbackSingular<T, number, Options>,
+	callback: ITransformCallbackSingular<T, void, Options>,
 	message?: IMessageCallback<T, Options> | undefined
 ) => {
 	let count = 0
@@ -156,7 +156,7 @@ const iterateObject = <T, V, Options>(
 	path: string,
 	transformerOptions: Options & ITransformerOptions,
 	options: ITransformOptions,
-	callback: ITransformCallbackSingular<T, number, Options>,
+	callback: ITransformCallbackSingular<T, void, Options>,
 	message?: IMessageCallback<T, Options> | undefined
 ) => {
 	const {disableArrayNotation} = transformerOptions
@@ -201,7 +201,7 @@ export const doTransform = async <T, V, Options>(
 	const locationSplits = splitPath(!!rawLocation, location)
 	const makeSub = async (
 		subPath: string,
-		cb: ITransformCallbackSingular<T, boolean, Options>,
+		cb: ITransformCallbackSingular<T, void, Options>,
 		transformOptions: ITransformOptions
 	) => iterateObject(
 		req,

@@ -558,7 +558,7 @@ The Typescript typing is also available to be extended.
 
                 *Note 2*: when `force` is `false`, and `path` is an array of strings, the following rules are applied  and overwriting the default behavior.
                 - If **all of** the values specified by any element in `path` do not exist, skip the transformation (respecting the value of `force`).
-                - If **at least one** the values specified by `path` exists, `force` is forced to be `true`.
+                - Otherwise, if **at least one** the values specified by `path` exists, `force` is forced to be `true`.
                  And the `info` param in the transformation `callback` will have the updated `force` value.
                 
                 *Note 3*: when `path` is an array of strings,
