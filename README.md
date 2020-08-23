@@ -390,9 +390,9 @@ const requiredString = len => [
     ['isLength', {max: len}],
 ]
 app.post('/update',
-    transformer('first').use(requiredString(50)),
-    transformer('last').use(requiredString(50)),
-    transformer('introduction').use(requiredString(256)),
+    transformer('first').use(requiredString(50)).message('Invalid first name'),
+    transformer('last').use(requiredString(50)).message('Invalid last name'),
+    transformer('introduction').use(requiredString(256)).message('Invalid introduction'),
 )
 ```
 
