@@ -22,7 +22,7 @@ describe('Recursive get', () => {
 
 describe('Recursive set', () => {
 	test('should set correct value', () => {
-		const obj: {d: {e: string}, a?: {b?: string}, f?: {1?: string}} = {d: {e: 'f'}}
+		const obj: { d: { e: string }, a?: { b?: string }, f?: { 1?: string } } = {d: {e: 'f'}}
 		recursiveSet(obj, 'a.b'.split('.'), 'c')
 		expect(obj.a!.b).toBe('c')
 		recursiveSet(obj, 'd.e'.split('.'), 'g')
@@ -35,6 +35,25 @@ describe('Recursive set', () => {
 		obj1 = {foo: [1]}
 		recursiveSet(obj1, 'foo.1'.split('.'), 2)
 		expect(obj1.foo).toEqual([1, 2])
+
+		obj1 = {key: undefined}
+		recursiveSet(obj1, 'key.child'.split('.'), undefined)
+		expect(obj1).toEqual({key: {child: undefined}})
+		obj1 = {key: null}
+		recursiveSet(obj1, 'key.child'.split('.'), undefined)
+		expect(obj1).toEqual({key: {child: undefined}})
+	})
+
+	test('optional value parameter', () => {
+		const obj1 = {}
+		recursiveSet(obj1, 'key.child'.split('.'))
+		expect(Object.prototype.hasOwnProperty.call(obj1.key, 'child')).toBe(false)
+		expect(obj1).toEqual({key: {child: undefined}})
+		expect(obj1).toEqual({key: {}})
+		recursiveSet(obj1, 'key.child'.split('.'), undefined)
+		expect(Object.prototype.hasOwnProperty.call(obj1.key, 'child')).toBe(true)
+		expect(obj1).toEqual({key: {child: undefined}})
+		expect(obj1).toEqual({key: {}})
 	})
 })
 

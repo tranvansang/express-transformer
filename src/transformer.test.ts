@@ -493,4 +493,54 @@ describe('raw key options', () => {
 		await combineToAsync(chain)(req, undefined as unknown as Response)
 		expect(req.body.key).toBe(4)
 	})
+
+	test('object traversal fix', async () => {
+		for (const val of [null, undefined, 1, '', '2', Symbol('foo'), 3n, false, true]) {
+			for (const validateOnly of [true, false]) {
+				const req = {body: {key: val}} as Request
+				await combineToAsync(
+					transformer('key.child')
+						.transform(jest.fn(), {force: true, validateOnly})
+				)(req, undefined as unknown as Response)
+				expect(Object.prototype.hasOwnProperty.call(req.body.key, 'child')).toBe(!validateOnly)
+				expect(req).toEqual({body: {key: {}}})
+				expect(req).toEqual({body: {key: {child: undefined}}})
+				req.body.key.child = 1
+			}
+		}
+
+		const fn = () => {}
+		const req = {body: {key: fn}} as Request
+		await combineToAsync(
+			transformer('key.child')
+				.transform(jest.fn(), {force: false})
+		)(req, undefined as unknown as Response)
+		expect(req.body.key).toBe(fn)
+		expect(Object.prototype.hasOwnProperty.call(req.body.key, 'child')).toBe(false)
+		await combineToAsync(
+			transformer('key.child')
+				.transform(jest.fn(), {force: true})
+		)(req, undefined as unknown as Response)
+		expect(req.body.key).toBe(fn)
+		expect(Object.prototype.hasOwnProperty.call(req.body.key, 'child')).toBe(true)
+	})
+	test('shape fixing regardless of force', async () => {
+		// typeof: 'string', 'number', 'boolean', 'function', 'bigint', 'object'(null), 'undefined', 'symbol'
+		for (const val of ['1', '', 1, true, false, () => {}, 1n, null, {}, undefined, Symbol('foo')]) {
+			const req = {body: {key: val}} as Request
+			await combineToAsync(
+				transformer('key[]')
+					.transform(jest.fn(), {force: false, validateOnly: true})
+			)(req, undefined as unknown as Response)
+			expect(req.body.key).toEqual([])
+		}
+		for (const val of ['1', '', 1, true, false, 1n, null, undefined, Symbol('foo')]) {
+			const req = {body: {key: val}} as Request
+			await combineToAsync(
+				transformer('key.foo')
+					.transform(jest.fn(), {force: false, validateOnly: true})
+			)(req, undefined as unknown as Response)
+			expect(req.body.key).toEqual({})
+		}
+	})
 })

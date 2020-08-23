@@ -537,7 +537,7 @@ The Typescript typing is also available to be extended.
                 - If the `path` parameter in `transformer(path, transformerOptions)` is a string, `value` will be the value of the current input.
                 - If the `path` parameter in `transformer(path, transformerOptions)` is an array of string, `value` will be the array of the values of the list of current inputs.
             - `info: Object`: an object which includes the following properties.
-                - `path`: the path to the current input or the array of paths to the current list of inputs.
+                - `path`: the path to the current input () or the array of paths to the current list of inputs.
                 - `pathSplits`: an array that contains a string (object key) or number (array index) values used to determine the traversal path.
                     When the `path` parameter is an array, this value will be an array of array.
                 - `req`: the request `req` object from the connect-like middleware.
@@ -548,16 +548,30 @@ The Typescript typing is also available to be extended.
                     If `transformerOptions` is `{foo: 'bar'}`, `options` will be `{location: 'body', foo: 'bar'}`.
                     If `transformerOptions` is `{foo: 'bar', location: 'params'}`, `options` will be `{location: 'params', foo: 'bar'}`.
         - `(optional)options: Object`: an optional options object with the following properties.
-            - `(optional) force: boolean (default: false)`: when the input value is omitted, the transformation will be skipped.
+            - `(optional) validateOnly: boolean (default: false)`: when `true`, ignore the value returned by the callback.
+            In other words, this config specifies whether the transformation is a transformer (check and transform the value) or a validator (only check).
             
-                Note 1: the library uses `Object.hasOwnProperty()` to determine whether a value at path exists, which means even if you specify `undefined` at the path, the transformation is **not** skipped.
+            - `(optional) force: boolean (default: false)`: unless `true`, when the input value **is omitted**, the transformation will be skipped.
             
-                Note 2: if `force` is `true` and {`path` or element in `path`} includes an array notation (`[]`), the necessary updates will occur along path traversal to make sure the access to the end of the path possible.
-                This behavior ignores the value of `validateOnly`.
+                *Note*: the library uses `Object.hasOwnProperty()` to determine whether a value at a path exists,
+                which means even if the input data is specified with an `undefined` or `null` or any value, the transformation is **not** skipped regardless of `force`.
+
+                How does the library fix the data shape regarding the values of `force`?
+                At a point of a path traversal, when the access point is not a leaf node (for e.g., `foo.bar` in `foo.bar.baar`, `bar` in `bar[]`, `foo[0].bar` in `foo[].bar[]`).
                 
-                For example: With `path = 'foo.bar[].fooo.baar[]'`, `context = {}`, `context` will be updated to be `{foo: {bar: []}}`.
-                With `path = 'foo.bar[].fooo.baar[]'`, `context = {foo: {bar: 0}}`, `context` will be updated to be `{foo: {bar: []}}` (because `Array.isArray(0)` is `false`, the library overwrites it with `[]`).
-            - `(optional) validateOnly: boolean (default: false)`: keep the value unchanged after the transformation. In other words, this config specifies whether the transformation is a transformer (check and change the value) or a validator (only check).
+                - If the input value is omitted
+                - If the input value is presented
+                    - If the value is malformed ()
+            
+                - When `path` is a string.
+                    - When `force` is `true`.
+                    - When `force` is `false`.
+                - When `path` is an array of strings.
+                    - When `force` is `true`.
+                    - When `force` is `false`.
+            *Note*: here is 
+            For example: With `path = 'foo.bar[].fooo.baar[]'`, `context = {}`, `context` will be updated to be `{foo: {bar: []}}`.
+            With `path = 'foo.bar[].fooo.baar[]'`, `context = {foo: {bar: 0}}`, `context` will be updated to be `{foo: {bar: []}}` (because `Array.isArray(0)` is `false`, the library overwrites it with `[]`).
 
             *Note 1*: when `force` is `false`, and `path` is an array of string, the following rules are applied (and overwriting the default behavior).
             - If **all of** the values specified by `path` do not exist, skip the transformation (respecting the value of `force`).

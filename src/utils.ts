@@ -11,20 +11,34 @@ import TransformationError from './TransformationError'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {Request} from 'express'
 
-export const recursiveSet = <T, V>(obj: T, pathSplits: Array<string | number>, value: V) => pathSplits
-	.reduce((acc: any, cur: string | number, index, pathArray) => {
-		if (!(acc instanceof Object)) return undefined
-		if (index === pathArray.length - 1) acc[cur] = value
-		else acc[cur] = Object.prototype.hasOwnProperty.call(acc, cur) ? acc[cur] : {}
-		return acc[cur]
-	},
-	obj || {})
+export const recursiveSet = <T, V>(...params: [
+	obj: T, pathSplits: Array<string | number>, ...value: [V] | []
+]) => {
+	const [obj, pathSplits] = params
+	return pathSplits
+		.reduce((acc: any, cur: string | number, index) => {
+			if (!(acc instanceof Object)) return undefined
+			if (index === pathSplits.length - 1) {
+				if (params.length >= 3) acc[cur] = params[2]
+			} else {
+				const isArray = typeof pathSplits[index + 1] === 'number'
+				if (!Object.prototype.hasOwnProperty.call(acc, cur)) acc[cur] = isArray ? [] : {}
+				else if (isArray) {
+					// typeof
+					// 'string', 'number', 'boolean', 'function', 'bigint', 'object'(null), 'undefined', 'symbol'
+					if (!Array.isArray(acc[cur])) acc[cur] = [] // reset the malformed data
+				} else if (acc[cur] === null || (
+					typeof acc[cur] !== 'object'
+					&& typeof acc[cur] !== 'function'
+				)) acc[cur] = {} // reset the malformed data
+			}
+			return acc[cur]
+		}, obj || {})
+}
 export const recursiveGet = <T, V>(obj: T, pathSplits: Array<string | number>, defaultValue?: V) => pathSplits
-	.reduce((
-		acc: any, cur, index, pathArray
-	) => acc instanceof Object && Object.prototype.hasOwnProperty.call(acc, cur)
+	.reduce((acc: any, cur, index) => acc instanceof Object && Object.prototype.hasOwnProperty.call(acc, cur)
 		? acc[cur]
-		: index === pathArray.length - 1 ? defaultValue : undefined,
+		: index === pathSplits.length - 1 ? defaultValue : undefined,
 	obj)
 export const recursiveHas = (obj: any, pathSplits: Array<string | number>) => {
 	for (const key of pathSplits) if (
@@ -119,6 +133,7 @@ const iterateObjectSub = async <T, V, Options>(
 	} else {
 		const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
 		const fullSplits = [...locationSplits, ...newSplits]
+		recursiveSet(req, fullSplits)
 		return force || recursiveHas(req, fullSplits)
 			? callback(
 				recursiveGet(req, fullSplits),
