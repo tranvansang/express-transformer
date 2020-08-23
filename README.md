@@ -155,7 +155,7 @@ app.get('/products/set-categories',
 )
 ```
 
-- Without `force`, the transformation chain only fixes if the input contains a malformed (non data) value.
+- Without `force`, the transformation chain only fixes if the input contains a malformed (non array, non object) value.
 
 ```javascript
 app.get('/products/set-categories',
