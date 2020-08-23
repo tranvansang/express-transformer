@@ -468,4 +468,20 @@ describe('raw key options', () => {
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.products).toEqual([{foo: 'bar'}])
 	})
+
+	test('array with omitted element', async () => {
+		const fn = jest.fn()
+		const a = []
+		a.length = 2
+		const req = {body: {a}} as Request
+		await combineToAsync(
+			transformer('a[]').transform(fn, {force: false}),
+		)(req, undefined as unknown as Response)
+		expect(fn.mock.calls.length).toBe(0)
+
+		await combineToAsync(
+			transformer('a[]').transform(fn, {force: true}),
+		)(req, undefined as unknown as Response)
+		expect(fn.mock.calls.length).toBe(2)
+	})
 })
