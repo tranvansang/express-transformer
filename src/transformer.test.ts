@@ -484,4 +484,13 @@ describe('raw key options', () => {
 		)(req, undefined as unknown as Response)
 		expect(fn.mock.calls.length).toBe(2)
 	})
+
+	test('non chain style', async () => {
+		const req = {body: {key: 1}} as Request
+		const chain = transformer('key')
+		chain.transform(v => v + 1)
+		chain.transform(v => v + 2)
+		await combineToAsync(chain)(req, undefined as unknown as Response)
+		expect(req.body.key).toBe(4)
+	})
 })

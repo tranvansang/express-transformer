@@ -483,20 +483,30 @@ The library exports the following methods.
 - `addTransformerPlugin`
 
 Typically, you only need to use the `transformer()` method in most of the cases.
-This method returns a transformation chain that is used to validate/transform input data.
-The transformation chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)``).
+This method returns a transformation chain that is used to validate/transform the input data.
+The transformation chain is also a connect-like middleware, and can be placed in the handler parameter in express (e.g. `app.use(chain)`).
 
 A transformation/validation can be appended to a transformation chain by calling `chain.<method>`.
-Actually, the library only defines only one method in the transformation chain's prototype, namely `.message()`.
+Internally, the library only defines only one method in the transformation chain's prototype, namely the `.message()`.
 All other methods are added using `addTransformerPlugin`.
 
-Initially, the library adds various plugins for uses, in advance.
+By default, the library adds various plugins for uses, in advance.
 Such as: `.transform`, `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
 Check the Plugins section below for more information.
 
 All methods from any transformation chain, including the methods defined by plugins and the internally implemented method (`.message()`), always return the chain itself.
-It is possible and highly recommended to add transformations to the chain by **chain**ing method calls.
+It is possible and highly recommended to add transformations to the chain in the **chain**ing style.
 For example: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
+
+Of course, it is possible to use the non-chain style.
+For instance:
+
+```javascript
+const chain = transformer('page', {location: 'query'})
+chain.defaultValue('1').toInt()
+chain.transform(v => v + 1)
+app.use('/articles', chain, (req, res) => {})
+```
 
 # API references
 
