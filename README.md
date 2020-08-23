@@ -393,7 +393,7 @@ app.post('/update', chainTransformations('firstName', [
 ]))
 ```
 
-- **This library is built with a strict requirement in mind,
+- **This library is built with a strict security concern in mind,
 it should work in almost any condition with almost any malformed input data**
 It also ensures you the data format (when `force` is true, or array of paths is used with at least one element exists).
 
