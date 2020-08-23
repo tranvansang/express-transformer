@@ -6,8 +6,8 @@ Connect-like middleware to validate/transform data.
 # Table of contents
 
 - [Usage samples](#usage-samples)
-- [General Usage](#general-usage)
-- [API References](#api-references)
+- [General usage](#general-usage)
+- [API references](#api-references)
     - [Create a transformation chain](#create-a-transformation-chain)
     - [Transformation chain](#transformation-chain)
     - [Plugin](#plugins)
@@ -476,7 +476,7 @@ Plugins with extendable Typescript typing can be configured to add new methods p
 No worry, the `disabelArrayNotation`, `rawPath`, and `rawLocation` options are there for you.
 Please check the API references section below.
 
-# General Usage
+# General usage
 
 The library exports the following methods.
 - `transformer` (also exported as `default`)
@@ -498,7 +498,7 @@ All methods from any transformation chain, including the methods defined by plug
 It is possible and highly recommended to add transformations to the chain in the **chain**ing style.
 For example: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
 
-Of course, it is possible to use the non-chain style.
+Of course, it is possible to use the non-chaining style.
 For instance:
 
 ```javascript
