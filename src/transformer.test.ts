@@ -384,6 +384,21 @@ describe('raw key options', () => {
 		expect(req.body).toEqual({a: [], b: []})
 	})
 
+	test('incremental test on 3.3.3 where rawPath and disableArrayNotation are used incorrectly', async () => {
+		const req = {body: {a: []}} as Request
+		await combineToAsync(
+			transformer(['a[]', 'b[]'], {rawPath: true})
+				.transform(jest.fn(), {validateOnly: true, force: true})
+		)(req, undefined as unknown as Response)
+		expect(req.body).toEqual({a: [], b: []})
+		req.body = {b: []}
+		await combineToAsync(
+			transformer(['a[]', 'b[]'], {rawPath: true})
+				.transform(jest.fn(), {validateOnly: true, force: true})
+		)(req, undefined as unknown as Response)
+		expect(req.body).toEqual({a: [], b: []})
+	})
+
 	test('throw error in array transformer', async () => {
 		const req = {
 			body: {key: undefined}

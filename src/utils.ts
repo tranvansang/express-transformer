@@ -65,45 +65,49 @@ const getArrayOrAssignEmpty = (
 // mostly clone the implementation of subTransform
 // check and fix the data shape
 const validateDataShape = <Options>(
-	obj: any,
+	req: Request,
+	locationSplits: string[],
 	prefixes: Array<string | number>,
 	[firstArray, ...arrays]: string[],
 	lastPath: string | number,
 	transformerOptions: Options & ITransformerOptions,
-	transformOptions: ITransformOptions
+	options: ITransformOptions
 ) => {
-	const {rawPath} = transformerOptions
+	const {force} = options
+	const {rawPath, disableArrayNotation} = transformerOptions
 	if (firstArray) {
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
-		const values = getArrayOrAssignEmpty(obj, newPrefixes, !!transformOptions.force)
+		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
 		for (let i = 0; i < values.length; i++) if (validateDataShape(
-			obj,
+			req,
+			locationSplits,
 			[...newPrefixes, i],
 			arrays,
 			lastPath,
 			transformerOptions,
-			transformOptions
+			options
 		)) return true
 		return false
 	}
-	if (!transformerOptions.rawPath && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
+	if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
 		// last selector is an array selector
 		const lastPathBase = lastPath.slice(0, lastPath.length - 2)
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, lastPathBase)]
-		const values = getArrayOrAssignEmpty(obj, newPrefixes, !!transformOptions.force)
+		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
 		// to achieve a 100% coverage, change to the following
 		// values.length && doesValueExist(..., String(0), ...)
 		for (let i = 0; i < values.length; i++) if (validateDataShape(
-			obj,
+			req,
+			locationSplits,
 			[...prefixes, ...splitPath(!!rawPath, lastPathBase)],
 			arrays,
 			i,
 			transformerOptions,
-			transformOptions
+			options
 		)) return true
 		return false
 	}
-	return recursiveHas(obj, [...prefixes, lastPath])
+	return recursiveHas(req, [...locationSplits, ...prefixes, lastPath])
 }
 
 /**
@@ -115,13 +119,13 @@ const validateDataShape = <Options>(
 const subTransform = async <T, V, Options>(
 	req: Request,
 	locationSplits: string[],
-	message: IMessageCallback<T, Options> | undefined,
-	options: ITransformOptions,
 	prefixes: Array<string | number>,
 	[firstArray, ...arrays]: string[],
 	lastPath: string | number,
+	transformerOptions: Options & ITransformerOptions,
+	options: ITransformOptions,
 	callback: ITransformCallbackSingular<T, V, Options>,
-	transformerOptions: Options & ITransformerOptions
+	message: IMessageCallback<T, Options> | undefined
 ) => {
 	const {force} = options
 	const {rawPath, disableArrayNotation} = transformerOptions
@@ -131,13 +135,13 @@ const subTransform = async <T, V, Options>(
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			locationSplits,
-			message,
-			options,
 			[...newPrefixes, i],
 			arrays,
 			lastPath,
+			transformerOptions,
+			options,
 			callback,
-			transformerOptions
+			message,
 		)
 	} else if (!disableArrayNotation && typeof lastPath !== 'number' && /\[]$/.test(lastPath)) {
 		// last selector is an array selector
@@ -151,13 +155,13 @@ const subTransform = async <T, V, Options>(
 		for (let i = 0; i < values.length; i++) await subTransform(
 			req,
 			locationSplits,
-			message,
-			options,
 			[...prefixes, ...lastPathBaseSplits],
 			arrays,
 			i,
+			transformerOptions,
+			options,
 			callback,
-			transformerOptions
+			message,
 		)
 	} else {
 		const newSplits = [...prefixes, ...splitPath(!!rawPath, lastPath)]
@@ -207,13 +211,13 @@ export const doTransform = async <T, V, Options>(
 		await subTransform(
 			req,
 			locationSplits,
-			message,
-			transformOptions,
 			[],
 			subPathArrays.slice(0, subPathArrays.length - 1),
 			subPathArrays[subPathArrays.length - 1],
+			transformerOptions,
+			transformOptions,
 			cb,
-			transformerOptions
+			message,
 		)
 	}
 	if (!Array.isArray(path)) await makeSub(
@@ -242,6 +246,7 @@ export const doTransform = async <T, V, Options>(
 			return validateDataShape(
 				req,
 				locationSplits,
+				[],
 				subPathArrays.slice(0, subPathArrays.length - 1),
 				subPathArrays[subPathArrays.length - 1],
 				transformerOptions,
