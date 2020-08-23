@@ -68,7 +68,7 @@ const getArrayOrAssignEmpty = (
  * @param arrays the remaining array prefixes
  * @param lastPath last path
  */
-const iterateObject = async <T, V, Options>(
+const iterateObjectSub = async <T, V, Options>(
 	req: Request,
 	locationSplits: string[],
 	prefixes: Array<string | number>,
@@ -84,7 +84,7 @@ const iterateObject = async <T, V, Options>(
 	if (firstArray) {
 		const newPrefixes = [...prefixes, ...splitPath(!!rawPath, firstArray)]
 		const values = getArrayOrAssignEmpty(req, [...locationSplits, ...newPrefixes], !!force)
-		for (let i = 0; i < values.length; i++) if (!await iterateObject(
+		for (let i = 0; i < values.length; i++) if (!await iterateObjectSub(
 			req,
 			locationSplits,
 			[...newPrefixes, i],
@@ -106,7 +106,7 @@ const iterateObject = async <T, V, Options>(
 			[...locationSplits, ...newPrefixes],
 			!!force
 		)
-		for (let i = 0; i < values.length; i++) if (!await iterateObject(
+		for (let i = 0; i < values.length; i++) if (!await iterateObjectSub(
 			req,
 			locationSplits,
 			newPrefixes,
@@ -131,6 +131,29 @@ const iterateObject = async <T, V, Options>(
 				req}
 		)
 		: false
+}
+const iterateObject = async <T, V, Options>(
+	req: Request,
+	locationSplits: string[],
+	path: string,
+	transformerOptions: Options & ITransformerOptions,
+	options: ITransformOptions,
+	callback: ITransformCallbackSingular<T, boolean, Options>,
+	message?: IMessageCallback<T, Options> | undefined
+) => {
+	const {disableArrayNotation} = transformerOptions
+	const pathArrays = disableArrayNotation ? [path] : path.split('[].') // only split arrays in middle
+	return await iterateObjectSub(
+		req,
+		locationSplits,
+		[],
+		pathArrays.slice(0, pathArrays.length - 1),
+		pathArrays[pathArrays.length - 1],
+		transformerOptions,
+		options,
+		callback,
+		message,
+	)
 }
 
 const throwError = async <T, Options>(
@@ -162,20 +185,15 @@ export const doTransform = async <T, V, Options>(
 		subPath: string,
 		cb: ITransformCallbackSingular<T, boolean, Options>,
 		transformOptions: ITransformOptions
-	) => {
-		const subPathArrays = disableArrayNotation ? [subPath] : subPath.split('[].') // only split arrays in middle
-		await iterateObject(
-			req,
-			locationSplits,
-			[],
-			subPathArrays.slice(0, subPathArrays.length - 1),
-			subPathArrays[subPathArrays.length - 1],
-			transformerOptions,
-			transformOptions,
-			cb,
-			message,
-		)
-	}
+	) => iterateObject(
+		req,
+		locationSplits,
+		subPath,
+		transformerOptions,
+		transformOptions,
+		cb,
+		message,
+	)
 	if (!Array.isArray(path)) await makeSub(
 		path,
 		async (value, info) => {
@@ -199,13 +217,10 @@ export const doTransform = async <T, V, Options>(
 	else {
 		let anyExist = false
 		for (const subPath of path) {
-			const subPathArrays = disableArrayNotation ? [subPath] : subPath.split('[].') // only split arrays in middle
 			if (await iterateObject(
 				req,
 				locationSplits,
-				[],
-				subPathArrays.slice(0, subPathArrays.length - 1),
-				subPathArrays[subPathArrays.length - 1],
+				subPath,
 				transformerOptions,
 				options,
 				() => true
