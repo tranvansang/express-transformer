@@ -160,7 +160,7 @@ app.get('/products/set-categories',
 ```javascript
 app.get('/products/set-categories',
 	transformer('products[].config.categories[]')
-        .transform(() => void 0, {validateOnly: true}), // what is 'void 0'? Because I am too lazy to type 'undefined'.
+        .transform(() => void 0, {validateOnly: true}), // why is 'void 0'? Because I am too lazy to type 'undefined'.
 	(req, res) => {
         // The following for-loop will NEVER throw any error with ANY (malformed) input data.
         //req.body.products, if exists, will be ensured to be in array type
@@ -174,13 +174,35 @@ app.get('/products/set-categories',
 )
 ```
 
+- **This library is built with a strict security concern in mind,
+it should work in almost any condition with almost any malformed input data**
+It also ensures you the data format (when `force` is true, or array of paths is used with at least one element exists).
+
+*If you find this is not correct, please fire a bug issue.*
+
+Once the input data passes all transformations/validations, you can freely use the value specified by path at any depth level.
+
+For example, with `transformer('review.stars').exists().toInt()`, in all handlers following after,
+you can freely use `req.body.review.stars` without worrying about what the input was initially.
+
+For instance, if the input was `req = {body: {review: 'foo'}}`, calling `req.body.review.stars` without checking will
+throw an error, and may break your app.
+However, the transformation automatically detects the pattern you require and changes the value for you.
+
+- Another malformed input data pattern.
+
+Consider the input with the data `req = {body: {reviews: {0: {stars: 7}}}}`, and the transformer `transformer('reviews[].stars').exists()`, 
+Without the transformer, there will be no error when accessing `req.body.reviews[0].stars`.
+
+However, because array notation is specified after the `reviews` key, the input is reset to an empty array, and becomes `{reviews: []}`.
+
 - Conditional transformation/validation.
 ```javascript
 app.post(
     '/order/:id',
     (req, res, next) => {
-        // if rejected is true, must provide reason
-        if (req.body.rejected) transformer('reason').exists()(req, res, next)
+        // if returned is true, reason must be provided
+        if (req.body.returned) transformer('reason').exists()(req, res, next)
         else next()
     }
 )
@@ -284,7 +306,7 @@ app.post(
     transformer('postalCode').use([
         ['exists'],
         ['isType', 'string'],
-        [postalCode]
+        ['isPostalCode'] // this plugin must be added before
     ]),
 )
 ```
@@ -314,7 +336,14 @@ app.post(
         ['exists'],
         [isType, 'string'],
         [isPostalCode],
-        ['transform', async (postalCode, {req}) => {req.address = await postalToAddress(postalCode)}, {validateOnly: true}],
+        [
+            'transform',
+            async (postalCode, {req}) => {
+                // the req object is available during the transformation
+                (req.locals ||= {}).address = await postalToAddress(postalCode)
+            },
+            {validateOnly: true}
+        ],
     ])
 )
 ```
@@ -343,7 +372,7 @@ const {
 
 Note: *`.message`is not a plugin*.
 
-- Interestingly, `.use` is itself a plugin.
+- Interestingly, `.use` itself is a plugin.
 
 ```javascript
 transformer('page', {location: 'param'}).use([
@@ -352,7 +381,7 @@ transformer('page', {location: 'param'}).use([
 ])
 ```
 
-- By this way, you can save the configuration to reuse.
+- By this way, you can save the configuration for reuses.
 
 ```javascript
 const requiredString = len => [
@@ -393,27 +422,36 @@ app.post('/update', chainTransformations('firstName', [
 ]))
 ```
 
-- **This library is built with a strict security concern in mind,
-it should work in almost any condition with almost any malformed input data**
-It also ensures you the data format (when `force` is true, or array of paths is used with at least one element exists).
+- Access various information during the transformation.
 
-*If you find this is not correct, please fire a bug issue.*
+*Note: the comments in the code are for the general cases.*
 
-Once the input data passes all transformations/validations, you can freely use the value specified by path at any depth level.
-
-For example, with `transformer('review.stars').exists().toInt()`, in all handlers following after,
-you can freely use `req.body.review.stars` without worrying about what the input was initially.
-
-For instance, if the input was `req = {body: {review: 'foo'}}`, calling `req.body.review.stars` without checking will
-throw an error, and may break your app.
-However, the transformation automatically detects the pattern you require and changes the value for you.
-
-- Another malformed input data pattern.
-
-Consider the input with the data `req = {body: {reviews: {0: {stars: 7}}}}`, and the transformer `transformer('reviews[].stars').exists()`, 
-Without the transformer, there will be no error when accessing `req.body.reviews[0].stars`.
-
-However, because array notation is specified after `reviews` key, the input is reset to an empty array, and becomes `{reviews: []}`.
+```javascript
+app.post(
+    '/update',
+    transformer('postalCode')
+        .exists()
+        .isType('string')
+        .matches(/^\d{3}-\d{4}$/)
+        .transform(async (
+            postalCode, // value or array of value
+            {
+                req, // the req
+                path, // string or array of string
+                pathSplits, // array of string or array of array of string
+                options: {
+                    location, // string
+                    rawPath, // boolean
+                    rawLocation, // boolean
+                    disableArrayNotation // boolean
+                }
+            }
+        ) => {
+            // the req object is available during the transformation
+            (req.locals ||= {}).address = await postalToAddress(postalCode)
+        }, {validateOnly: true})
+)
+```
 
 - And more ready-to-use validators/transformers, namely:
     - `.exists()`
