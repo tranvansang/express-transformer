@@ -160,7 +160,7 @@ app.get('/products/set-categories',
 ```javascript
 app.get('/products/set-categories',
 	transformer('products[].config.categories[]')
-        .transform(() => void 0, {validateOnly: true}),
+        .transform(() => void 0, {validateOnly: true}), // what is 'void 0'? Because I am too lazy to type 'undefined'.
 	(req, res) => {
         // The following for-loop will NEVER throw any error with ANY (malformed) input data.
         //req.body.products, if exists, will be ensured to be in array type
