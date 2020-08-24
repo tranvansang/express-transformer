@@ -391,7 +391,7 @@ const requiredString = len => [
     ['isType', 'string'],
     ['message', 'invalid input type']
     ['isLength', {max: len}],
-    ['message', (_, {path}) => `${path} must be at most ${len}`]
+    ['message', (_, {path}) => `${path} must be at most ${len} characters`]
 ]
 app.post('/update',
     transformer('first').use(requiredString(50)),
