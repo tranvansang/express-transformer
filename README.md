@@ -489,7 +489,7 @@ Instead, it adds methods by plugins via calling `addTransformerPlugin`.
 For example: `.message`, `.transform`, `.isEmail`, `.exists`, `.defaultValue`, `.toInt`, ...
 Check the Plugins section below for more information.
 
-All methods from any transformation chain, including the methods defined by plugins and the internally implemented method (`.message()`), always return the chain itself.
+All methods in the transformation chain always return the chain itself.
 It is possible and highly recommended to add transformations to the chain in the **chain**ing style.
 For example: `chain.exists().isEmail().transform(emailToUser).message('Email not found')`
 
