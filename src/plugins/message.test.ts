@@ -84,7 +84,7 @@ describe('Transform Plugins', () => {
 		)(req as Request, undefined as unknown as Response)
 		expect(console.warn.mock.calls.length).toBe(1)
 
-		console.warn = jest.fn()
+		console.warn.mockClear()
 		await combineToAsync(
 			transformer(['k1[].a1[].a2', 'k2[]', 'k3.c3[]'])
 				.message('1')
@@ -93,5 +93,25 @@ describe('Transform Plugins', () => {
 				.message('1', {disableOverwriteWarning: true}),
 		)(req as Request, undefined as unknown as Response)
 		expect(console.warn.mock.calls.length).toBe(0)
+
+		console.warn.mockClear()
+		await combineToAsync(
+			transformer(['k1[].a1[].a2', 'k2[]', 'k3.c3[]'])
+				.message('1')
+				.message('1')
+		)(req as Request, undefined as unknown as Response)
+		expect(console.warn.mock.calls.length).toBe(0)
+
+		req.body.a = 1
+		console.warn.mockClear()
+		await combineToAsync(
+			transformer('a')
+				.use([
+					['transform', jest.fn()],
+					['message', '1'],
+					['message', '1']
+				])
+		)(req as Request, undefined as unknown as Response)
+		expect(console.warn.mock.calls.length).toBe(1)
 	})
 })
