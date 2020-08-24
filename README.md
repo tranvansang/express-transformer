@@ -643,16 +643,16 @@ These plugins probably change the inputs in the paths. In other words, they have
     - `after?: Date | string | number | bigint`
     - `notBefore?: Date | string | number | bigint`
     - `notAfter?: Date | string | number | bigint`
-- `chain.toFloat(options?: {min?: number, max?: number, force?: boolean})`: convert the input to a number.
-    Throw an error if the input is an invalid number (using `!isNaN()` and `isFinite`) or cannot be parsed to a number.
+- `chain.toFloat(options?: {min?: number, max?: number, acceptInfinity?: boolean, force?: boolean})`: convert the input to a number.
+    Throw an error if the input is an invalid number (using `!isNaN()` and `isFinite` (if `acceptInfinity` is `false`)) or cannot be parsed to a number.
     Support range checking with the `min`, `max` in the options.
     
-    Note: `bigint` value is converted to `number`. `NaN`, `Infinity`, and `-Infinity` are invalid values.
+    Note: `bigint` value is converted to `number`. `NaN` is an invalid value.
 - `chain.toInt(options?: {min, max, force})`: convert the input to an integer number.
-    Throw an error if the input is an invalid number (using `!isNaN()` and `isFinite`) or cannot be parsed to a number.
+    Throw an error if the input is an invalid number (using `!isNaN()` and `isFinite` (if `acceptInfinity` is `false`)) or cannot be parsed to a number.
     Support range checking with the `min`, `max` in the options.
     
-    Note: `bigint` value is converted to `number`. `NaN`, `Infinity`, and `-Infinity` are invalid values.
+    Note: `bigint` value is converted to `number`. `NaN` is an invalid value.
 - `chain.trim()`: trim value if it exists and is in string format. This transformer never throws any error.
 - `chain.use(pluginConfigs: Array<[ITransformPlugin | string, ...any[]]>)`: combine multiple plugins. Parameters:
 

@@ -2,23 +2,22 @@ import TransformationError from '../TransformationError'
 import {ITransformCallbackInfo, ITransformOptions, ITransformPlugin} from '../interfaces'
 import {isValidNumber} from '../utils'
 
+type ToIntOptions = {
+	min?: number
+	max?: number
+	acceptInfinity?: boolean
+}
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			toInt(options?: {
-				min?: number
-				max?: number
-			} & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, number, Options>
+			toInt(options?: ToIntOptions & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, number, Options>
 		}
 	}
 }
 
 export default {
 	name: 'toInt',
-	getConfig({min, max, ...options}: {
-		min?: number
-		max?: number
-	} & Omit<ITransformOptions, 'validateOnly'> = {}) {
+	getConfig({min, max, acceptInfinity, ...options}: ToIntOptions & Omit<ITransformOptions, 'validateOnly'> = {}) {
 		return {
 			transform<T, V, Options>(value: T, info: ITransformCallbackInfo<Options>) {
 				const {path} = info
@@ -29,7 +28,7 @@ export default {
 					? parseInt(value as string)
 					: Math.trunc(typeof value === 'number' ? value as number : Number(value))
 				if (
-					!isValidNumber(intValue)
+					!isValidNumber(intValue, !!acceptInfinity)
 				) throw new TransformationError(`${path} must be a valid integer`, info)
 				if (
 					min !== undefined && intValue < min

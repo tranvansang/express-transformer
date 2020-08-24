@@ -1,5 +1,6 @@
 import TransformationError from '../TransformationError'
 import {ITransformOptions, ITransformPlugin} from '../interfaces'
+import {isValidNumber} from '../utils'
 
 declare global {
 	namespace ExpressTransformer {
@@ -25,7 +26,7 @@ export default {
 		let max: number | undefined
 		if (typeof options !== 'object') {
 			const number = typeof options === 'string' ? parseFloat(options) : options
-			if (!isNaN(number)) {
+			if (isValidNumber(number, true)) {
 				min = number
 				max = number
 			}

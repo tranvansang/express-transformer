@@ -38,5 +38,14 @@ describe('Transform Plugins', () => {
 			transformer('key').toInt({force: true}),
 		)(req as Request, undefined as unknown as Response))
 		expect(req.body.key).toBe(undefined)
+
+		req.body.key = Infinity
+		await flipPromise(combineToAsync(
+			transformer('key').toFloat(),
+		)(req as Request, undefined as unknown as Response))
+
+		await combineToAsync(
+			transformer('key').toFloat({acceptInfinity: true}),
+		)(req as Request, undefined as unknown as Response)
 	})
 })

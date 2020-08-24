@@ -30,7 +30,7 @@ const toDate = <T>(name: string, value?: T) => {
 	) throw new Error(`${name} must be in date, string, or number format`)
 	if (value instanceof Date) {
 		if (
-			!isValidNumber(value.getTime())
+			!isValidNumber(value.getTime(), false)
 		) throw new Error(`${name} is an invalid Date object`)
 		return value
 	}
@@ -40,7 +40,7 @@ const toDate = <T>(name: string, value?: T) => {
 			? new Date(value as number).getTime()
 			: new Date(Number(value)).getTime()
 	if (
-		!isValidNumber(time)
+		!isValidNumber(time, false)
 	) throw new Error(`${name} cannot be converted to date`)
 	return new Date(time)
 }
@@ -73,7 +73,7 @@ export default {
 				let date
 				if (value instanceof Date) {
 					if (
-						!isValidNumber(value.getTime())
+						!isValidNumber(value.getTime(), false)
 					) throw new TransformationError(`${info.path} is an invalid date object`, info)
 					if (copy) date = new Date(value.getTime())
 					else date = value
@@ -84,7 +84,7 @@ export default {
 							? new Date(value as number).getTime()
 							: new Date(Number(value)).getTime()
 					if (
-						!isValidNumber(time)
+						!isValidNumber(time, false)
 					) throw new TransformationError(`${info.path} cannot be converted to Date`, info)
 					date = new Date(time)
 				}
