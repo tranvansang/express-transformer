@@ -34,11 +34,11 @@ const {transformer} = require('express-transformer')
 
 const app = express()
 app.post('/login',
-	transformer('username').exists(),
-	transformer('password').exists(),
-	(req, res, next) => {
+    transformer('username').exists(),
+    transformer('password').exists(),
+    (req, res, next) => {
         //req.body.age and req.body.password must exist, for sure
-	})
+    })
 app.listen(3000)
 ```
 
@@ -49,78 +49,78 @@ const {transformer} = require('express-transformer')
 
 const app = express()
 app.post('/signup',
-	transformer('username').exists(),
-	transformer('password').exists(),
-	transformer(['password', 'passwordConfirm']).transform(([password, passwordConfirm]) => {
+    transformer('username').exists(),
+    transformer('password').exists(),
+    transformer(['password', 'passwordConfirm']).transform(([password, passwordConfirm]) => {
         if (password !== passwordConfirm) throw new Error('Passwords do not match')
     }, {validateOnly: true}),
-	(req, res, next) => {
+    (req, res, next) => {
         //req.body.age and req.body.password exist
         //and, req.body.password === req.body.passwordConfirm
-	})
+    })
 app.listen(3000)
 ```
 
 - Convert the 1-base `page` **string** parameter in the query to a 0-base **number**.
 ```javascript
 app.get('/article',
-	transformer('page', {location: 'query'})
-		.defaultValue(1)
-		.toInt({min: 1})
-		.transform(val => val - 1),
-	(req, res, next) => {}
+    transformer('page', {location: 'query'})
+        .defaultValue(1)
+        .toInt({min: 1})
+        .transform(val => val - 1),
+    (req, res, next) => {}
 )
 ```
 
 - Check password length and validate email format, a more complicated, but obviously common case.
 ```javascript
 app.post('/signup',
-	transformer('email')
-		.exists()
+    transformer('email')
+        .exists()
         .message('Please provide email')
         .isEmail()
         .message('Unrecognized email')
-		.transform(async email => { // transformer function can be async
-			if (await User.findByEmail(email).exec()) throw new Error('Email already existed')
-		}, {validateOnly: true}),
-	transformer(['password', 'passwordConfirm'], {validateOnly: true})
-		.exists()
-		.trim()
-		.isLength({min: 8})
-        .message('Password is too short')
-		.transform(([password, passwordConfirm]) => {
-			if (password !== passwordConfirm) throw new Error('Passwords do not match')
+        .transform(async email => { // transformer function can be async
+            if (await User.findByEmail(email).exec()) throw new Error('Email already existed')
         }, {validateOnly: true}),
-	(req, res, next) => {}
+    transformer(['password', 'passwordConfirm'], {validateOnly: true})
+        .exists()
+        .trim()
+        .isLength({min: 8})
+        .message('Password is too short')
+        .transform(([password, passwordConfirm]) => {
+            if (password !== passwordConfirm) throw new Error('Passwords do not match')
+        }, {validateOnly: true}),
+    (req, res, next) => {}
 )
 ```
 
 - Convert an id to a user object.
 ```javascript
 app.get('/user/:id',
-	transformer('id', {location: 'params'})
+    transformer('id', {location: 'params'})
         .matches(/^[a-f\d]{24}$/i)
         .message('Invalid user id format')
-		.transform(async id => {
-			const user = await User.findById(id).exec()
-			if (user) throw new Error('Incorrect id')
+        .transform(async id => {
+            const user = await User.findById(id).exec()
+            if (user) throw new Error('Incorrect id')
             return user //req.params.id will become the `user` object
-		})
+        })
         .message(async id => { // the message function can also be async
             return `${id} is not a valid user id`
         }),
-	(req, res) => {res.status(200).json(req.params.id.toJSON())}
+    (req, res) => {res.status(200).json(req.params.id.toJSON())}
 )
 ```
 
 - Check token.
 ```javascript
 app.get('/admin/update',
-	transformer('token')
+    transformer('token')
         .exists()
         .is('secret-value')
         .message('Invalid credential', {global: true}),
-	(req, res) => {}
+    (req, res) => {}
 )
 ```
 
@@ -141,14 +141,14 @@ transformer(['me.favorites[]', 'posts[].meta.comments[].likes[]', 'credits'])
 - **Force the input data shape.**
 ```javascript
 app.get('/products/set-categories',
-	transformer('products[].config.categories[]')
+    transformer('products[].config.categories[]')
         .transform(() => void 0, {validateOnly: true, force: true}),
-	(req, res) => {
+    (req, res) => {
         // Setting force = true ensures that the following for-loop will
         // NEVER throw any error with ANY (malformed) input data.
         for (const {config: {categories}} of req.body.products) {
             for (const category of categories) {
-            	console.log(category)
+                console.log(category)
             }
         }
     }
@@ -159,15 +159,15 @@ app.get('/products/set-categories',
 
 ```javascript
 app.get('/products/set-categories',
-	transformer('products[].config.categories[]')
+    transformer('products[].config.categories[]')
         .transform(() => void 0, {validateOnly: true}), // why is 'void 0'? Because I am too lazy to type 'undefined'.
-	(req, res) => {
+    (req, res) => {
         // The following for-loop will NEVER throw any error with ANY (malformed) input data.
         //req.body.products, if exists, will be ensured to be in array type
         for (const {config: {categories}} of req.body.products || []) {
             // categories, if exists, will be ensured to be in array type
             for (const category of categories || []) {
-            	console.log(category)
+                console.log(category)
             }
         }
     }
@@ -258,11 +258,11 @@ app.post(
 
 ```typescript
 declare global {
-	namespace ExpressTransformer {
-		export interface ITransformer<T, V, Options> {
-			isPostalCode(): ITransformer<T, string, Options>
-		}
-	}
+    namespace ExpressTransformer {
+        export interface ITransformer<T, V, Options> {
+            isPostalCode(): ITransformer<T, string, Options>
+        }
+    }
 }
 ```
 
@@ -354,22 +354,22 @@ All default plugins are exported and available to be used in this way (or you ca
 
 ```
 const {
-	transform,
-	exists,
-	isIn,
-	isEmail,
-	isLength,
-	matches,
+    transform,
+    exists,
+    isIn,
+    isEmail,
+    isLength,
+    matches,
     message,
-	toDate,
-	toFloat,
-	toInt,
-	trim,
-	defaultValue,
-	is,
-	isArray,
-	isType,
-	use
+    toDate,
+    toFloat,
+    toInt,
+    trim,
+    defaultValue,
+    is,
+    isArray,
+    isType,
+    use
 } = require('express-transformer')
 ```
 
@@ -601,15 +601,15 @@ These plugins only validate, do not change the inputs in the paths. In other wor
     `options` is an optional object with the following properties
 
     - `force?: boolean`
-	- `allowDisplayName?: boolean`
-	- `requireDisplayName?: boolean`
-	- `allowUtf8LocalPart?: boolean`
-	- `requireTld?: boolean`
-	- `ignoreMaxLength?: boolean`
-	- `domainSpecificValidation?: boolean`
-	- `allowIpDomain?: boolean`
-	
-	Please consult the [validator](https://www.npmjs.com/package/validator) package for more details.
+    - `allowDisplayName?: boolean`
+    - `requireDisplayName?: boolean`
+    - `allowUtf8LocalPart?: boolean`
+    - `requireTld?: boolean`
+    - `ignoreMaxLength?: boolean`
+    - `domainSpecificValidation?: boolean`
+    - `allowIpDomain?: boolean`
+    
+    Please consult the [validator](https://www.npmjs.com/package/validator) package for more details.
 - `chain.isIn(values, options?: {force?: boolean})`: check if the input is in the provided `values` list.
 - `chain.isLength(options, transformOptions?: {force?: boolean})`: check the input's length.
     If the input is an array, check for the number of its elements.
@@ -714,14 +714,14 @@ The transformation chain's interface can be exported via namespace and a global 
 
 ```typescript
 declare global {
-	namespace ExpressTransformer {
-		export interface ITransformer<T, V, Options> {
-			isPostalCode(
-				value: T,
-				options?: {force?: boolean}
-			): ITransformer<T, string, Options>
-		}
-	}
+    namespace ExpressTransformer {
+        export interface ITransformer<T, V, Options> {
+            isPostalCode(
+                value: T,
+                options?: {force?: boolean}
+            ): ITransformer<T, string, Options>
+        }
+    }
 }
 ```
 
