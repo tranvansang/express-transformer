@@ -695,7 +695,8 @@ Consult the [validator](https://www.npmjs.com/package/validator) package for mor
     - `(required) transform: Function`: a function which accepts the same parameters as of `chain.transform`.
     - `(optional) options: Object`: the options object which will be passed to `.transform()`.
      It is highly recommended to set `validateOnly` option here to explicitly indicate that your plugin is a validator or a transformer.
-- `(optional) updateStack: stack => void`: for internal plugins (such as `.message`) which modify the transformation stack.
+    - `(optional) updateStack: stack => void`: for internal plugins (such as `.message`) which modify the transformation stack.
+        This method, if exists, is executed before `transform`, if exists.
      
 It is recommended to make use of the exported `TransformationError` error when throwing an error.
 
