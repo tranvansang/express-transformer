@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {Request, Response} from 'express'
 import {combineToAsync} from 'middleware-async'
-import {addTransformerPlugin, transformer} from '../transformer'
+import {addTransformerPlugin, message, transformer} from '../transformer'
 import flipPromise from 'flip-promise'
 import exists from './exists'
 import isLength from './isLength'
@@ -100,6 +100,19 @@ describe('Transform Plugin', () => {
 				[exists],
 				['use', [
 					['message', 'custom message'],
+				]],
+			]),
+		)(req as Request, undefined as unknown as Response))
+		expect(err.message).toBe('custom message')
+	})
+
+	test('use with message (object ver)', async () => {
+		const req = {body: {} }
+		const err = await flipPromise(combineToAsync(
+			transformer('key').use([
+				[exists],
+				['use', [
+					[message, 'custom message'],
 				]],
 			]),
 		)(req as Request, undefined as unknown as Response))
