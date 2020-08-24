@@ -11,14 +11,13 @@ import defaultValue from './plugins/defaultValue'
 import isEmail from './plugins/isEmail'
 import asyncMiddleware from 'middleware-async'
 import {
-	IMessageCallback,
-	ITransformCallback,
+	ITransformation,
 	ITransformCallbackInfo,
 	ITransformer,
 	ITransformerOptions,
-	ITransformOptions,
 	ITransformPlugin,
-	ITransformPluginConfig, MaybeArray
+	ITransformPluginConfig,
+	MaybeArray
 } from './interfaces'
 import {doTransform, recursiveGet, recursiveHas, recursiveSet} from './utils'
 import is from './plugins/is'
@@ -27,12 +26,14 @@ import isType from './plugins/isType'
 import transform from './plugins/transform'
 import use from './plugins/use'
 import plugins from './plugins'
+import message from './plugins/message'
 
 export {
 	TransformationError,
 	recursiveGet,
 	recursiveSet,
 	recursiveHas,
+	message,
 	transform,
 	exists,
 	isIn,
@@ -56,6 +57,7 @@ export const addTransformerPlugin = (plugin: ITransformPlugin) => {
 	plugins.push(plugin)
 }
 
+addTransformerPlugin(message)
 addTransformerPlugin(transform)
 addTransformerPlugin(use)
 addTransformerPlugin(exists)
@@ -74,8 +76,6 @@ addTransformerPlugin(isType)
 
 type PluginName = 'defaultValue'
 
-//NOTE: transformer ignores value that is not provided by default.
-//Check their existence via .exists() or set {force: true} option in .transform(callback, options)
 export const transformer = <T, V, Options>(
 	path: string | string[],
 	transformerOptions?: Options & ITransformerOptions
@@ -83,48 +83,27 @@ export const transformer = <T, V, Options>(
 	transformerOptions ||= {} as Options & ITransformerOptions
 	transformerOptions.location ||= 'body'
 	const { location } = transformerOptions
-	const stack: Array<{
-		callback: ITransformCallback<T, V, Options>
-		message?: IMessageCallback<T, Options>
-		options?: ITransformOptions
-	}> = []
+	const stack = [] as ITransformation<T, V, Options>[]
 	const middleware = asyncMiddleware(async (req, res, next) => {
 		for (
-			const {callback, options, message} of stack
+			const {callback, options, message: msg} of stack
 		) await doTransform(
 			req,
 			location,
 			path,
 			callback,
 			options,
-			message,
+			msg,
 			transformerOptions!
 		)
 		next()
 	}) as ITransformer<T, V, Options>
-	middleware.message = (
-		callback,
-		{global, disableOverwriteWarning} = {}
-	) => {
-		if (stack.length) {
-			if (stack[stack.length - 1].message) {
-				// eslint-disable-next-line no-console
-				if (!disableOverwriteWarning) console.warn(
-					'You are specify the .message twice for a same transformation.'
-					+ ' Only the last .message is applied.'
-					+ ' To disable this warning, please set disableOverwriteWarning in the option.'
-				)
-			}
-			stack[stack.length - 1].message = callback
-		}
-		if (global) for (const transformation of stack) if (!transformation.message) transformation.message = callback
-		return middleware
-	}
 	const addPluginConfig = (configs: MaybeArray<ITransformPluginConfig>) => {
 		if (Array.isArray(configs)) for (const config of configs) addPluginConfig(config)
 		else {
-			const {options, transform: cb} = configs
-			stack.push({
+			const {options, transform: cb, updateStack} = configs
+			updateStack?.(stack)
+			if (cb) stack.push({
 				callback: (
 					value: T | T[],
 					info: ITransformCallbackInfo<Options>
@@ -136,8 +115,7 @@ export const transformer = <T, V, Options>(
 	for (
 		const {name, getConfig} of plugins
 	) middleware[name as PluginName] = <Params extends []>(...params: Params) => {
-		const config = getConfig(...params)
-		addPluginConfig(config)
+		addPluginConfig(getConfig(...params))
 		return middleware
 	}
 	return middleware

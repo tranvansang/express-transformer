@@ -92,4 +92,17 @@ describe('Transform Plugin', () => {
 		)(req as Request, undefined as unknown as Response)
 		expect(req.body.key).toBe(2)
 	})
+
+	test('use with message', async () => {
+		const req = {body: {} }
+		const err = await flipPromise(combineToAsync(
+			transformer('key').use([
+				[exists],
+				['use', [
+					['message', 'custom message'],
+				]],
+			]),
+		)(req as Request, undefined as unknown as Response))
+		expect(err.message).toBe('custom message')
+	})
 })

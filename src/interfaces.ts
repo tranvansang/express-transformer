@@ -6,12 +6,8 @@ type IRequestHandlerArray = ReadonlyArray<IRequestHandler>
 
 declare global {
 	namespace ExpressTransformer {
-		export interface ITransformer<T, V, Options> extends RequestHandler {
-			message(
-				callback: IMessageCallback<T, Options>,
-				options?: IMessageOptions
-			): ITransformer<T, V, Options>
-		}
+		// eslint-disable-next-line @typescript-eslint/no-empty-interface
+		export interface ITransformer<T, V, Options> extends RequestHandler {}
 	}
 }
 
@@ -54,24 +50,27 @@ export type ITransformCallback<T, V, Options> = ITransformCallbackSingular<T, V,
 	| ITransformCallbackPlural<T, V, Options>
 export type IMessageCallback<T, Options> = string
 	| ((value: T | T[], options: ITransformCallbackInfo<Options>) => Promisable<string>)
-export type IMessageOptions = {
-	global?: boolean
-	disableOverwriteWarning?: boolean
-}
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ITransformer<T, V, Options> extends ExpressTransformer.ITransformer<T, V, Options> {}
 
 export type MaybeArray<T> = T | Array<T>
 export type ITransformPluginConfig = {
-	transform<T, V, Options>(
+	transform?: <T, V, Options>(
 		value: T | T[], callbackOptions: ITransformCallbackInfo<Options>
-	): Promisable<T | T[] | V | V[] | void>
+	) => Promisable<T | T[] | V | V[] | void>
 	options?: ITransformOptions
+	updateStack?: <T, V, Options>(stack: ITransformation<T, V, Options>[]) => void // run before transform
 }
 export type ITransformPlugin = {
 	name: string
 	getConfig: <Params extends []>(
 		...params: Params
 	) => MaybeArray<ITransformPluginConfig>
+}
+
+export type ITransformation<T, V, Options> = {
+	callback: ITransformCallback<T, V, Options>
+	message?: IMessageCallback<T, Options>
+	options?: ITransformOptions
 }
