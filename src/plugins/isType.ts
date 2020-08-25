@@ -2,10 +2,23 @@ import {ITransformOptions, ITransformPlugin} from '../interfaces'
 import {TransformationError} from '../transformer'
 
 type JSType = 'string' | 'number' | 'boolean' | 'function' | 'bigint' | 'object' | 'undefined' | 'symbol'
+type JSTypeToType = {
+	string: string
+	number: number
+	boolean: boolean
+	function: (...args: any[]) => any
+	bigint: bigint
+	object: any | null
+	undefined: undefined
+	symbol: symbol
+}
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			isType(type: JSType, options?: Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, T, Options>
+			isType<Type extends JSType>(
+				type: Type,
+				options?: Omit<ITransformOptions, 'validateOnly'>
+			): ITransformer<T, T & JSTypeToType[Type], Options>
 		}
 	}
 }
