@@ -17,7 +17,7 @@ describe('Transform Plugins', () => {
 		for (const val of [0, false, true, 1, 'hii'])
 			await combineToAsync(
 				transformer('key').exists(),
-			)
+			)({body: {key: val}} as Request, undefined as unknown as Response)
 		await combineToAsync(
 			transformer('key').exists({acceptEmptyString: true}),
 		)({body: {key: ''}} as Request, undefined as unknown as Response)
