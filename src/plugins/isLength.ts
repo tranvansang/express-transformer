@@ -11,7 +11,7 @@ declare global {
 					max?: number
 				} | string | number,
 				transformOptions?: Omit<ITransformOptions, 'validateOnly'>
-			): ITransformer<T, T & (string | Array<unknown>), Options>
+			): ITransformer<T & (string | Array<unknown>), V, Options>
 		}
 	}
 }

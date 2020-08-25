@@ -8,7 +8,7 @@ declare global {
 		export interface ITransformer<T, V, Options> {
 			isEmail(
 				options?: IIsEmailOptions & Omit<ITransformOptions, 'validateOnly'>
-			): ITransformer<T, string, Options>
+			): ITransformer<T & string, V, Options>
 		}
 	}
 }

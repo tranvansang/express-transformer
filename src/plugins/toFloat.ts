@@ -13,7 +13,7 @@ declare global {
 		interface ITransformer<T, V, Options> {
 			toFloat(
 				options?: ToFloatOptions & Omit<ITransformOptions, 'validateOnly'>
-			): ITransformer<T, number, Options>
+			): ITransformer<T & number, V, Options>
 		}
 	}
 }

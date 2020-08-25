@@ -7,7 +7,7 @@ declare global {
 			isIn(
 				values: ReadonlyArray<T>,
 				options?: Omit<ITransformOptions, 'validateOnly'>
-			): ITransformer<T, T, Options>
+			): ITransformer<T, V, Options>
 		}
 	}
 }

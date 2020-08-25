@@ -4,7 +4,7 @@ import {ITransformPlugin} from '../interfaces'
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			exists(options?: { acceptEmptyString?: boolean }): ITransformer<T, T, Options>
+			exists(options?: { acceptEmptyString?: boolean }): ITransformer<T, V, Options>
 		}
 	}
 }

@@ -39,5 +39,12 @@ describe('Transform Plugin', () => {
 				transformer('key').isType(type, {force: true}),
 			)(req as Request, undefined as unknown as Response))
 		}
+		//the following is for type checking
+		transformer('key')
+			.isType('string')
+			.transform(
+				(k: string) => k.startsWith('a'),
+				{validateOnly: true}
+			)
 	})
 })

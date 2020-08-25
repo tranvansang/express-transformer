@@ -10,7 +10,9 @@ type ToIntOptions = {
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			toInt(options?: ToIntOptions & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, number, Options>
+			toInt(
+				options?: ToIntOptions & Omit<ITransformOptions, 'validateOnly'>
+			): ITransformer<T & number, V, Options>
 		}
 	}
 }

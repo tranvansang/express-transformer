@@ -18,7 +18,7 @@ declare global {
 			isType<Type extends JSType>(
 				type: Type,
 				options?: Omit<ITransformOptions, 'validateOnly'>
-			): ITransformer<T, T & JSTypeToType[Type], Options>
+			): ITransformer<T & JSTypeToType[Type], V, Options>
 		}
 	}
 }

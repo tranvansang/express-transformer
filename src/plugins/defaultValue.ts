@@ -3,7 +3,7 @@ import {ITransformPlugin} from '../interfaces'
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			defaultValue(defaultValue: T, options?: {ignoreEmptyString?: boolean}): ITransformer<T, T | V, Options>
+			defaultValue(defaultValue: T, options?: {ignoreEmptyString?: boolean}): ITransformer<T, V, Options>
 		}
 	}
 }

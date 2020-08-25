@@ -4,7 +4,7 @@ import {TransformationError} from '../transformer'
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			isArray(options?: Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, Array<unknown>, Options>
+			isArray(options?: Omit<ITransformOptions, 'validateOnly'>): ITransformer<T & Array<unknown>, V, Options>
 		}
 	}
 }

@@ -4,7 +4,10 @@ import {ITransformOptions, ITransformPlugin} from '../interfaces'
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			matches(regex: RegExp, options?: Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, string, Options>
+			matches(
+				regex: RegExp,
+				options?: Omit<ITransformOptions, 'validateOnly'>
+			): ITransformer<T & string, V, Options>
 		}
 	}
 }

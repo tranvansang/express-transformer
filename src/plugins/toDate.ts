@@ -15,7 +15,9 @@ interface IToDateOptions {
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
-			toDate(options?: IToDateOptions & Omit<ITransformOptions, 'validateOnly'>): ITransformer<T, Date, Options>
+			toDate(
+				options?: IToDateOptions & Omit<ITransformOptions, 'validateOnly'>
+			): ITransformer<T & Date, V, Options>
 		}
 	}
 }
