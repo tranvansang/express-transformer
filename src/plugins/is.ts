@@ -15,7 +15,7 @@ export default {
 		return {
 			transform(val: T, info) {
 				if (val !== value) throw new TransformationError(
-					`${info.path} must be ${value}`,
+					`${info.path} does not match the pre-defined value`,
 					info
 				)
 			},
