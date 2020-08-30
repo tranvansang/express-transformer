@@ -1,7 +1,6 @@
 import {ITransformOptions, ITransformPlugin} from '../interfaces'
 import {TransformationError} from '../transformer'
 
-type JSType = 'string' | 'number' | 'boolean' | 'function' | 'bigint' | 'object' | 'undefined' | 'symbol'
 type JSTypeToType = {
 	string: string
 	number: number
@@ -12,6 +11,7 @@ type JSTypeToType = {
 	undefined: undefined
 	symbol: symbol
 }
+type JSType = keyof JSTypeToType
 declare global {
 	namespace ExpressTransformer {
 		export interface ITransformer<T, V, Options> {
